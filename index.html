@@ -14,7 +14,8 @@
   #titleRow h1 { margin:0; font-family: Arial, Helvetica, sans-serif;
                  font-weight:900; color:#2C2C2C; letter-spacing:0.5px; white-space:nowrap; }
   #tagline { display:inline-block; color:#666; margin:8px 0 0; white-space:nowrap; }
-  #instructions { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:12px 0 0; }
+  #motivation { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:14px 0 0; }
+  #instructions { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:20px 0 0; }
   #tileRow { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:wrap; }
   #tileRow canvas { border:1px solid #ddd; border-radius:4px; cursor:default; }
   #tileHint { font-size:10.5px; color:#777; line-height:1.35; text-align:center; margin-top:8px; }
@@ -69,15 +70,23 @@
     <h1>Swalpa adjust maadi</h1>
   </div>
   <p id="tagline">Bengalurina prema kathe</p>
+  <p id="motivation">You play as the Red Power Co. or the Blue Water Co.,
+  both operating in a Bangalore neighbourhood. Each is trying to supply as
+  many houses as possible, without much concern for how their actions
+  affect the other. Meanwhile, roads are constantly dug up for Metro work,
+  VIP visits, and floods, wreaking havoc on the infrastructure. The city's
+  residents are left to deal with unpredictable power and water, and must
+  suffer in silence.</p>
   <div id="legendRow">
     <div class="legendItem"><canvas id="legRed" width="26" height="26"></canvas><div class="label">Power Co.</div></div>
     <div class="legendItem"><canvas id="legBlue" width="26" height="26"></canvas><div class="label">Water Co.</div></div>
     <div class="legendItem"><canvas id="legRoad" width="26" height="26"></canvas><div class="label">Roadworks</div></div>
     <div class="legendItem"><canvas id="legHouse" width="26" height="26"></canvas><div class="label">House</div></div>
   </div>
-  <p id="instructions">Earn revenue from houses connected to your supply. Houses are
-  built when a space first connects to both red and blue supply. The player
-  on whose turn this happens henceforth controls the space beneath the house.</p>
+  <p id="instructions">You earn revenue from houses connected to your
+  supply. Houses are built when a space first connects to both red and blue
+  supply. The player on whose turn this happens henceforth controls the
+  space beneath the house.</p>
   <div id="roundNum">Round 1/20</div>
   <div id="tileRow"></div>
   <div id="tileHint">Upcoming cards. Active card highlighted by orange
