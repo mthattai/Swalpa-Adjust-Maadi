@@ -205,6 +205,15 @@
 </div>
 
 <script>
+window.onerror = function(msg, url, line, col, error){
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;' +
+    'font-size:12px;padding:10px;z-index:9999;white-space:pre-wrap;';
+  box.textContent = 'Error: ' + msg + ' (line ' + line + ')';
+  document.body.appendChild(box);
+  return false;
+};
+
 const N = 6;
 const TOTAL_ROUNDS = 20;
 const WIN_THRESHOLD = 500;
@@ -216,12 +225,17 @@ const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 
 function fitTextToWidth(el, targetWidth, maxFontSize, minFontSize){
-  let fontSize = maxFontSize;
-  el.style.fontSize = fontSize + 'px';
-  while (el.scrollWidth > targetWidth && fontSize > minFontSize){
-    fontSize -= 1;
-    el.style.fontSize = fontSize + 'px';
+  let lo = minFontSize, hi = maxFontSize;
+  el.style.fontSize = hi + 'px';
+  if (el.scrollWidth <= targetWidth){ return; }
+  el.style.fontSize = lo + 'px';
+  if (el.scrollWidth > targetWidth){ return; }
+  while (hi - lo > 1){
+    const mid = Math.floor((lo + hi) / 2);
+    el.style.fontSize = mid + 'px';
+    if (el.scrollWidth > targetWidth){ hi = mid; } else { lo = mid; }
   }
+  el.style.fontSize = lo + 'px';
 }
 
 function computeLayout(){
@@ -235,12 +249,23 @@ function computeLayout(){
   document.getElementById('app').style.width = CANVAS_SIZE + 'px';
   document.getElementById('gameTitle').style.width = CANVAS_SIZE + 'px';
 
-  const fitWidth = CANVAS_SIZE * 0.96;
-  fitTextToWidth(document.querySelector('#titleRow h1'), fitWidth, 70, 16);
-  fitTextToWidth(document.getElementById('tagline'), fitWidth, 34, 10);
+  try {
+    const fitWidth = CANVAS_SIZE * 0.96;
+    fitTextToWidth(document.querySelector('#titleRow h1'), fitWidth, 70, 16);
+    fitTextToWidth(document.getElementById('tagline'), fitWidth, 34, 10);
+  } catch (e) {
+    console.error('fitTextToWidth failed, continuing without it:', e);
+  }
 }
 computeLayout();
-window.addEventListener('resize', () => { computeLayout(); if (board) render(); });
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    computeLayout();
+    if (board) render();
+  }, 150);
+});
 
 function straightEdges(rot){
   return (rot%2===0) ? {N:['R'],S:['R'],E:['B'],W:['B']} : {N:['B'],S:['B'],E:['R'],W:['R']};
