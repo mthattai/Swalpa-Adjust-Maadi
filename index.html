@@ -22,7 +22,7 @@
                          background:white; color:#555; cursor:pointer; }
   #infoPopup { font-size:12px; color:#333; line-height:1.4; text-align:left; background:#fff8e6;
                border:1px solid #F1A208; border-radius:6px; padding:10px 12px; margin-top:10px; }
-  #tileRow { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:wrap; }
+  #tileRow { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:nowrap; }
   #tileRow canvas { border:1px solid #ddd; border-radius:4px; cursor:default; }
   #legendRow { display:flex; justify-content:space-between; margin-top:10px; }
   .legendItem { display:flex; flex-direction:column; align-items:center; gap:3px; width:25%; }
@@ -596,7 +596,13 @@ function render(){
 function renderDrawArea(){
   const area = document.getElementById('tileRow');
   area.innerHTML = '';
-  const psize = 42;
+  // 8 icons + 7 gaps (5px each) + 2px border per icon must fit within
+  // CANVAS_SIZE (the fixed width of the container). Solve for the
+  // largest icon size that guarantees this, capped at the original 42px
+  // design size so it doesn't grow larger on wide screens.
+  const gapTotal = 7 * 5;
+  const borderTotal = VISIBLE_TILES * 2;
+  const psize = Math.max(20, Math.min(42, Math.floor((CANVAS_SIZE - gapTotal - borderTotal - 8) / VISIBLE_TILES)));
 
   upcomingTiles.forEach((tile, idx) => {
     const isActive = (idx === upcomingTiles.length - 1);
