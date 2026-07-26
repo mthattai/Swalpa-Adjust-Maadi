@@ -128,8 +128,7 @@
   <ul>
     <li>1 board</li>
     <li>76 cards in the deck</li>
-    <li>36 House tokens</li>
-    <li>36 control markers in each player's colour</li>
+    <li>36 House tokens in each player's colour</li>
   </ul>
 
   <h2>The board</h2>
@@ -169,14 +168,14 @@
   immediately.</p>
 
   <h2>Houses and control</h2>
-  <p>Houses are built when a space first connects to both red and blue
-  supply. A house built at setup stays neutral for the rest of the game,
-  controlled by neither player. The player on whose turn this happens
-  henceforth controls the space beneath the house, which becomes shaded
-  by their colour. At each turn, each player earns revenue from houses
-  they control that are connected to both red and blue supply (see "How
-  to score"). Houses are permanent once built. If a Roadworks card lands
-  on a house it has no effect.</p>
+  <p>Houses are built when an empty space first connects to both red and
+  blue supply. The player on whose turn this happens henceforth earns
+  revenue from that house, indicated by the roof of the house being in
+  their colour. Houses built at setup are not allocated to either
+  player. At each turn, each player earns revenue from houses in their
+  colour that are connected to both red and blue supply. If Roadworks
+  destroys a house, a new house can be built and claimed on that
+  space.</p>
 
   <h2>Play</h2>
   <p>Play alternates, Player 1 first. In 1-player games the human is
@@ -188,36 +187,26 @@
   shrinks; the very last card is used on the final turn of the game.</p>
   <p>To play on your turn, click a space on the board to place the
   active card and see what it does. You can try out as many spaces as
-  you like, as long as they are not shaded by the other player's colour.
-  The Roadworks card lands on a random space, you can't change it
-  (ouch!). If a Roadworks card lands on a house it has no effect. The
-  current chosen space is always highlighted by an orange border. Click
-  the chosen space again to confirm your move and complete your turn.</p>
+  you like. The Roadworks card lands on a random space, you can't
+  change it (ouch!). If Roadworks lands on a house, it destroys the
+  house completely (double ouch!). The current chosen space is always
+  highlighted by an orange border. Click the chosen space again to
+  confirm your move and complete your turn.</p>
   <p>Once the card is played, the row of upcoming cards moves one step to
   the right. The current active card is updated and the next player
   plays their turn.</p>
 
   <h2>Scoring</h2>
   <p>Each round consists of one Player 1 move and one Player 2 move. After
-  every turn, each player earns one point for every house they control
-  that is currently connected to both red and blue supply. A house that's
-  only partly connected, or controlled by neither player (such as one
-  formed at setup), earns nothing for anyone. Both players' totals are
-  checked and updated after every turn, so scores can go up twice each
-  round.</p>
+  every turn, each player earns one point for every house in their
+  colour that is simultaneously connected to both red and blue supply.
+  A house that's only partly connected does not contribute to the
+  score. Both players' totals are checked and updated after every turn,
+  so scores can go up twice each round.</p>
 
   <h2>Winning</h2>
   <p>After 20 rounds, whoever has the higher score wins. Equal score is a
   tie.</p>
-
-  <h2>Notes</h2>
-  <p>Building houses early is important, since it gives you lasting
-  control of that space and its future revenue. Only the controlling
-  player earns anything from a house -- an uncontrolled house, such as
-  one formed at setup, never scores for anyone. Because houses themselves
-  are immune to Roadworks, protecting or disrupting a house usually means
-  protecting or disrupting the supply chain that reaches it, elsewhere on
-  the board.</p>
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
@@ -474,7 +463,7 @@ function drawTileOn(targetCtx, px, py, size, tile, redSupplied, blueSupplied){
   }
 }
 
-function drawHouseShape(ctx, cx, cy, s, rSup, bSup){
+function drawHouseShape(ctx, cx, cy, s, rSup, bSup, ownerColor){
   const baseW = s*0.5, baseH = s*0.4;
   const baseX = cx - baseW/2, baseY = cy - baseH*0.15;
   const roofOverhang = s*0.06;
@@ -518,7 +507,7 @@ function drawHouseShape(ctx, cx, cy, s, rSup, bSup){
   ctx.lineTo(cx, roofTopY);
   ctx.lineTo(baseX + baseW + roofOverhang, baseY);
   ctx.closePath();
-  ctx.fillStyle = '#eee';
+  ctx.fillStyle = ownerColor || '#eee';
   ctx.fill();
   ctx.strokeStyle = '#333'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
   ctx.stroke();
@@ -561,16 +550,16 @@ function render(){
     const px = BAND + c*SIZE, py = BAND + r*SIZE;
     ctx.fillStyle='white'; ctx.fillRect(px,py,SIZE,SIZE);
 
-    const projectedNewHouse = !house[r][c] && redC[r][c] && blueC[r][c];
-    if (owner[r][c] === 'R' || (projectedNewHouse && turn === 'R')){ ctx.fillStyle='rgba(142,68,173,0.38)'; ctx.fillRect(px,py,SIZE,SIZE); }
-    else if (owner[r][c] === 'B' || (projectedNewHouse && turn === 'B')){ ctx.fillStyle='rgba(22,160,133,0.38)'; ctx.fillRect(px,py,SIZE,SIZE); }
-
     drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
 
     if (house[r][c] || (redC[r][c] && blueC[r][c])){
       const cx=px+SIZE/2, cy=py+SIZE/2;
       const rSup = redC[r][c], bSup = blueC[r][c];
-      drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup);
+      const projectedNewHouse = !house[r][c] && rSup && bSup;
+      let ownerColor = null;
+      if (owner[r][c] === 'R' || (projectedNewHouse && turn === 'R')) ownerColor = P1_COLOR;
+      else if (owner[r][c] === 'B' || (projectedNewHouse && turn === 'B')) ownerColor = P2_COLOR;
+      drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup, ownerColor);
     }
 
     ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.strokeRect(px,py,SIZE,SIZE);
@@ -709,8 +698,10 @@ function beginTurn(){
   if (currentDraw.kind === 'X'){
     const r = Math.floor(Math.random()*N);
     const c = Math.floor(Math.random()*N);
-    if (!(house[r][c] || board[r][c].kind === 'X')){
+    if (board[r][c].kind !== 'X'){
       board[r][c] = {kind:'X', rot:0};
+      house[r][c] = false;
+      owner[r][c] = null;
     }
     pendingSquare = [r,c];
     render();
@@ -747,7 +738,6 @@ function aiChooseSquare(color, drawTile){
   const decay = Math.max(0, (TOTAL_ROUNDS - roundNum) / TOTAL_ROUNDS);
   let bestVal = -Infinity, best = null;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (owner[r][c] === otherC) continue;
     const saved = board[r][c];
     const wasHouseBefore = house[r][c];
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
@@ -812,8 +802,6 @@ canvas.addEventListener('click', (e)=>{
     return;
   }
 
-  const otherC = turn==='R' ? 'B' : 'R';
-  if (owner[r][c] === otherC){ showMsg("That house belongs to the other player now."); return; }
   if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
     commitTurn();
     return;
@@ -850,6 +838,8 @@ function backToGame(){
   document.getElementById('rulesPage').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('gameTitle').style.display = 'block';
+  computeLayout();
+  if (board) render();
 }
 document.getElementById('backBtn').onclick = backToGame;
 document.getElementById('backBtn2').onclick = backToGame;
@@ -932,29 +922,28 @@ const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
   "on the final turn of the game.";
 
 const HOW_TO_PLAY_TEXT = "To play on your turn, click a space on the " +
-  "board to place the active card and see what it does. You can try out " +
-  "as many spaces as you like, as long as they are not shaded by the " +
-  "other player's colour. The Roadworks card lands on a random space, " +
-  "you can't change it (ouch!). If a Roadworks card lands on a house it " +
-  "has no effect. The current chosen space is always highlighted by an " +
-  "orange border. Click the chosen space again to confirm your move and " +
-  "complete your turn.";
+  "board to place the active card and see what it does. You can try " +
+  "out as many spaces as you like. The Roadworks card lands on a " +
+  "random space, you can't change it (ouch!). If Roadworks lands on a " +
+  "house, it destroys the house completely (double ouch!). The current " +
+  "chosen space is always highlighted by an orange border. Click the " +
+  "chosen space again to confirm your move and complete your turn.";
 
-const HOUSE_RULES_TEXT = "Houses are built when a space first connects to " +
-  "both red and blue supply. The player on whose turn this happens " +
-  "henceforth controls the space beneath the house, which becomes " +
-  "shaded by their colour. At each turn, each player earns revenue from " +
-  "houses they control that are connected to both red and blue supply " +
-  "(see \"How to score\"). Houses are permanent once built. If a " +
-  "Roadworks card lands on a house it has no effect.";
+const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
+  "connects to both red and blue supply. The player on whose turn this " +
+  "happens henceforth earns revenue from that house, indicated by the " +
+  "roof of the house being in their colour. Houses built at setup are " +
+  "not allocated to either player. At each turn, each player earns " +
+  "revenue from houses in their colour that are connected to both red " +
+  "and blue supply (see \"How to score\"). If Roadworks destroys a " +
+  "house, a new house can be built and claimed on that space.";
 
 const HOW_TO_SCORE_TEXT = "Each round consists of one Player 1 move and " +
   "one Player 2 move. After every turn, each player earns one point for " +
-  "every house they control that is currently connected to both red and " +
-  "blue supply. A house that's only partly connected, or controlled by " +
-  "neither player (such as one formed at setup), earns nothing for " +
-  "anyone. Both players' totals are checked and updated after every " +
-  "turn, so scores can go up twice each round.";
+  "every house in their colour that is simultaneously connected to " +
+  "both red and blue supply. A house that's only partly connected does " +
+  "not contribute to the score. Both players' totals are checked and " +
+  "updated after every turn, so scores can go up twice each round.";
 
 function toggleInfoPopup(text){
   const popup = document.getElementById('infoPopup');
