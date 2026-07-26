@@ -15,10 +15,15 @@
                  font-weight:900; color:#2C2C2C; letter-spacing:0.5px; white-space:nowrap; }
   #tagline { display:inline-block; color:#666; margin:8px 0 0; white-space:nowrap; }
   #motivation { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:14px 0 0; }
-  #instructions { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:20px 0 0; }
+  #infoBtnGrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;
+                 max-width:340px; margin-left:auto; margin-right:auto; }
+  #infoBtnGrid button { display:inline-flex; align-items:center; justify-content:center; gap:5px;
+                         font-size:11px; padding:6px 10px; border-radius:5px; border:1px solid #999;
+                         background:white; color:#555; cursor:pointer; }
+  #infoPopup { font-size:12px; color:#333; line-height:1.4; text-align:left; background:#fff8e6;
+               border:1px solid #F1A208; border-radius:6px; padding:10px 12px; margin-top:10px; }
   #tileRow { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:wrap; }
   #tileRow canvas { border:1px solid #ddd; border-radius:4px; cursor:default; }
-  #tileHint { font-size:10.5px; color:#777; line-height:1.35; text-align:center; margin-top:8px; }
   #legendRow { display:flex; justify-content:space-between; margin-top:10px; }
   .legendItem { display:flex; flex-direction:column; align-items:center; gap:3px; width:25%; }
   .legendItem .label { font-size:10px; color:#666; text-align:center; }
@@ -83,16 +88,15 @@
     <div class="legendItem"><canvas id="legRoad" width="26" height="26"></canvas><div class="label">Roadworks</div></div>
     <div class="legendItem"><canvas id="legHouse" width="26" height="26"></canvas><div class="label">House</div></div>
   </div>
-  <p id="instructions">You earn revenue from houses connected to your
-  supply. Houses are built when a space first connects to both red and blue
-  supply. The player on whose turn this happens henceforth controls the
-  space beneath the house.</p>
+  <div id="infoBtnGrid">
+    <button id="deckRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> Deck rules</button>
+    <button id="howToPlayBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to play</button>
+    <button id="houseRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> House rules</button>
+    <button id="howToScoreBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to score</button>
+  </div>
+  <div id="infoPopup" style="display:none;"></div>
   <div id="roundNum">Round 1/20</div>
   <div id="tileRow"></div>
-  <div id="tileHint">Upcoming cards. Active card highlighted by orange
-    border. Click any space in the 6x6 grid to try this card there and see
-    its impact. Tap the active card to commit. The Roadworks card lands on
-    a random space, you can't change it.</div>
 </div>
 <div id="app">
   <canvas id="board"></canvas>
@@ -515,18 +519,13 @@ function renderDrawArea(){
     const c = cnv.getContext('2d');
     c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
     drawTileOn(c, 2, 2, psize-4, tile, true, true);
-    if (isActive && pendingSquare){
+    if (isActive){
       c.strokeStyle='#F1A208'; c.lineWidth=4; c.setLineDash([6,4]);
       c.strokeRect(3,3,psize-6,psize-6); c.setLineDash([]);
-      cnv.style.cursor = 'pointer';
-    } else if (isActive){
-      c.strokeStyle='#333'; c.lineWidth=2; c.strokeRect(1,1,psize-2,psize-2);
-      cnv.style.cursor = 'default';
     } else {
       c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
       cnv.style.opacity = '0.55';
     }
-    if (isActive) cnv.id = 'activeTileIcon';
     area.appendChild(cnv);
   });
 }
@@ -679,15 +678,24 @@ function countSupplied(houseGrid, connGrid){
 
 canvas.addEventListener('click', (e)=>{
   if (gameOver || (vsComputerOn && turn === 'B')) return;
-  if (currentDraw.kind === 'X') return; // roadworks: spot is already fixed, board clicks do nothing
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
   const x = (e.clientX-rect.left)*scaleX - BAND, y = (e.clientY-rect.top)*scaleY - BAND;
   const c = Math.floor(x/SIZE), r = Math.floor(y/SIZE);
   if (r<0||r>=N||c<0||c>=N) return;
+
+  if (currentDraw.kind === 'X'){
+    // Roadworks: the space is already fixed, any board click just confirms.
+    if (pendingSquare) commitTurn();
+    return;
+  }
+
   const otherC = turn==='R' ? 'B' : 'R';
   if (owner[r][c] === otherC){ showMsg("That house belongs to the other player now."); return; }
-  if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c) return;
+  if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
+    commitTurn();
+    return;
+  }
 
   if (pendingSquare){
     board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
@@ -698,12 +706,7 @@ canvas.addEventListener('click', (e)=>{
   render();
 });
 
-document.getElementById('tileRow').addEventListener('click', (e) => {
-  if (gameOver || (vsComputerOn && turn === 'B')) return;
-  if (e.target.id !== 'activeTileIcon') return;
-  if (!pendingSquare) return;
-  commitTurn();
-});
+
 
 function finishGame(){
   gameOver = true;
@@ -806,6 +809,59 @@ function renderTitleAndLegend(){
   drawTileOn(roadCtx, 0, 0, 26, {kind:'X', rot:0}, true, true);
   drawHouseLegendIcon(document.getElementById('legHouse').getContext('2d'), 26);
 }
+
+function drawInfoIcon(ctx, s){
+  const cx = s/2, cy = s/2, r = s*0.46;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI);
+  ctx.lineWidth = 1.4; ctx.strokeStyle = '#555'; ctx.stroke();
+  ctx.fillStyle = '#555';
+  ctx.beginPath(); ctx.arc(cx, s*0.32, s*0.09, 0, 2*Math.PI); ctx.fill();
+  ctx.fillRect(cx - s*0.07, s*0.46, s*0.14, s*0.32);
+}
+
+const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. Both " +
+  "players use the same deck. The rightmost card is the current active " +
+  "card. Once a player plays their card, the entire row moves one step to " +
+  "the right.";
+
+const HOW_TO_PLAY_TEXT = "To play on your turn, click any space on the " +
+  "board to try the current active card there and see what it does. You " +
+  "can try out as many spaces as you like. The Roadworks card lands on a " +
+  "random space, you can't change it (ouch!). The current chosen space is " +
+  "always highlighted by an orange border. Click the chosen space again " +
+  "to confirm your move and complete your turn.";
+
+const HOUSE_RULES_TEXT = "Houses are built when a space first connects to " +
+  "both red and blue supply. The player on whose turn this happens " +
+  "henceforth controls the space beneath the house. Each player earns " +
+  "revenue at each turn from houses connected to their supply " +
+  "(see \"How to score\").";
+
+const HOW_TO_SCORE_TEXT = "Each round consists of one red player move and " +
+  "one blue player move. Once a player completes their turn, the total " +
+  "number of houses connected to each colour is tallied. The red total " +
+  "is added to the current red score, and the blue total is added to the " +
+  "current blue score. Both players' scores are simultaneously updated " +
+  "after every turn, so scores go up twice each round.";
+
+function toggleInfoPopup(text){
+  const popup = document.getElementById('infoPopup');
+  if (popup.style.display !== 'none' && popup.textContent === text){
+    popup.style.display = 'none';
+  } else {
+    popup.textContent = text;
+    popup.style.display = 'block';
+  }
+}
+
+document.getElementById('deckRulesBtn').onclick = () => toggleInfoPopup(DECK_RULES_TEXT);
+document.getElementById('howToPlayBtn').onclick = () => toggleInfoPopup(HOW_TO_PLAY_TEXT);
+document.getElementById('houseRulesBtn').onclick = () => toggleInfoPopup(HOUSE_RULES_TEXT);
+document.getElementById('howToScoreBtn').onclick = () => toggleInfoPopup(HOW_TO_SCORE_TEXT);
+
+document.querySelectorAll('.infoIcon').forEach(cnv => {
+  drawInfoIcon(cnv.getContext('2d'), 15);
+});
 
 renderTitleAndLegend();
 
