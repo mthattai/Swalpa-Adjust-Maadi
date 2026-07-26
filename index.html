@@ -838,8 +838,10 @@ function backToGame(){
   document.getElementById('rulesPage').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('gameTitle').style.display = 'block';
-  computeLayout();
-  if (board) render();
+  requestAnimationFrame(() => {
+    computeLayout();
+    if (board) render();
+  });
 }
 document.getElementById('backBtn').onclick = backToGame;
 document.getElementById('backBtn2').onclick = backToGame;
