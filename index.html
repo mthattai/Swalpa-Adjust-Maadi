@@ -39,8 +39,8 @@
   .scoreBox { width:100px; height:64px; border-radius:8px; display:flex; flex-direction:column;
               align-items:center; justify-content:center; color:white; border:3px solid transparent;
               opacity:0.35; filter:grayscale(60%); transition:opacity 0.15s, filter 0.15s, transform 0.15s; }
-  .scoreR { background:#C0392B; }
-  .scoreB { background:#2E86C1; }
+  .scoreR { background:#8E44AD; }
+  .scoreB { background:#16A085; }
   .active { opacity:1; filter:none; border-color:#222;
             box-shadow:0 0 0 3px white, 0 0 0 6px #222; }
   .scoreBox .num { font-size:26px; font-weight:bold; }
@@ -75,16 +75,15 @@
     <h1>Swalpa adjust maadi</h1>
   </div>
   <p id="tagline">Bengalurina prema kathe</p>
-  <p id="motivation">You play as the Red Power Co. or the Blue Water Co.,
-  both operating in a Bangalore neighbourhood. Each is trying to supply as
-  many houses as possible, without much concern for how their actions
-  affect the other. Meanwhile, roads are constantly dug up for Metro work,
-  VIP visits, and floods, wreaking havoc on the infrastructure. The city's
-  residents are left to deal with unpredictable power and water, and must
-  suffer in silence.</p>
+  <p id="motivation">Two contractors operate in a Bangalore neighbourhood.
+  Each is trying to supply power and water to as many houses as possible,
+  without much concern for how their actions affect the other. Meanwhile,
+  roads are constantly dug up for Metro work, VIP visits, and floods,
+  wreaking havoc on the infrastructure. The city's residents are left to
+  deal with unpredictable power and water, and must suffer in silence.</p>
   <div id="legendRow">
-    <div class="legendItem"><canvas id="legRed" width="26" height="26"></canvas><div class="label">Power Co.</div></div>
-    <div class="legendItem"><canvas id="legBlue" width="26" height="26"></canvas><div class="label">Water Co.</div></div>
+    <div class="legendItem"><canvas id="legRed" width="26" height="26"></canvas><div class="label">Power</div></div>
+    <div class="legendItem"><canvas id="legBlue" width="26" height="26"></canvas><div class="label">Water</div></div>
     <div class="legendItem"><canvas id="legRoad" width="26" height="26"></canvas><div class="label">Roadworks</div></div>
     <div class="legendItem"><canvas id="legHouse" width="26" height="26"></canvas><div class="label">House</div></div>
   </div>
@@ -101,8 +100,8 @@
 <div id="app">
   <canvas id="board"></canvas>
   <div id="scoreRow">
-    <div class="scoreBox scoreR" id="scoreR"><div class="num">0</div><div class="lbl">POWER</div></div>
-    <div class="scoreBox scoreB" id="scoreB"><div class="num">0</div><div class="lbl">WATER</div></div>
+    <div class="scoreBox scoreR" id="scoreR"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
+    <div class="scoreBox scoreB" id="scoreB"><div class="num">0</div><div class="lbl">PLAYER 2</div></div>
   </div>
   <div id="msg"></div>
   <div class="btnRow">
@@ -118,26 +117,25 @@
   <h1>Swalpa adjust maadi</h1>
   <p class="ruleSub">Bengalurina prema kathe</p>
 
-  <p>You play as the Red Power Co. or the Blue Water Co., both operating in
-  a Bangalore neighbourhood. Each is trying to supply as many houses as
-  possible, without much concern for how their actions affect the other.
-  Meanwhile, roads are constantly dug up for Metro work, VIP visits, and
-  floods, wreaking havoc on the infrastructure. The city's residents are
-  left to deal with unpredictable power and water, and must suffer in
-  silence.</p>
+  <p>Two contractors operate in a Bangalore neighbourhood. Each is trying
+  to supply power and water to as many houses as possible, without much
+  concern for how their actions affect the other. Meanwhile, roads are
+  constantly dug up for Metro work, VIP visits, and floods, wreaking havoc
+  on the infrastructure. The city's residents are left to deal with
+  unpredictable power and water, and must suffer in silence.</p>
 
   <h2>Components</h2>
   <ul>
     <li>1 board</li>
     <li>76 cards in the deck</li>
     <li>36 House tokens</li>
-    <li>36 red and 36 blue control markers</li>
+    <li>36 control markers in each player's colour</li>
   </ul>
 
   <h2>The board</h2>
-  <p>A board of 6x6 spaces. Two opposite edges belong to Red's power
-  supply, the other two belong to Blue's water supply. Any space along an
-  edge with a connection reaching it is directly supplied.</p>
+  <p>A board of 6x6 spaces. Two opposite edges supply power, shown in red;
+  the other two supply water, shown in blue. Any space along an edge with
+  a connection reaching it is directly supplied.</p>
 
   <h2>The deck</h2>
   <p>There are 7 card types.</p>
@@ -172,49 +170,54 @@
 
   <h2>Houses and control</h2>
   <p>Houses are built when a space first connects to both red and blue
-  supply. The player on whose turn this happens henceforth controls the
-  space beneath the house (indicated by red or blue shading). A house
-  built at setup stays neutral for the rest of the game. A house is
-  permanent once built, even if it is later disconnected from supply. If
-  a Roadworks card lands on a house it has no effect.</p>
+  supply. A house built at setup stays neutral for the rest of the game,
+  controlled by neither player. The player on whose turn this happens
+  henceforth controls the space beneath the house, which becomes shaded
+  by their colour. At each turn, each player earns revenue from houses
+  they control that are connected to both red and blue supply (see "How
+  to score"). Houses are permanent once built. If a Roadworks card lands
+  on a house it has no effect.</p>
 
   <h2>Play</h2>
-  <p>Play alternates, Red first. In 1-player games the player is Red and
-  the computer is Blue.</p>
+  <p>Play alternates, Player 1 first. In 1-player games the human is
+  Player 1 and the computer is Player 2.</p>
   <p>The row of 8 icons shows the upcoming cards. Both players use the
   same deck. The rightmost card is the current active card. Once a
   player plays their card, the entire row moves one step to the right. In
   the last few rounds, fewer than 8 cards remain in the deck, so this row
   shrinks; the very last card is used on the final turn of the game.</p>
-  <p>To play on your turn, click any space on the board to try the
-  current active card there and see what it does. You can try out as
-  many spaces as you like. The Roadworks card lands on a random space,
-  you can't change it (ouch!). If a Roadworks card lands on a house it
-  has no effect. The current chosen space is always highlighted by an
-  orange border. Click the chosen space again to confirm your move and
-  complete your turn.</p>
+  <p>To play on your turn, click a space on the board to place the
+  active card and see what it does. You can try out as many spaces as
+  you like, as long as they are not shaded by the other player's colour.
+  The Roadworks card lands on a random space, you can't change it
+  (ouch!). If a Roadworks card lands on a house it has no effect. The
+  current chosen space is always highlighted by an orange border. Click
+  the chosen space again to confirm your move and complete your turn.</p>
   <p>Once the card is played, the row of upcoming cards moves one step to
   the right. The current active card is updated and the next player
   plays their turn.</p>
 
   <h2>Scoring</h2>
-  <p>Each round consists of one red player move and one blue player move.
-  Once a player completes their turn, the total number of houses
-  connected to each colour is tallied. The red total is added to the
-  current red score, and the blue total is added to the current blue
-  score. Both players' scores are simultaneously updated after every
-  turn, so scores go up twice each round.</p>
+  <p>Each round consists of one Player 1 move and one Player 2 move. After
+  every turn, each player earns one point for every house they control
+  that is currently connected to both red and blue supply. A house that's
+  only partly connected, or controlled by neither player (such as one
+  formed at setup), earns nothing for anyone. Both players' totals are
+  checked and updated after every turn, so scores can go up twice each
+  round.</p>
 
   <h2>Winning</h2>
   <p>After 20 rounds, whoever has the higher score wins. Equal score is a
   tie.</p>
 
   <h2>Notes</h2>
-  <p>Building houses early is important, because it gives you control of
-  the underlying space. A house connected to both red and blue is
-  neutral, since it earns revenue for both players. A player can gain by
-  disconnecting a house from the opponent's supply, or reconnecting a
-  house to their own.</p>
+  <p>Building houses early is important, since it gives you lasting
+  control of that space and its future revenue. Only the controlling
+  player earns anything from a house -- an uncontrolled house, such as
+  one formed at setup, never scores for anyone. Because houses themselves
+  are immune to Roadworks, protecting or disrupting a house usually means
+  protecting or disrupting the supply chain that reaches it, elsewhere on
+  the board.</p>
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
@@ -244,6 +247,7 @@ const WIN_THRESHOLD = 500;
 let SIZE, BAND, INSET, CANVAS_SIZE;
 const RED_DARK = '#C0392B', RED_LIGHT = '#E8B4AC';
 const BLUE_DARK = '#2E86C1', BLUE_LIGHT = '#AED0EA';
+const P1_COLOR = '#8E44AD', P2_COLOR = '#16A085';
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -558,8 +562,8 @@ function render(){
     ctx.fillStyle='white'; ctx.fillRect(px,py,SIZE,SIZE);
 
     const projectedNewHouse = !house[r][c] && redC[r][c] && blueC[r][c];
-    if (owner[r][c] === 'R' || (projectedNewHouse && turn === 'R')){ ctx.fillStyle='rgba(192,57,43,0.20)'; ctx.fillRect(px,py,SIZE,SIZE); }
-    else if (owner[r][c] === 'B' || (projectedNewHouse && turn === 'B')){ ctx.fillStyle='rgba(46,134,193,0.20)'; ctx.fillRect(px,py,SIZE,SIZE); }
+    if (owner[r][c] === 'R' || (projectedNewHouse && turn === 'R')){ ctx.fillStyle='rgba(142,68,173,0.38)'; ctx.fillRect(px,py,SIZE,SIZE); }
+    else if (owner[r][c] === 'B' || (projectedNewHouse && turn === 'B')){ ctx.fillStyle='rgba(22,160,133,0.38)'; ctx.fillRect(px,py,SIZE,SIZE); }
 
     drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
 
@@ -630,8 +634,11 @@ function applyHouseAndRevenue(){
       owner[r][c] = turn;
     }
   }
-  revenue.R += countSupplied(house, redC);
-  revenue.B += countSupplied(house, blueC);
+  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    if (owner[r][c] && redC[r][c] && blueC[r][c]){
+      revenue[owner[r][c]] += 1;
+    }
+  }
 }
 
 function advanceToNextTurn(){
@@ -745,15 +752,16 @@ function aiChooseSquare(color, drawTile){
     const wasHouseBefore = house[r][c];
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
     const {redC, blueC} = connectivity();
-    const myConn = color==='R' ? redC : blueC;
-    const oppConn = color==='R' ? blueC : redC;
     let myScore = 0, oppScore = 0, myTerr = 0;
     for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
-      if (house[rr][cc]){
-        if (myConn[rr][cc]) myScore++;
-        if (oppConn[rr][cc]) oppScore++;
+      const full = redC[rr][cc] && blueC[rr][cc];
+      let effOwner = owner[rr][cc];
+      if (full && !house[rr][cc] && effOwner === null){
+        effOwner = color; // this placement would newly claim it this turn
       }
-      if (myConn[rr][cc]) myTerr++;
+      if (full && effOwner === color) myScore++;
+      else if (full && effOwner === otherC) oppScore++;
+      if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
     }
     const diff = myScore - oppScore;
     const completesHouse = (!wasHouseBefore) && redC[r][c] && blueC[r][c];
@@ -785,12 +793,6 @@ function aiPlayTurn(){
     board[r][c] = {kind: currentDraw.kind, rot: currentDraw.rot};
     commitTurn();
   }, STAGE_DELAY_MS);
-}
-
-function countSupplied(houseGrid, connGrid){
-  let n=0;
-  for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (houseGrid[r][c] && connGrid[r][c]) n++;
-  return n;
 }
 
 canvas.addEventListener('click', (e)=>{
@@ -929,27 +931,30 @@ const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
   "remain in the deck, so this row shrinks; the very last card is used " +
   "on the final turn of the game.";
 
-const HOW_TO_PLAY_TEXT = "To play on your turn, click any space on the " +
-  "board to try the current active card there and see what it does. You " +
-  "can try out as many spaces as you like. The Roadworks card lands on a " +
-  "random space, you can't change it (ouch!). If a Roadworks card lands " +
-  "on a house it has no effect. The current chosen space is always " +
-  "highlighted by an orange border. Click the chosen space again to " +
-  "confirm your move and complete your turn.";
+const HOW_TO_PLAY_TEXT = "To play on your turn, click a space on the " +
+  "board to place the active card and see what it does. You can try out " +
+  "as many spaces as you like, as long as they are not shaded by the " +
+  "other player's colour. The Roadworks card lands on a random space, " +
+  "you can't change it (ouch!). If a Roadworks card lands on a house it " +
+  "has no effect. The current chosen space is always highlighted by an " +
+  "orange border. Click the chosen space again to confirm your move and " +
+  "complete your turn.";
 
 const HOUSE_RULES_TEXT = "Houses are built when a space first connects to " +
   "both red and blue supply. The player on whose turn this happens " +
-  "henceforth controls the space beneath the house. Each player earns " +
-  "revenue at each turn from houses connected to their supply " +
+  "henceforth controls the space beneath the house, which becomes " +
+  "shaded by their colour. At each turn, each player earns revenue from " +
+  "houses they control that are connected to both red and blue supply " +
   "(see \"How to score\"). Houses are permanent once built. If a " +
   "Roadworks card lands on a house it has no effect.";
 
-const HOW_TO_SCORE_TEXT = "Each round consists of one red player move and " +
-  "one blue player move. Once a player completes their turn, the total " +
-  "number of houses connected to each colour is tallied. The red total " +
-  "is added to the current red score, and the blue total is added to the " +
-  "current blue score. Both players' scores are simultaneously updated " +
-  "after every turn, so scores go up twice each round.";
+const HOW_TO_SCORE_TEXT = "Each round consists of one Player 1 move and " +
+  "one Player 2 move. After every turn, each player earns one point for " +
+  "every house they control that is currently connected to both red and " +
+  "blue supply. A house that's only partly connected, or controlled by " +
+  "neither player (such as one formed at setup), earns nothing for " +
+  "anyone. Both players' totals are checked and updated after every " +
+  "turn, so scores can go up twice each round.";
 
 function toggleInfoPopup(text){
   const popup = document.getElementById('infoPopup');
