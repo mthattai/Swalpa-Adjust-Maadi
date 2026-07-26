@@ -128,28 +128,35 @@
 
   <h2>Components</h2>
   <ul>
-    <li>1 board, 6x6 spaces.</li>
-    <li>A deck of 8 card types: 2 Straight, 4 Bend, 2 Roadworks.</li>
+    <li>1 board</li>
+    <li>76 cards in the deck</li>
+    <li>36 House tokens</li>
+    <li>36 red and 36 blue control markers</li>
   </ul>
 
   <h2>The board</h2>
-  <p>Two opposite edges belong to Red's power supply, the other two belong
-  to Blue's water supply. Any space along an edge with a connection
-  reaching it is directly supplied.</p>
+  <p>A board of 6x6 spaces. Two opposite edges belong to Red's power
+  supply, the other two belong to Blue's water supply. Any space along an
+  edge with a connection reaching it is directly supplied.</p>
 
   <h2>The deck</h2>
-  <p>You can see 8 upcoming cards from the deck, with the rightmost active
-  card highlighted by a dashed orange border. Each card is one of the
-  following:</p>
+  <p>There are 7 card types.</p>
   <ul>
-    <li><b>Straight</b>: red and blue connectors, perpendicular to each
-    other.</li>
-    <li><b>Bend</b>: red and blue L-shaped connectors, on opposite
-    corners.</li>
-    <li><b>Roadworks</b>.</li>
+    <li><b>Straight</b> (2 possible orientations): red and blue
+    connectors, perpendicular to each other.</li>
+    <li><b>Bend</b> (4 possible orientations): red and blue L-shaped
+    connectors, on opposite corners.</li>
+    <li><b>Roadworks</b> (orientation irrelevant): a blank card.</li>
   </ul>
   <div id="ruleTileDiagram" class="ruleDiagramRow"></div>
-  <p>Cards are dealt with fixed orientation.</p>
+  <p>The deck consists of:</p>
+  <ul>
+    <li>6x6 copies of the Straight/Bend cards for setup.</li>
+    <li>6x6 copies of the Straight/Bend cards for play.</li>
+    <li>4 copies of Roadworks cards for play.</li>
+  </ul>
+  <p>This gives a total of 36 shuffled cards for setup, and 40 shuffled
+  cards as the playable deck.</p>
 
   <h2>The connection rule</h2>
   <p>When connectors of the same colour meet across an edge separating two
@@ -159,42 +166,55 @@
   <div id="ruleJunctionDiagram" class="ruleDiagramRow"></div>
 
   <h2>Setup</h2>
-  <p>Fill the board with a random mix of Straight and Bend cards, with no
-  Roadworks at setup. Check the board once: any space already connected to
-  both supplies becomes a house immediately.</p>
+  <p>Fill the board with the 36 shuffled setup cards. Check the board
+  once. Any space already connected to both supplies becomes a house
+  immediately.</p>
 
-  <h2>Houses</h2>
+  <h2>Houses and control</h2>
   <p>Houses are built when a space first connects to both red and blue
   supply. The player on whose turn this happens henceforth controls the
   space beneath the house (indicated by red or blue shading). A house
   built at setup stays neutral for the rest of the game. A house is
-  permanent once created, even if it is later disconnected from supply.
-  Roadworks can never strike a space that's already a house.</p>
+  permanent once built, even if it is later disconnected from supply. If
+  a Roadworks card lands on a house it has no effect.</p>
 
-  <h2>Your turn</h2>
-  <p>Play alternates, Red first.</p>
-  <p><b>Draw a card.</b></p>
-  <p><b>If it's Roadworks:</b> the card lands on a random space, you can't
-  change it.</p>
-  <p><b>If it's a Straight or Bend:</b> choose any space not controlled by
-  the other player, and place the card there, in its printed orientation.</p>
-  <p>You can try out many spaces and see the resulting impact on the power
-  and water flows. Once you are ready to commit, click the active card.</p>
+  <h2>Play</h2>
+  <p>Play alternates, Red first. In 1-player games the player is Red and
+  the computer is Blue.</p>
+  <p>The row of 8 icons shows the upcoming cards. Both players use the
+  same deck. The rightmost card is the current active card. Once a
+  player plays their card, the entire row moves one step to the right. In
+  the last few rounds, fewer than 8 cards remain in the deck, so this row
+  shrinks; the very last card is used on the final turn of the game.</p>
+  <p>To play on your turn, click any space on the board to try the
+  current active card there and see what it does. You can try out as
+  many spaces as you like. The Roadworks card lands on a random space,
+  you can't change it (ouch!). If a Roadworks card lands on a house it
+  has no effect. The current chosen space is always highlighted by an
+  orange border. Click the chosen space again to confirm your move and
+  complete your turn.</p>
+  <p>Once the card is played, the row of upcoming cards moves one step to
+  the right. The current active card is updated and the next player
+  plays their turn.</p>
 
-  <h2>Revenue</h2>
-  <p>After every turn, both players earn one point for every house
-  currently connected to their own colour.</p>
+  <h2>Scoring</h2>
+  <p>Each round consists of one red player move and one blue player move.
+  Once a player completes their turn, the total number of houses
+  connected to each colour is tallied. The red total is added to the
+  current red score, and the blue total is added to the current blue
+  score. Both players' scores are simultaneously updated after every
+  turn, so scores go up twice each round.</p>
 
   <h2>Winning</h2>
-  <p>After 20 rounds, whoever has the higher revenue wins. Equal revenue is
-  a tie.</p>
+  <p>After 20 rounds, whoever has the higher score wins. Equal score is a
+  tie.</p>
 
   <h2>Notes</h2>
   <p>Building houses early is important, because it gives you control of
-  the underlying space. A house connected to both red and blue is neutral,
-  since it earns revenue for both players. A player can gain by
-  disconnecting a house from the opponent's supply, or reconnecting a house
-  to their own.</p>
+  the underlying space. A house connected to both red and blue is
+  neutral, since it earns revenue for both players. A player can gain by
+  disconnecting a house from the opponent's supply, or reconnecting a
+  house to their own.</p>
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
@@ -292,27 +312,28 @@ function edgesOf(tile){
 
 let board, house, owner, revenue, turn, currentDraw, upcomingTiles, roundNum, gameOver;
 
-const REAL_DRAWS = [
-  {kind:'S', rot:0}, {kind:'S', rot:1},
-  {kind:'B', rot:0}, {kind:'B', rot:1}, {kind:'B', rot:2}, {kind:'B', rot:3},
-];
-
-function randomDraw(){
-  // 8-card deck: 2 Straight, 4 Bend, 2 Roadworks -- each of the 8 equally likely.
-  const roll = Math.floor(Math.random()*8);
-  if (roll < 2) return {kind:'S', rot: roll};
-  if (roll < 6) return {kind:'B', rot: roll-2};
-  return {kind:'X', rot:0};
-}
-function randomBoardTile(){
-  return REAL_DRAWS[Math.floor(Math.random()*REAL_DRAWS.length)];
+function buildSetupDeck(){
+  const setupDeck = [];
+  for (let i=0;i<6;i++) setupDeck.push({kind:'S', rot:0});
+  for (let i=0;i<6;i++) setupDeck.push({kind:'S', rot:1});
+  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:0});
+  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:1});
+  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:2});
+  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:3});
+  for (let i=setupDeck.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [setupDeck[i],setupDeck[j]] = [setupDeck[j],setupDeck[i]];
+  }
+  return setupDeck;
 }
 
 function freshGame(){
+  const setupDeck = buildSetupDeck();
   board = [];
+  let setupIdx = 0;
   for (let r=0;r<N;r++){
     const row=[];
-    for (let c=0;c<N;c++){ row.push(randomBoardTile()); }
+    for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
     board.push(row);
   }
   house = Array.from({length:N},()=>Array(N).fill(false));
@@ -631,16 +652,46 @@ const STAGE_DELAY_MS = 800;
 
 const VISIBLE_TILES = 8;
 
+let deck = [];
+let deckPos = 0;
+
+function buildAndShuffleDeck(){
+  deck = [];
+  for (let i=0;i<6;i++) deck.push({kind:'S', rot:0});
+  for (let i=0;i<6;i++) deck.push({kind:'S', rot:1});
+  for (let i=0;i<6;i++) deck.push({kind:'B', rot:0});
+  for (let i=0;i<6;i++) deck.push({kind:'B', rot:1});
+  for (let i=0;i<6;i++) deck.push({kind:'B', rot:2});
+  for (let i=0;i<6;i++) deck.push({kind:'B', rot:3});
+  for (let i=0;i<4;i++) deck.push({kind:'X', rot:0});
+  // Fisher-Yates shuffle, fixed once at the start of play.
+  for (let i=deck.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]] = [deck[j],deck[i]];
+  }
+  deckPos = 0;
+}
+
+function nextDeckCard(){
+  if (deckPos >= deck.length) return null;
+  return deck[deckPos++];
+}
+
 function initTileQueue(){
+  buildAndShuffleDeck();
   upcomingTiles = [];
-  for (let i=0;i<VISIBLE_TILES;i++) upcomingTiles.push(randomDraw());
+  for (let i=0;i<VISIBLE_TILES;i++){
+    const card = nextDeckCard();
+    if (card) upcomingTiles.unshift(card);
+  }
   currentDraw = upcomingTiles[upcomingTiles.length-1];
 }
 
 function advanceTileQueue(){
   upcomingTiles.pop();
-  upcomingTiles.unshift(randomDraw());
-  currentDraw = upcomingTiles[upcomingTiles.length-1];
+  const card = nextDeckCard();
+  if (card) upcomingTiles.unshift(card);
+  if (upcomingTiles.length > 0) currentDraw = upcomingTiles[upcomingTiles.length-1];
 }
 
 function beginTurn(){
@@ -751,8 +802,11 @@ canvas.addEventListener('click', (e)=>{
   if (r<0||r>=N||c<0||c>=N) return;
 
   if (currentDraw.kind === 'X'){
-    // Roadworks: the space is already fixed, any board click just confirms.
-    if (pendingSquare) commitTurn();
+    // Roadworks: the space is already fixed, but you still must click
+    // that same highlighted space to confirm, same as any other card.
+    if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
+      commitTurn();
+    }
     return;
   }
 
@@ -868,10 +922,12 @@ function drawInfoIcon(ctx, s){
   ctx.fillRect(cx - s*0.07, s*0.46, s*0.14, s*0.32);
 }
 
-const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. Both " +
-  "players use the same deck. The rightmost card is the current active " +
-  "card. Once a player plays their card, the entire row moves one step to " +
-  "the right.";
+const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
+  "Both players use the same deck. The rightmost card is the current " +
+  "active card. Once a player plays their card, the entire row moves " +
+  "one step to the right. In the last few rounds, fewer than 8 cards " +
+  "remain in the deck, so this row shrinks; the very last card is used " +
+  "on the final turn of the game.";
 
 const HOW_TO_PLAY_TEXT = "To play on your turn, click any space on the " +
   "board to try the current active card there and see what it does. You " +
