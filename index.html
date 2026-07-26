@@ -185,13 +185,15 @@
   player plays their card, the entire row moves one step to the right. In
   the last few rounds, fewer than 8 cards remain in the deck, so this row
   shrinks; the very last card is used on the final turn of the game.</p>
-  <p>To play on your turn, click a space on the board to place the
-  active card and see what it does. You can try out as many spaces as
-  you like. The Roadworks card lands on a random space, you can't
-  change it (ouch!). If Roadworks lands on a house, it destroys the
-  house completely (double ouch!). The current chosen space is always
-  highlighted by an orange border. Click the chosen space again to
-  confirm your move and complete your turn.</p>
+  <p>To play your turn, click a space on the board to place the active
+  card and see what it does. You can try out as many spaces as you
+  like, except the exact space on which the other player just played
+  (which is greyed out).
+  If the active card is Roadworks, it lands on a random space, you
+  can't choose where (ouch!). If Roadworks lands on a house, it
+  destroys the house completely (double ouch!). The current chosen
+  space is always highlighted by an orange border. Click the chosen
+  space again to confirm your move and complete your turn.</p>
   <p>Once the card is played, the row of upcoming cards moves one step to
   the right. The current active card is updated and the next player
   plays their turn.</p>
@@ -550,6 +552,10 @@ function render(){
     const px = BAND + c*SIZE, py = BAND + r*SIZE;
     ctx.fillStyle='white'; ctx.fillRect(px,py,SIZE,SIZE);
 
+    if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c){
+      ctx.fillStyle='rgba(120,120,120,0.35)'; ctx.fillRect(px,py,SIZE,SIZE);
+    }
+
     drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
 
     if (house[r][c] || (redC[r][c] && blueC[r][c])){
@@ -614,6 +620,7 @@ function showMsg(t){ document.getElementById('msg').textContent = t; setTimeout(
 
 let pendingSquare = null;
 let previewSavedTile = null;
+let lastPlayedSquare = null;
 
 function applyHouseAndRevenue(){
   const {redC, blueC} = connectivity();
@@ -716,6 +723,7 @@ function beginTurn(){
 }
 
 function commitTurn(){
+  lastPlayedSquare = pendingSquare ? [pendingSquare[0], pendingSquare[1]] : null;
   pendingSquare = null;
   previewSavedTile = null;
   advanceTileQueue();
@@ -738,6 +746,7 @@ function aiChooseSquare(color, drawTile){
   const decay = Math.max(0, (TOTAL_ROUNDS - roundNum) / TOTAL_ROUNDS);
   let bestVal = -Infinity, best = null;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c) continue;
     const saved = board[r][c];
     const wasHouseBefore = house[r][c];
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
@@ -804,6 +813,10 @@ canvas.addEventListener('click', (e)=>{
 
   if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
     commitTurn();
+    return;
+  }
+
+  if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c){
     return;
   }
 
@@ -923,13 +936,16 @@ const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
   "remain in the deck, so this row shrinks; the very last card is used " +
   "on the final turn of the game.";
 
-const HOW_TO_PLAY_TEXT = "To play on your turn, click a space on the " +
-  "board to place the active card and see what it does. You can try " +
-  "out as many spaces as you like. The Roadworks card lands on a " +
-  "random space, you can't change it (ouch!). If Roadworks lands on a " +
-  "house, it destroys the house completely (double ouch!). The current " +
-  "chosen space is always highlighted by an orange border. Click the " +
-  "chosen space again to confirm your move and complete your turn.";
+const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
+  "to place the active card and see what it does. You can try out as " +
+  "many spaces as you like, except the exact space on which the other " +
+  "player just played (which is greyed out). If the active card is " +
+  "Roadworks, it lands on a " +
+  "random space, you can't choose where (ouch!). If Roadworks lands on " +
+  "a house, it destroys the house completely (double ouch!). The " +
+  "current chosen space is always highlighted by an orange border. " +
+  "Click the chosen space again to confirm your move and complete " +
+  "your turn.";
 
 const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "connects to both red and blue supply. The player on whose turn this " +
