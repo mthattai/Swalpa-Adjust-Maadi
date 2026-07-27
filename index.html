@@ -85,6 +85,7 @@
     <div class="legendItem"><canvas id="legRed" width="26" height="26"></canvas><div class="label">Power</div></div>
     <div class="legendItem"><canvas id="legBlue" width="26" height="26"></canvas><div class="label">Water</div></div>
     <div class="legendItem"><canvas id="legRoad" width="26" height="26"></canvas><div class="label">Roadworks</div></div>
+    <div class="legendItem"><canvas id="legPark" width="26" height="26"></canvas><div class="label">Park</div></div>
     <div class="legendItem"><canvas id="legHouse" width="26" height="26"></canvas><div class="label">House</div></div>
   </div>
   <div id="infoBtnGrid">
@@ -137,20 +138,24 @@
   a connection reaching it is directly supplied.</p>
 
   <h2>The deck</h2>
-  <p>There are 7 card types.</p>
+  <p>There are 8 card types.</p>
   <ul>
     <li><b>Straight</b> (2 possible orientations): red and blue
     connectors, perpendicular to each other.</li>
     <li><b>Bend</b> (4 possible orientations): red and blue L-shaped
     connectors, on opposite corners.</li>
-    <li><b>Roadworks</b> (orientation irrelevant): a blank card.</li>
+    <li><b>Roadworks</b> (orientation irrelevant): a yellow triangle
+    and no connectors.</li>
+    <li><b>Park</b> (orientation irrelevant): a tree and no
+    connectors.</li>
   </ul>
   <div id="ruleTileDiagram" class="ruleDiagramRow"></div>
   <p>The deck consists of:</p>
   <ul>
-    <li>6x6 copies of the Straight/Bend cards for setup.</li>
+    <li>5x6 copies of the Straight/Bend cards for setup.</li>
+    <li>6 Park cards for setup.</li>
     <li>6x6 copies of the Straight/Bend cards for play.</li>
-    <li>4 copies of Roadworks cards for play.</li>
+    <li>4 Roadworks cards for play.</li>
   </ul>
   <p>This gives a total of 36 shuffled cards for setup, and 40 shuffled
   cards as the playable deck.</p>
@@ -167,15 +172,21 @@
   once. Any space already connected to both supplies becomes a house
   immediately.</p>
 
+  <h2>Parks</h2>
+  <p>Six of the 36 setup spaces are Parks. Neither player may place a
+  card on a Park. Roadworks can still strike a Park like any other
+  space, destroying it. Once that happens, the space is open for play
+  like any other.</p>
+
   <h2>Houses and control</h2>
   <p>Houses are built when an empty space first connects to both red and
-  blue supply. The player on whose turn this happens henceforth earns
+  blue supply. The player on whose turn this happens can henceforth earn
   revenue from that house, indicated by the roof of the house being in
   their colour. Houses built at setup are not allocated to either
   player. At each turn, each player earns revenue from houses in their
-  colour that are connected to both red and blue supply. If Roadworks
-  destroys a house, a new house can be built and claimed on that
-  space.</p>
+  colour that are simultaneously connected to both red and blue supply
+  (see "How to score"). If Roadworks destroys a Park or house, a new
+  house can be built and claimed on that space.</p>
 
   <h2>Play</h2>
   <p>Play alternates, Player 1 first. In 1-player games the human is
@@ -186,14 +197,14 @@
   the last few rounds, fewer than 8 cards remain in the deck, so this row
   shrinks; the very last card is used on the final turn of the game.</p>
   <p>To play your turn, click a space on the board to place the active
-  card and see what it does. You can try out as many spaces as you
-  like, except the exact space on which the other player just played
-  (which is greyed out).
-  If the active card is Roadworks, it lands on a random space, you
-  can't choose where (ouch!). If Roadworks lands on a house, it
-  destroys the house completely (double ouch!). The current chosen
-  space is always highlighted by an orange border. Click the chosen
-  space again to confirm your move and complete your turn.</p>
+  card there and see what it does. You can try out as many spaces as
+  you like except for Parks, and the space the other player just
+  played on (which is greyed out). If the active card is Roadworks it
+  lands on a random space, you can't choose where. Roadworks destroys
+  any Park or house it lands on (ouch!), leaving the space up for
+  grabs in subsequent turns. The current chosen space is always
+  highlighted by an orange border. Click the chosen space again to
+  confirm your move and complete your turn.</p>
   <p>Once the card is played, the row of upcoming cards moves one step to
   the right. The current active card is updated and the next player
   plays their turn.</p>
@@ -309,12 +320,13 @@ let board, house, owner, revenue, turn, currentDraw, upcomingTiles, roundNum, ga
 
 function buildSetupDeck(){
   const setupDeck = [];
-  for (let i=0;i<6;i++) setupDeck.push({kind:'S', rot:0});
-  for (let i=0;i<6;i++) setupDeck.push({kind:'S', rot:1});
-  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:0});
-  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:1});
-  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:2});
-  for (let i=0;i<6;i++) setupDeck.push({kind:'B', rot:3});
+  for (let i=0;i<5;i++) setupDeck.push({kind:'S', rot:0});
+  for (let i=0;i<5;i++) setupDeck.push({kind:'S', rot:1});
+  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:0});
+  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:1});
+  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:2});
+  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:3});
+  for (let i=0;i<6;i++) setupDeck.push({kind:'P', rot:0});
   for (let i=setupDeck.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
     [setupDeck[i],setupDeck[j]] = [setupDeck[j],setupDeck[i]];
@@ -462,6 +474,19 @@ function drawTileOn(targetCtx, px, py, size, tile, redSupplied, blueSupplied){
     targetCtx.beginPath();
     targetCtx.arc(cx, cy + s*0.10, s*0.04, 0, 2*Math.PI);
     targetCtx.fill();
+  } else if (tile.kind==='P'){
+    targetCtx.fillStyle = '#CFE8C4';
+    targetCtx.fillRect(px, py, s, s);
+    const cx = px + s*0.5, cy = py + s*0.5;
+    targetCtx.fillStyle = '#7A5230';
+    targetCtx.fillRect(cx - s*0.035, cy + s*0.04, s*0.07, s*0.20);
+    targetCtx.fillStyle = '#4C8C4A';
+    targetCtx.beginPath();
+    targetCtx.arc(cx, cy - s*0.10, s*0.24, 0, 2*Math.PI);
+    targetCtx.fill();
+    targetCtx.strokeStyle = '#2F5E2D';
+    targetCtx.lineWidth = s*0.03;
+    targetCtx.stroke();
   }
 }
 
@@ -753,6 +778,7 @@ function aiChooseSquare(color, drawTile){
   let bestVal = -Infinity, best = null;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c) continue;
+    if (board[r][c].kind === 'P') continue;
     const saved = board[r][c];
     const wasHouseBefore = house[r][c];
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
@@ -826,6 +852,10 @@ canvas.addEventListener('click', (e)=>{
     return;
   }
 
+  if (board[r][c].kind === 'P'){
+    return;
+  }
+
   if (pendingSquare){
     board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
   }
@@ -873,9 +903,7 @@ function smallTileCanvas(container, tile, labelText){
   cnv.width = psize; cnv.height = psize;
   const pctx = cnv.getContext('2d');
   pctx.fillStyle = 'white'; pctx.fillRect(0,0,psize,psize);
-  if (tile.kind !== 'X'){
-    drawTileOn(pctx, 2, 2, psize-4, tile, true, true);
-  }
+  drawTileOn(pctx, 2, 2, psize-4, tile, true, true);
   pctx.strokeStyle = '#999'; pctx.lineWidth = 1; pctx.strokeRect(1,1,psize-2,psize-2);
   wrap.appendChild(cnv);
   const lbl = document.createElement('div');
@@ -891,12 +919,15 @@ function renderRuleDiagrams(){
     smallTileCanvas(tileArea, {kind:'S', rot:0}, 'Straight');
     smallTileCanvas(tileArea, {kind:'B', rot:0}, 'Bend');
     smallTileCanvas(tileArea, {kind:'X', rot:0}, 'Roadworks');
+    smallTileCanvas(tileArea, {kind:'P', rot:0}, 'Park');
   }
   const juncArea = document.getElementById('ruleJunctionDiagram');
   if (juncArea.childNodes.length === 0){
+    const wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
     const cnv = document.createElement('canvas');
     const tsize = 78;
-    cnv.width = tsize*3; cnv.height = tsize + 40;
+    cnv.width = tsize*3; cnv.height = tsize;
     const pctx = cnv.getContext('2d');
     pctx.fillStyle = 'white'; pctx.fillRect(0,0,cnv.width,cnv.height);
     // Tile A: straight, red N-S, blue E-W (east=blue)
@@ -907,10 +938,12 @@ function renderRuleDiagrams(){
     drawTileOn(pctx, tsize*2, 0, tsize, {kind:'B', rot:1}, true, true);
     pctx.strokeStyle = '#999'; pctx.lineWidth = 1;
     for (let i=0;i<3;i++) pctx.strokeRect(i*tsize+1, 1, tsize-2, tsize-2);
-    pctx.fillStyle = '#555'; pctx.font = '10px sans-serif'; pctx.textAlign = 'center';
-    pctx.fillText('blue meets blue: connected', tsize*1.5, tsize+16);
-    pctx.fillText('red meets blue: not connected', tsize*1.5, tsize+32);
-    juncArea.appendChild(cnv);
+    wrap.appendChild(cnv);
+    const lbl = document.createElement('div');
+    lbl.style.fontSize = '11px'; lbl.style.color = '#555'; lbl.style.marginTop = '4px';
+    lbl.innerHTML = 'blue meets blue: connected<br>red meets blue: not connected';
+    wrap.appendChild(lbl);
+    juncArea.appendChild(wrap);
   }
 }
 
@@ -923,6 +956,8 @@ function renderTitleAndLegend(){
   const roadCtx = document.getElementById('legRoad').getContext('2d');
   roadCtx.fillStyle='white'; roadCtx.fillRect(0,0,26,26);
   drawTileOn(roadCtx, 0, 0, 26, {kind:'X', rot:0}, true, true);
+  const parkCtx = document.getElementById('legPark').getContext('2d');
+  drawTileOn(parkCtx, 0, 0, 26, {kind:'P', rot:0}, true, true);
   drawHouseShape(document.getElementById('legHouse').getContext('2d'), 13, 15, 22, true, true);
 }
 
@@ -943,24 +978,24 @@ const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
   "on the final turn of the game.";
 
 const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
-  "to place the active card and see what it does. You can try out as " +
-  "many spaces as you like, except the exact space on which the other " +
-  "player just played (which is greyed out). If the active card is " +
-  "Roadworks, it lands on a " +
-  "random space, you can't choose where (ouch!). If Roadworks lands on " +
-  "a house, it destroys the house completely (double ouch!). The " +
-  "current chosen space is always highlighted by an orange border. " +
-  "Click the chosen space again to confirm your move and complete " +
-  "your turn.";
+  "to place the active card there and see what it does. You can try " +
+  "out as many spaces as you like except for Parks, and the space the " +
+  "other player just played on (which is greyed out). If the active " +
+  "card is Roadworks it lands on a random space, you can't choose " +
+  "where. Roadworks destroys any Park or house it lands on (ouch!), " +
+  "leaving the space up for grabs in subsequent turns. The current " +
+  "chosen space is always highlighted by an orange border. Click the " +
+  "chosen space again to confirm your move and complete your turn.";
 
 const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "connects to both red and blue supply. The player on whose turn this " +
-  "happens henceforth earns revenue from that house, indicated by the " +
-  "roof of the house being in their colour. Houses built at setup are " +
-  "not allocated to either player. At each turn, each player earns " +
-  "revenue from houses in their colour that are connected to both red " +
-  "and blue supply (see \"How to score\"). If Roadworks destroys a " +
-  "house, a new house can be built and claimed on that space.";
+  "happens can henceforth earn revenue from that house, indicated by " +
+  "the roof of the house being in their colour. Houses built at setup " +
+  "are not allocated to either player. At each turn, each player earns " +
+  "revenue from houses in their colour that are simultaneously " +
+  "connected to both red and blue supply (see \"How to score\"). If " +
+  "Roadworks destroys a Park or house, a new house can be built and " +
+  "claimed on that space.";
 
 const HOW_TO_SCORE_TEXT = "Each round consists of one Player 1 move and " +
   "one Player 2 move. After every turn, each player earns one point for " +
