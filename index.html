@@ -49,6 +49,9 @@
   #new1pBtn, #new2pBtn, #rulesBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
   .btnRow { display:flex; gap:8px; }
+  #digUpRow { margin-top:18px; }
+  #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px; border:none;
+              background:#C0392B; color:white; cursor:pointer; }
   #msg { font-size:12px; color:#a33; min-height:16px; }
   #rulesPage { display:none; max-width:560px; margin:0 auto; padding:8px 4px 40px; text-align:left; }
   #rulesPage h1 { font-size:22px; margin:8px 0 2px; }
@@ -71,41 +74,44 @@
 </head>
 <body>
 <div id="gameTitle">
-  <div id="titleRow">
-    <h1>Swalpa adjust maadi</h1>
+  <div id="preLaunchBox">
+    <div id="titleRow">
+      <h1>Swalpa adjust maadi</h1>
+    </div>
+    <p id="tagline">Bengalurina prema kathe</p>
+    <p id="motivation">Two contractors operate in a Bangalore neighbourhood.
+    Each is trying to supply power and water to as many houses as possible,
+    without much concern for how their actions affect the other. Meanwhile,
+    roads are constantly dug up for Metro work, VIP visits, and floods,
+    wreaking havoc on the infrastructure. The city's residents are left to
+    deal with unpredictable power and water, and must suffer in silence.</p>
+    <div id="digUpRow"><button id="digUpBtn">Let's dig up the road!</button></div>
   </div>
-  <p id="tagline">Bengalurina prema kathe</p>
-  <p id="motivation">Two contractors operate in a Bangalore neighbourhood.
-  Each is trying to supply power and water to as many houses as possible,
-  without much concern for how their actions affect the other. Meanwhile,
-  roads are constantly dug up for Metro work, VIP visits, and floods,
-  wreaking havoc on the infrastructure. The city's residents are left to
-  deal with unpredictable power and water, and must suffer in silence.</p>
-  <div id="legendRow">
+  <div id="legendRow" style="display:none;">
     <div class="legendItem"><canvas id="legRed" width="26" height="26"></canvas><div class="label">Power</div></div>
     <div class="legendItem"><canvas id="legBlue" width="26" height="26"></canvas><div class="label">Water</div></div>
     <div class="legendItem"><canvas id="legRoad" width="26" height="26"></canvas><div class="label">Roadworks</div></div>
     <div class="legendItem"><canvas id="legPark" width="26" height="26"></canvas><div class="label">Park</div></div>
     <div class="legendItem"><canvas id="legHouse" width="26" height="26"></canvas><div class="label">House</div></div>
   </div>
-  <div id="infoBtnGrid">
+  <div id="infoBtnGrid" style="display:none;">
     <button id="deckRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> Deck rules</button>
     <button id="howToPlayBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to play</button>
     <button id="houseRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> House rules</button>
     <button id="howToScoreBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to score</button>
   </div>
   <div id="infoPopup" style="display:none;"></div>
-  <div id="roundNum">Round 1/20</div>
-  <div id="tileRow"></div>
+  <div id="roundNum" style="display:none;">Round 1/20</div>
+  <div id="tileRow" style="display:none;"></div>
 </div>
 <div id="app">
-  <canvas id="board"></canvas>
-  <div id="scoreRow">
+  <canvas id="board" style="display:none;"></canvas>
+  <div id="scoreRow" style="display:none;">
     <div class="scoreBox scoreR" id="scoreR"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
     <div class="scoreBox scoreB" id="scoreB"><div class="num">0</div><div class="lbl">PLAYER 2</div></div>
   </div>
-  <div id="msg"></div>
-  <div class="btnRow">
+  <div id="msg" style="display:none;"></div>
+  <div class="btnRow" style="display:none;">
     <button id="new2pBtn">New 2-player game</button>
     <button id="new1pBtn">New 1-player game</button>
     <button id="rulesBtn">Rules</button>
@@ -650,6 +656,7 @@ function renderDrawArea(){
 function showMsg(t){ document.getElementById('msg').textContent = t; setTimeout(()=>{ document.getElementById('msg').textContent=''; }, 1800); }
 
 let pendingSquare = null;
+let inPreLaunch = true;
 let previewSavedTile = null;
 let lastPlayedSquare = null;
 
@@ -883,6 +890,19 @@ document.getElementById('rulesBtn').onclick = () => {
   renderRuleDiagrams();
   window.scrollTo(0,0);
 };
+function exitPreLaunch(){
+  inPreLaunch = false;
+  document.getElementById('preLaunchBox').style.display = 'none';
+  document.getElementById('legendRow').style.display = 'flex';
+  document.getElementById('infoBtnGrid').style.display = 'grid';
+  document.getElementById('roundNum').style.display = 'block';
+  document.getElementById('tileRow').style.display = 'flex';
+  document.getElementById('board').style.display = 'block';
+  document.getElementById('scoreRow').style.display = 'flex';
+  document.getElementById('msg').style.display = 'block';
+  document.querySelector('.btnRow').style.display = 'flex';
+}
+
 function backToGame(){
   document.getElementById('rulesPage').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
@@ -947,8 +967,9 @@ function renderRuleDiagrams(){
   }
 }
 
-document.getElementById('new2pBtn').onclick = () => { vsComputerOn = false; freshGame(); };
-document.getElementById('new1pBtn').onclick = () => { vsComputerOn = true; freshGame(); };
+document.getElementById('new2pBtn').onclick = () => { vsComputerOn = false; exitPreLaunch(); freshGame(); };
+document.getElementById('new1pBtn').onclick = () => { vsComputerOn = true; exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { vsComputerOn = false; exitPreLaunch(); freshGame(); };
 
 function renderTitleAndLegend(){
   drawLightningBolt(document.getElementById('legRed').getContext('2d'), 26, RED_DARK);
@@ -1024,8 +1045,6 @@ document.querySelectorAll('.infoIcon').forEach(cnv => {
 });
 
 renderTitleAndLegend();
-
-freshGame();
 </script>
 </body>
 </html>
