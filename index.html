@@ -48,6 +48,7 @@
   #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
   #new1pBtn, #new2pBtn, #rulesBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
+  #new1pBtn.modeActive, #new2pBtn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
   #digUpRow { margin-top:18px; }
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px; border:none;
@@ -64,12 +65,6 @@
                        background:white; color:#444; cursor:pointer; margin:8px 0; }
   .ruleDiagramRow { display:flex; gap:10px; justify-content:center; margin:10px 0 14px; flex-wrap:wrap; }
   .ruleDiagramRow canvas { border:1px solid #ccc; border-radius:4px; }
-  #overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6);
-             display:none; align-items:center; justify-content:center; }
-  #overlay .card { background:white; border-radius:10px; padding:24px; max-width:340px; text-align:center; }
-  #overlay .card h3 { margin-top:0; }
-  #overlay button { margin-top:14px; padding:8px 16px; border-radius:6px; border:none; background:#333;
-                     color:white; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -231,14 +226,6 @@
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
 </div>
 
-<div id="overlay">
-  <div class="card">
-    <h3 id="overlayTitle">Game Over</h3>
-    <div id="overlayText"></div>
-    <button id="overlayClose">Close</button>
-  </div>
-</div>
-
 <script>
 window.onerror = function(msg, url, line, col, error){
   const box = document.createElement('div');
@@ -355,12 +342,12 @@ function freshGame(){
   turn = 'R';
   roundNum = 1;
   gameOver = false;
+  lastPlayedSquare = null;
 
   const {redC, blueC} = connectivity();
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (redC[r][c] && blueC[r][c]) house[r][c] = true;
   }
-  document.getElementById('overlay').style.display = 'none';
   initTileQueue();
   beginTurn();
 }
@@ -617,8 +604,8 @@ function render(){
 
   document.getElementById('scoreR').querySelector('.num').textContent = revenue.R;
   document.getElementById('scoreB').querySelector('.num').textContent = revenue.B;
-  document.getElementById('scoreR').classList.toggle('active', turn==='R');
-  document.getElementById('scoreB').classList.toggle('active', turn==='B');
+  document.getElementById('scoreR').classList.toggle('active', gameOver || turn==='R');
+  document.getElementById('scoreB').classList.toggle('active', gameOver || turn==='B');
   document.getElementById('roundNum').textContent = `Round ${roundNum}/${TOTAL_ROUNDS}`;
 
   renderDrawArea();
@@ -635,22 +622,29 @@ function renderDrawArea(){
   const borderTotal = VISIBLE_TILES * 2;
   const psize = Math.max(20, Math.min(42, Math.floor((CANVAS_SIZE - gapTotal - borderTotal - 8) / VISIBLE_TILES)));
 
-  upcomingTiles.forEach((tile, idx) => {
-    const isActive = (idx === upcomingTiles.length - 1);
+  const numBlanks = VISIBLE_TILES - upcomingTiles.length;
+  for (let slot=0; slot<VISIBLE_TILES; slot++){
     const cnv = document.createElement('canvas');
     cnv.width = psize; cnv.height = psize;
     const c = cnv.getContext('2d');
-    c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
-    drawTileOn(c, 2, 2, psize-4, tile, true, true);
-    if (isActive){
-      c.strokeStyle='#F1A208'; c.lineWidth=4; c.setLineDash([6,4]);
-      c.strokeRect(3,3,psize-6,psize-6); c.setLineDash([]);
+    if (slot < numBlanks){
+      c.strokeStyle='#ddd'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
     } else {
-      c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
-      cnv.style.opacity = '0.55';
+      const idx = slot - numBlanks;
+      const tile = upcomingTiles[idx];
+      const isActive = (idx === upcomingTiles.length - 1);
+      c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
+      drawTileOn(c, 2, 2, psize-4, tile, true, true);
+      if (isActive){
+        c.strokeStyle='#F1A208'; c.lineWidth=4; c.setLineDash([6,4]);
+        c.strokeRect(3,3,psize-6,psize-6); c.setLineDash([]);
+      } else {
+        c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
+        cnv.style.opacity = '0.55';
+      }
     }
     area.appendChild(cnv);
-  });
+  }
 }
 
 function showMsg(t){ document.getElementById('msg').textContent = t; setTimeout(()=>{ document.getElementById('msg').textContent=''; }, 1800); }
@@ -876,13 +870,9 @@ canvas.addEventListener('click', (e)=>{
 
 function finishGame(){
   gameOver = true;
-  document.getElementById('overlayTitle').textContent = 'Game over';
-  document.getElementById('overlayText').textContent = `Red: ${revenue.R}   Blue: ${revenue.B}`;
-  document.getElementById('overlay').style.display = 'flex';
   render();
 }
 
-document.getElementById('overlayClose').onclick = () => { document.getElementById('overlay').style.display='none'; };
 document.getElementById('rulesBtn').onclick = () => {
   document.getElementById('app').style.display = 'none';
   document.getElementById('gameTitle').style.display = 'none';
@@ -967,9 +957,14 @@ function renderRuleDiagrams(){
   }
 }
 
-document.getElementById('new2pBtn').onclick = () => { vsComputerOn = false; exitPreLaunch(); freshGame(); };
-document.getElementById('new1pBtn').onclick = () => { vsComputerOn = true; exitPreLaunch(); freshGame(); };
-document.getElementById('digUpBtn').onclick = () => { vsComputerOn = false; exitPreLaunch(); freshGame(); };
+document.getElementById('new2pBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('new1pBtn').onclick = () => { vsComputerOn = true; updateModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); exitPreLaunch(); freshGame(); };
+
+function updateModeButtons(){
+  document.getElementById('new2pBtn').classList.toggle('modeActive', !vsComputerOn);
+  document.getElementById('new1pBtn').classList.toggle('modeActive', vsComputerOn);
+}
 
 function renderTitleAndLegend(){
   drawLightningBolt(document.getElementById('legRed').getContext('2d'), 26, RED_DARK);
