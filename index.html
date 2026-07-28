@@ -35,22 +35,24 @@
   .pieceCell.armed { border-color:#222; }
   .pieceCell.disabled { opacity:0.25; cursor:not-allowed; }
   .pieceCell canvas { pointer-events:none; display:block; }
-  #scoreRow { display:flex; gap:20px; margin-top:10px; }
-  .scoreBox { width:100px; height:64px; border-radius:8px; display:flex; flex-direction:column;
+  #scoreRow { display:flex; gap:8px; margin-top:10px; flex-wrap:nowrap; justify-content:center; }
+  .scoreBox { width:76px; height:58px; border-radius:8px; display:flex; flex-direction:column;
               align-items:center; justify-content:center; color:white; border:3px solid transparent;
               opacity:0.35; filter:grayscale(60%); transition:opacity 0.15s, filter 0.15s, transform 0.15s; }
-  .scoreR { background:#8E44AD; }
-  .scoreB { background:#16A085; }
+  .scoreP1 { background:#f9bf1f; }
+  .scoreP2 { background:#7570b3; }
+  .scoreP3 { background:#e7298a; }
+  .scoreP4 { background:#1b9e77; }
   .active { opacity:1; filter:none; border-color:#222;
             box-shadow:0 0 0 3px white, 0 0 0 6px #222; }
   .winner { border-color:#F1C40F !important;
             box-shadow:0 0 0 3px white, 0 0 0 6px #F1C40F !important; }
-  .scoreBox .num { font-size:26px; font-weight:bold; }
+  .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
   #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
-  #new1pBtn, #new2pBtn, #rulesBtn, #size6Btn, #size7Btn, #size8Btn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
+  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #size6Btn, #size7Btn, #size8Btn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
-  #new1pBtn.modeActive, #new2pBtn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive { background:#333; color:white; border-color:#333; }
+  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
   #digUpRow { margin-top:18px; }
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px; border:none;
@@ -76,9 +78,9 @@
       <h1>Swalpa adjust maadi</h1>
     </div>
     <p id="tagline">Bengalurina prema kathe</p>
-    <p id="motivation">Two contractors operate in a Bangalore neighbourhood.
+    <p id="motivation">Competing contractors operate in a Bangalore neighbourhood.
     Each is trying to supply power and water to as many houses as possible,
-    without much concern for how their actions affect the other. Meanwhile,
+    without much concern for how their actions affect the others. Meanwhile,
     roads are constantly dug up for Metro work, VIP visits, and floods,
     wreaking havoc on the infrastructure. The city's residents are left to
     deal with unpredictable power and water, and must suffer in silence.</p>
@@ -104,19 +106,25 @@
 <div id="app">
   <canvas id="board" style="display:none;"></canvas>
   <div id="scoreRow" style="display:none;">
-    <div class="scoreBox scoreR" id="scoreR"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
-    <div class="scoreBox scoreB" id="scoreB"><div class="num">0</div><div class="lbl">PLAYER 2</div></div>
+    <div class="scoreBox scoreP1" id="scoreP1"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
+    <div class="scoreBox scoreP2" id="scoreP2"><div class="num">0</div><div class="lbl">PLAYER 2</div></div>
+    <div class="scoreBox scoreP3" id="scoreP3" style="display:none;"><div class="num">0</div><div class="lbl">PLAYER 3</div></div>
+    <div class="scoreBox scoreP4" id="scoreP4" style="display:none;"><div class="num">0</div><div class="lbl">PLAYER 4</div></div>
   </div>
   <div id="msg" style="display:none;"></div>
-  <div class="btnRow" style="display:none;">
-    <button id="new2pBtn">New 2-player game</button>
-    <button id="new1pBtn">New 1-player game</button>
-    <button id="rulesBtn">Rules</button>
+  <div class="btnRow" id="playerBtnRow" style="display:none;">
+    <button id="p1Btn">1 player</button>
+    <button id="p2Btn">2 player</button>
+    <button id="p3Btn">3 player</button>
+    <button id="p4Btn">4-player</button>
   </div>
   <div class="btnRow" id="sizeBtnRow" style="display:none;">
-    <button id="size6Btn">6x6</button>
-    <button id="size7Btn">7x7</button>
-    <button id="size8Btn">8x8</button>
+    <button id="size6Btn">6x6 board</button>
+    <button id="size7Btn">7x7 board</button>
+    <button id="size8Btn">8x8 board</button>
+  </div>
+  <div class="btnRow" id="rulesBtnRow" style="display:none;">
+    <button id="rulesBtn">Rules</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
 </div>
@@ -126,9 +134,9 @@
   <h1>Swalpa adjust maadi</h1>
   <p class="ruleSub">Bengalurina prema kathe</p>
 
-  <p>Two contractors operate in a Bangalore neighbourhood. Each is trying
+  <p>Competing contractors operate in a Bangalore neighbourhood. Each is trying
   to supply power and water to as many houses as possible, without much
-  concern for how their actions affect the other. Meanwhile, roads are
+  concern for how their actions affect the others. Meanwhile, roads are
   constantly dug up for Metro work, VIP visits, and floods, wreaking havoc
   on the infrastructure. The city's residents are left to deal with
   unpredictable power and water, and must suffer in silence.</p>
@@ -161,12 +169,12 @@
   <ul>
     <li>6/8/10 Park cards with a random selection of Straight/Bend
     cards to make up 36/49/64 cards (for 6x6, 7x7, or 8x8 boards,
-    respectively).</li>
+    respectively). The deck is shuffled before setup.</li>
   </ul>
   <p>The play deck consists of:</p>
   <ul>
-    <li>6x6 copies of the Straight/Bend cards and 4 Roadworks
-    cards.</li>
+    <li>3x6 copies of the Straight/Bend cards and 2 Roadworks cards
+    per player. The deck is shuffled before play.</li>
   </ul>
 
   <h2>The connection rule</h2>
@@ -177,12 +185,12 @@
   <div id="ruleJunctionDiagram" class="ruleDiagramRow"></div>
 
   <h2>Setup</h2>
-  <p>Fill the board with the shuffled setup cards. Check the board
+  <p>Fill the board with the setup cards. Check the board
   once. Any space already connected to both supplies becomes a house
   immediately.</p>
 
   <h2>Parks</h2>
-  <p>Neither player may place a
+  <p>No player may place a
   card on a Park. Roadworks can still strike a Park like any other
   space, destroying it. Once that happens, the space is open for play
   like any other.</p>
@@ -191,23 +199,23 @@
   <p>Houses are built when an empty space first connects to both red and
   blue supply. The player on whose turn this happens can henceforth earn
   revenue from that house, indicated by the roof of the house being in
-  their colour. Houses built at setup are not allocated to either
+  their colour. Houses built at setup are not allocated to any
   player. At each turn, each player earns revenue from houses in their
   colour that are simultaneously connected to both red and blue supply
   (see "How to score"). If Roadworks destroys a Park or house, a new
   house can be built and claimed on that space.</p>
 
   <h2>Play</h2>
-  <p>Play alternates, Player 1 first. In 1-player games the human is
-  Player 1 and the computer is Player 2.</p>
-  <p>The row of 8 icons shows the upcoming cards. Both players use the
+  <p>Player 1 goes first, others follow in turn. In 1-player games the
+  human is Player 1 and the computer is Player 2.</p>
+  <p>The row of 8 icons shows the upcoming cards. All players use the
   same deck. The rightmost card is the current active card. Once a
   player plays their card, the entire row moves one step to the right. In
   the last few rounds, fewer than 8 cards remain in the deck, so this row
   shrinks; the very last card is used on the final turn of the game.</p>
   <p>To play your turn, click a space on the board to place the active
   card there and see what it does. You can try out as many spaces as
-  you like except for Parks, and the space the other player just
+  you like except for Parks, and the space the previous player just
   played on (which is greyed out). If the active card is Roadworks it
   lands on a random space, you can't choose where. Roadworks destroys
   any Park or house it lands on (ouch!), leaving the space up for
@@ -219,12 +227,12 @@
   plays their turn.</p>
 
   <h2>Scoring</h2>
-  <p>Each round consists of one Player 1 move and one Player 2 move. After
+  <p>Each round consists of one move by each player in turn. After
   every turn, each player earns one point for every house in their
   colour that is simultaneously connected to both red and blue supply.
   A house that's only partly connected does not contribute to the
-  score. Both players' totals are checked and updated after every turn,
-  so scores can go up twice each round.</p>
+  score. Each player's total is checked and updated after every turn
+  in a round.</p>
 
   <h2>Winning</h2>
   <p>After 20 rounds, whoever has the higher score wins. Equal score is a
@@ -245,12 +253,16 @@ window.onerror = function(msg, url, line, col, error){
 };
 
 let N = 6;
+let vsComputerOn = true;
+let numPlayers = 1;
+let effectiveN = 2;
 const TOTAL_ROUNDS = 20;
 const WIN_THRESHOLD = 500;
 let SIZE, BAND, INSET, CANVAS_SIZE;
 const RED_DARK = '#C0392B', RED_LIGHT = '#E8B4AC';
 const BLUE_DARK = '#2E86C1', BLUE_LIGHT = '#AED0EA';
-const P1_COLOR = '#8E44AD', P2_COLOR = '#16A085';
+const P1_COLOR = '#f9bf1f', P2_COLOR = '#7570b3', P3_COLOR = '#e7298a', P4_COLOR = '#1b9e77';
+const PLAYER_COLORS = [P1_COLOR, P2_COLOR, P3_COLOR, P4_COLOR];
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -279,6 +291,12 @@ function computeLayout(){
   canvas.style.width = CANVAS_SIZE + 'px'; canvas.style.height = CANVAS_SIZE + 'px';
   document.getElementById('app').style.width = CANVAS_SIZE + 'px';
   document.getElementById('gameTitle').style.width = CANVAS_SIZE + 'px';
+
+  const scoreGap = 8;
+  const scoreBoxWidth = Math.max(50, Math.min(76, Math.floor((CANVAS_SIZE - (effectiveN-1)*scoreGap) / effectiveN)));
+  for (let p=1; p<=4; p++){
+    document.getElementById('scoreP'+p).style.width = scoreBoxWidth + 'px';
+  }
 
   try {
     const fitWidth = CANVAS_SIZE * 0.96;
@@ -350,8 +368,8 @@ function freshGame(){
   }
   house = Array.from({length:N},()=>Array(N).fill(false));
   owner = Array.from({length:N},()=>Array(N).fill(null));
-  revenue = {R:0, B:0};
-  turn = 'R';
+  revenue = {1:0, 2:0, 3:0, 4:0};
+  turn = 1;
   roundNum = 1;
   gameOver = false;
   lastPlayedSquare = null;
@@ -403,8 +421,6 @@ function connectivity(){
   }
   return {redC, blueC};
 }
-
-function otherColor(c){ return c==='R'?'B':'R'; }
 
 function rotatePt(x,y,k){
   x-=0.5; y-=0.5;
@@ -593,8 +609,8 @@ function render(){
       const rSup = redC[r][c], bSup = blueC[r][c];
       const projectedNewHouse = !house[r][c] && rSup && bSup;
       let ownerColor = null;
-      if (owner[r][c] === 'R' || (projectedNewHouse && turn === 'R')) ownerColor = P1_COLOR;
-      else if (owner[r][c] === 'B' || (projectedNewHouse && turn === 'B')) ownerColor = P2_COLOR;
+      const effOwner = owner[r][c] || (projectedNewHouse ? turn : null);
+      if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
       drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup, ownerColor);
     }
 
@@ -614,12 +630,19 @@ function render(){
   ctx.fillRect(0, boardEdge0+INSET, BAND, N*SIZE-2*INSET);
   ctx.fillRect(boardEdgeN, boardEdge0+INSET, BAND, N*SIZE-2*INSET);
 
-  document.getElementById('scoreR').querySelector('.num').textContent = revenue.R;
-  document.getElementById('scoreB').querySelector('.num').textContent = revenue.B;
-  document.getElementById('scoreR').classList.toggle('active', gameOver || turn==='R');
-  document.getElementById('scoreB').classList.toggle('active', gameOver || turn==='B');
-  document.getElementById('scoreR').classList.toggle('winner', gameOver && revenue.R >= revenue.B);
-  document.getElementById('scoreB').classList.toggle('winner', gameOver && revenue.B >= revenue.R);
+  const maxRevenue = Math.max(...Array.from({length:effectiveN}, (_,i) => revenue[i+1]));
+  for (let p=1; p<=4; p++){
+    const box = document.getElementById('scoreP'+p);
+    const numEl = box.querySelector('.num');
+    numEl.textContent = revenue[p];
+    try {
+      fitTextToWidth(numEl, box.offsetWidth * 0.8, 22, 12);
+    } catch (e) {
+      console.error('fitTextToWidth failed for score box, continuing without it:', e);
+    }
+    box.classList.toggle('active', gameOver || turn===p);
+    box.classList.toggle('winner', gameOver && p<=effectiveN && revenue[p] === maxRevenue);
+  }
   document.getElementById('roundNum').textContent = `Round ${roundNum}/${TOTAL_ROUNDS}`;
 
   renderDrawArea();
@@ -684,10 +707,10 @@ function applyHouseAndRevenue(){
 }
 
 function advanceToNextTurn(){
-  const wasBlue = (turn === 'B');
-  turn = otherColor(turn);
+  const wasLastPlayer = (turn === effectiveN);
+  turn = wasLastPlayer ? 1 : turn + 1;
 
-  if (wasBlue){
+  if (wasLastPlayer){
     if (roundNum >= TOTAL_ROUNDS){
       finishGame();
       return;
@@ -706,13 +729,13 @@ let deckPos = 0;
 
 function buildAndShuffleDeck(){
   deck = [];
-  for (let i=0;i<6;i++) deck.push({kind:'S', rot:0});
-  for (let i=0;i<6;i++) deck.push({kind:'S', rot:1});
-  for (let i=0;i<6;i++) deck.push({kind:'B', rot:0});
-  for (let i=0;i<6;i++) deck.push({kind:'B', rot:1});
-  for (let i=0;i<6;i++) deck.push({kind:'B', rot:2});
-  for (let i=0;i<6;i++) deck.push({kind:'B', rot:3});
-  for (let i=0;i<4;i++) deck.push({kind:'X', rot:0});
+  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'S', rot:0});
+  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'S', rot:1});
+  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:0});
+  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:1});
+  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:2});
+  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:3});
+  for (let i=0;i<2*effectiveN;i++) deck.push({kind:'X', rot:0});
   // Fisher-Yates shuffle, fixed once at the start of play.
   for (let i=deck.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
@@ -758,11 +781,11 @@ function beginTurn(){
     }
     pendingSquare = [r,c];
     render();
-    if (vsComputerOn && turn === 'B' && !gameOver){
+    if (vsComputerOn && turn === 2 && !gameOver){
       setTimeout(commitTurn, STAGE_DELAY_MS);
     }
     // else: human's turn -- wait for a click on the tile icon to commit.
-  } else if (vsComputerOn && turn === 'B' && !gameOver){
+  } else if (vsComputerOn && turn === 2 && !gameOver){
     setTimeout(aiPlayTurn, STAGE_DELAY_MS);
   }
   // else: human's turn -- wait for a board click (preview), then tile-icon click to commit.
@@ -782,13 +805,12 @@ function endTurnAndAdvance(){
   setTimeout(advanceToNextTurn, STAGE_DELAY_MS);
 }
 
-let vsComputerOn = false;
 
 const AI_ALPHA = 0.7;
 const AI_BETA = 0.1;
 
 function aiChooseSquare(color, drawTile){
-  const otherC = color==='R' ? 'B' : 'R';
+  const otherC = color===1 ? 2 : 1;
   const decay = Math.max(0, (TOTAL_ROUNDS - roundNum) / TOTAL_ROUNDS);
   let bestVal = -Infinity, best = null;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
@@ -821,7 +843,7 @@ function aiChooseSquare(color, drawTile){
 }
 
 function aiPlayTurn(){
-  if (!vsComputerOn || turn !== 'B' || gameOver) return;
+  if (!vsComputerOn || turn !== 2 || gameOver) return;
   // Stage 1: the new tile is already visible in the draw area at this point.
   // Stage 2: show which square the AI has chosen, before placing anything.
   const [r,c] = aiChooseSquare(turn, currentDraw);
@@ -829,7 +851,7 @@ function aiPlayTurn(){
   render();
 
   setTimeout(() => {
-    if (!vsComputerOn || turn !== 'B' || gameOver){
+    if (!vsComputerOn || turn !== 2 || gameOver){
       pendingSquare = null;
       render();
       return;
@@ -842,7 +864,7 @@ function aiPlayTurn(){
 }
 
 canvas.addEventListener('click', (e)=>{
-  if (gameOver || (vsComputerOn && turn === 'B')) return;
+  if (gameOver || (vsComputerOn && turn === 2)) return;
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
   const x = (e.clientX-rect.left)*scaleX - BAND, y = (e.clientY-rect.top)*scaleY - BAND;
@@ -905,6 +927,13 @@ function exitPreLaunch(){
   document.getElementById('scoreRow').style.display = 'flex';
   document.getElementById('msg').style.display = 'block';
   document.querySelectorAll('.btnRow').forEach(el => { el.style.display = 'flex'; });
+  updateScoreBoxVisibility();
+}
+
+function updateScoreBoxVisibility(){
+  for (let p=1; p<=4; p++){
+    document.getElementById('scoreP'+p).style.display = (p <= effectiveN) ? 'flex' : 'none';
+  }
 }
 
 function backToGame(){
@@ -971,16 +1000,20 @@ function renderRuleDiagrams(){
   }
 }
 
-document.getElementById('new2pBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('new1pBtn').onclick = () => { vsComputerOn = true; updateModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('digUpBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p1Btn').onclick = () => { numPlayers = 1; vsComputerOn = true; effectiveN = 2; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p2Btn').onclick = () => { numPlayers = 2; vsComputerOn = false; effectiveN = 2; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p3Btn').onclick = () => { numPlayers = 3; vsComputerOn = false; effectiveN = 3; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p4Btn').onclick = () => { numPlayers = 4; vsComputerOn = false; effectiveN = 4; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { numPlayers = 1; vsComputerOn = true; effectiveN = 2; computeLayout(); updatePlayerButtons(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size6Btn').onclick = () => { N = 6; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size7Btn').onclick = () => { N = 7; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size8Btn').onclick = () => { N = 8; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
 
-function updateModeButtons(){
-  document.getElementById('new2pBtn').classList.toggle('modeActive', !vsComputerOn);
-  document.getElementById('new1pBtn').classList.toggle('modeActive', vsComputerOn);
+function updatePlayerButtons(){
+  document.getElementById('p1Btn').classList.toggle('modeActive', numPlayers === 1);
+  document.getElementById('p2Btn').classList.toggle('modeActive', numPlayers === 2);
+  document.getElementById('p3Btn').classList.toggle('modeActive', numPlayers === 3);
+  document.getElementById('p4Btn').classList.toggle('modeActive', numPlayers === 4);
 }
 
 function updateSizeButtons(){
@@ -1010,7 +1043,7 @@ function drawInfoIcon(ctx, s){
 }
 
 const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
-  "Both players use the same deck. The rightmost card is the current " +
+  "All players use the same deck. The rightmost card is the current " +
   "active card. Once a player plays their card, the entire row moves " +
   "one step to the right. In the last few rounds, fewer than 8 cards " +
   "remain in the deck, so this row shrinks; the very last card is used " +
@@ -1019,7 +1052,7 @@ const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
 const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
   "to place the active card there and see what it does. You can try " +
   "out as many spaces as you like except for Parks, and the space the " +
-  "other player just played on (which is greyed out). If the active " +
+  "previous player just played on (which is greyed out). If the active " +
   "card is Roadworks it lands on a random space, you can't choose " +
   "where. Roadworks destroys any Park or house it lands on (ouch!), " +
   "leaving the space up for grabs in subsequent turns. The current " +
@@ -1030,18 +1063,18 @@ const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "connects to both red and blue supply. The player on whose turn this " +
   "happens can henceforth earn revenue from that house, indicated by " +
   "the roof of the house being in their colour. Houses built at setup " +
-  "are not allocated to either player. At each turn, each player earns " +
+  "are not allocated to any player. At each turn, each player earns " +
   "revenue from houses in their colour that are simultaneously " +
   "connected to both red and blue supply (see \"How to score\"). If " +
   "Roadworks destroys a Park or house, a new house can be built and " +
   "claimed on that space.";
 
-const HOW_TO_SCORE_TEXT = "Each round consists of one Player 1 move and " +
-  "one Player 2 move. After every turn, each player earns one point for " +
+const HOW_TO_SCORE_TEXT = "Each round consists of one move by each " +
+  "player in turn. After every turn, each player earns one point for " +
   "every house in their colour that is simultaneously connected to " +
   "both red and blue supply. A house that's only partly connected does " +
-  "not contribute to the score. Both players' totals are checked and " +
-  "updated after every turn, so scores can go up twice each round.";
+  "not contribute to the score. Each player's total is checked and " +
+  "updated after every turn in a round.";
 
 function toggleInfoPopup(text){
   const popup = document.getElementById('infoPopup');
