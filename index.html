@@ -43,12 +43,14 @@
   .scoreB { background:#16A085; }
   .active { opacity:1; filter:none; border-color:#222;
             box-shadow:0 0 0 3px white, 0 0 0 6px #222; }
+  .winner { border-color:#F1C40F !important;
+            box-shadow:0 0 0 3px white, 0 0 0 6px #F1C40F !important; }
   .scoreBox .num { font-size:26px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
   #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
-  #new1pBtn, #new2pBtn, #rulesBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
+  #new1pBtn, #new2pBtn, #rulesBtn, #size6Btn, #size7Btn, #size8Btn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
-  #new1pBtn.modeActive, #new2pBtn.modeActive { background:#333; color:white; border-color:#333; }
+  #new1pBtn.modeActive, #new2pBtn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
   #digUpRow { margin-top:18px; }
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px; border:none;
@@ -111,6 +113,11 @@
     <button id="new1pBtn">New 1-player game</button>
     <button id="rulesBtn">Rules</button>
   </div>
+  <div class="btnRow" id="sizeBtnRow" style="display:none;">
+    <button id="size6Btn">6x6</button>
+    <button id="size7Btn">7x7</button>
+    <button id="size8Btn">8x8</button>
+  </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
 </div>
 
@@ -129,37 +136,38 @@
   <h2>Components</h2>
   <ul>
     <li>1 board</li>
-    <li>76 cards in the deck</li>
-    <li>36 House tokens in each player's colour</li>
+    <li>1 setup deck</li>
+    <li>1 play deck</li>
+    <li>House tokens in each player's colour</li>
   </ul>
 
   <h2>The board</h2>
-  <p>A board of 6x6 spaces. Two opposite edges supply power, shown in red;
-  the other two supply water, shown in blue. Any space along an edge with
-  a connection reaching it is directly supplied.</p>
+  <p>A board of 6x6, 7x7, or 8x8 spaces. Two opposite edges supply power,
+  shown in red; the other two supply water, shown in blue. Any space
+  along an edge with a connection reaching it is directly supplied.</p>
 
   <h2>The deck</h2>
   <p>There are 8 card types.</p>
   <ul>
-    <li><b>Straight</b> (2 possible orientations): red and blue
+    <li><b>Straight</b> (2 possible versions): red and blue
     connectors, perpendicular to each other.</li>
-    <li><b>Bend</b> (4 possible orientations): red and blue L-shaped
+    <li><b>Bend</b> (4 possible versions): red and blue L-shaped
     connectors, on opposite corners.</li>
-    <li><b>Roadworks</b> (orientation irrelevant): a yellow triangle
-    and no connectors.</li>
-    <li><b>Park</b> (orientation irrelevant): a tree and no
-    connectors.</li>
+    <li><b>Roadworks</b>: a yellow triangle and no connectors.</li>
+    <li><b>Park</b>: a tree and no connectors.</li>
   </ul>
   <div id="ruleTileDiagram" class="ruleDiagramRow"></div>
-  <p>The deck consists of:</p>
+  <p>The setup deck consists of:</p>
   <ul>
-    <li>5x6 copies of the Straight/Bend cards for setup.</li>
-    <li>6 Park cards for setup.</li>
-    <li>6x6 copies of the Straight/Bend cards for play.</li>
-    <li>4 Roadworks cards for play.</li>
+    <li>6/8/10 Park cards with a random selection of Straight/Bend
+    cards to make up 36/49/64 cards (for 6x6, 7x7, or 8x8 boards,
+    respectively).</li>
   </ul>
-  <p>This gives a total of 36 shuffled cards for setup, and 40 shuffled
-  cards as the playable deck.</p>
+  <p>The play deck consists of:</p>
+  <ul>
+    <li>6x6 copies of the Straight/Bend cards and 4 Roadworks
+    cards.</li>
+  </ul>
 
   <h2>The connection rule</h2>
   <p>When connectors of the same colour meet across an edge separating two
@@ -169,12 +177,12 @@
   <div id="ruleJunctionDiagram" class="ruleDiagramRow"></div>
 
   <h2>Setup</h2>
-  <p>Fill the board with the 36 shuffled setup cards. Check the board
+  <p>Fill the board with the shuffled setup cards. Check the board
   once. Any space already connected to both supplies becomes a house
   immediately.</p>
 
   <h2>Parks</h2>
-  <p>Six of the 36 setup spaces are Parks. Neither player may place a
+  <p>Neither player may place a
   card on a Park. Roadworks can still strike a Park like any other
   space, destroying it. Once that happens, the space is open for play
   like any other.</p>
@@ -236,7 +244,7 @@ window.onerror = function(msg, url, line, col, error){
   return false;
 };
 
-const N = 6;
+let N = 6;
 const TOTAL_ROUNDS = 20;
 const WIN_THRESHOLD = 500;
 let SIZE, BAND, INSET, CANVAS_SIZE;
@@ -312,14 +320,18 @@ function edgesOf(tile){
 let board, house, owner, revenue, turn, currentDraw, upcomingTiles, roundNum, gameOver;
 
 function buildSetupDeck(){
+  const parksConfig = {6:6, 7:8, 8:10};
+  const numParks = parksConfig[N];
+  const numConnectors = N*N - numParks;
+  const orientations = [
+    {kind:'S', rot:0}, {kind:'S', rot:1},
+    {kind:'B', rot:0}, {kind:'B', rot:1}, {kind:'B', rot:2}, {kind:'B', rot:3},
+  ];
   const setupDeck = [];
-  for (let i=0;i<5;i++) setupDeck.push({kind:'S', rot:0});
-  for (let i=0;i<5;i++) setupDeck.push({kind:'S', rot:1});
-  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:0});
-  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:1});
-  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:2});
-  for (let i=0;i<5;i++) setupDeck.push({kind:'B', rot:3});
-  for (let i=0;i<6;i++) setupDeck.push({kind:'P', rot:0});
+  for (let i=0;i<numConnectors;i++){
+    setupDeck.push(orientations[Math.floor(Math.random()*6)]);
+  }
+  for (let i=0;i<numParks;i++) setupDeck.push({kind:'P', rot:0});
   for (let i=setupDeck.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
     [setupDeck[i],setupDeck[j]] = [setupDeck[j],setupDeck[i]];
@@ -606,6 +618,8 @@ function render(){
   document.getElementById('scoreB').querySelector('.num').textContent = revenue.B;
   document.getElementById('scoreR').classList.toggle('active', gameOver || turn==='R');
   document.getElementById('scoreB').classList.toggle('active', gameOver || turn==='B');
+  document.getElementById('scoreR').classList.toggle('winner', gameOver && revenue.R >= revenue.B);
+  document.getElementById('scoreB').classList.toggle('winner', gameOver && revenue.B >= revenue.R);
   document.getElementById('roundNum').textContent = `Round ${roundNum}/${TOTAL_ROUNDS}`;
 
   renderDrawArea();
@@ -890,7 +904,7 @@ function exitPreLaunch(){
   document.getElementById('board').style.display = 'block';
   document.getElementById('scoreRow').style.display = 'flex';
   document.getElementById('msg').style.display = 'block';
-  document.querySelector('.btnRow').style.display = 'flex';
+  document.querySelectorAll('.btnRow').forEach(el => { el.style.display = 'flex'; });
 }
 
 function backToGame(){
@@ -959,11 +973,20 @@ function renderRuleDiagrams(){
 
 document.getElementById('new2pBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('new1pBtn').onclick = () => { vsComputerOn = true; updateModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('digUpBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { vsComputerOn = false; updateModeButtons(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('size6Btn').onclick = () => { N = 6; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('size7Btn').onclick = () => { N = 7; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('size8Btn').onclick = () => { N = 8; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
 
 function updateModeButtons(){
   document.getElementById('new2pBtn').classList.toggle('modeActive', !vsComputerOn);
   document.getElementById('new1pBtn').classList.toggle('modeActive', vsComputerOn);
+}
+
+function updateSizeButtons(){
+  document.getElementById('size6Btn').classList.toggle('modeActive', N === 6);
+  document.getElementById('size7Btn').classList.toggle('modeActive', N === 7);
+  document.getElementById('size8Btn').classList.toggle('modeActive', N === 8);
 }
 
 function renderTitleAndLegend(){
