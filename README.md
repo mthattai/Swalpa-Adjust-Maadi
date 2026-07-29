@@ -54,7 +54,7 @@ No player may place a card on a Park. Roadworks can still strike a Park like any
 
 Houses and control
 
-Houses are built when an empty space first connects to both red and blue supply. The player on whose turn this happens can henceforth earn revenue from that house, indicated by the roof of the house being in their colour. Houses built at setup are not allocated to any player. At each turn, each player earns revenue from houses in their colour that are simultaneously connected to both red and blue supply (see "How to score"). If Roadworks destroys a Park or house, a new house can be built and claimed on that space.
+Houses are built when an empty space first connects to both red and blue supply. The player on whose turn this happens can henceforth earn revenue from that house, indicated by the roof of the house being in their colour. Houses built at setup or at a corner are not allocated to any player. On their turn, each player earns revenue from houses in their colour that are simultaneously connected to both red and blue supply (see "How to score"). If Roadworks destroys a Park or house, a new house can be built and claimed on that space.
 
 
 Play
@@ -70,7 +70,7 @@ Once the card is played, the row of upcoming cards moves one step to the right. 
 
 Scoring
 
-Each round consists of one move by each player in turn. After every turn, each player earns one point for every house in their colour that is simultaneously connected to both red and blue supply. A house that's only partly connected does not contribute to the score. Each player's total is checked and updated after every turn in a round.
+Each round consists of one move by each player in turn. After their  turn, a player earns one point for every house in their colour that is simultaneously connected to both red and blue supply. A house that's only partly connected does not contribute to the score. Each player's total is checked and updated only once in a round, on their  turn.
 
 
 Winning
