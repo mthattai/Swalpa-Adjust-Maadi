@@ -199,11 +199,11 @@
   <p>Houses are built when an empty space first connects to both red and
   blue supply. The player on whose turn this happens can henceforth earn
   revenue from that house, indicated by the roof of the house being in
-  their colour. Houses built at setup are not allocated to any
-  player. At each turn, each player earns revenue from houses in their
-  colour that are simultaneously connected to both red and blue supply
-  (see "How to score"). If Roadworks destroys a Park or house, a new
-  house can be built and claimed on that space.</p>
+  their colour. Houses built at setup or at a corner are not allocated
+  to any player. On their turn, each player earns revenue from houses
+  in their colour that are simultaneously connected to both red and
+  blue supply (see "How to score"). If Roadworks destroys a Park or
+  house, a new house can be built and claimed on that space.</p>
 
   <h2>Play</h2>
   <p>Player 1 goes first, others follow in turn. In 1-player games the
@@ -228,11 +228,11 @@
 
   <h2>Scoring</h2>
   <p>Each round consists of one move by each player in turn. After
-  every turn, each player earns one point for every house in their
+  their turn, a player earns one point for every house in their
   colour that is simultaneously connected to both red and blue supply.
   A house that's only partly connected does not contribute to the
-  score. Each player's total is checked and updated after every turn
-  in a round.</p>
+  score. Each player's total is checked and updated only once in a
+  round, on their turn.</p>
 
   <h2>Winning</h2>
   <p>After 20 rounds, whoever has the higher score wins. Equal score is a
@@ -608,7 +608,7 @@ function render(){
     if (house[r][c] || (redC[r][c] && blueC[r][c])){
       const cx=px+SIZE/2, cy=py+SIZE/2;
       const rSup = redC[r][c], bSup = blueC[r][c];
-      const projectedNewHouse = !house[r][c] && rSup && bSup;
+      const projectedNewHouse = !house[r][c] && rSup && bSup && !isCorner(r,c);
       let ownerColor = null;
       const effOwner = owner[r][c] || (projectedNewHouse ? turn : null);
       if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
@@ -698,16 +698,20 @@ function scheduleIfCurrent(fn, delay){
 let previewSavedTile = null;
 let lastPlayedSquare = null;
 
+function isCorner(r, c){
+  return (r === 0 || r === N-1) && (c === 0 || c === N-1);
+}
+
 function applyHouseAndRevenue(){
   const {redC, blueC} = connectivity();
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (redC[r][c] && blueC[r][c] && !house[r][c]){
       house[r][c] = true;
-      owner[r][c] = turn;
+      if (!isCorner(r,c)) owner[r][c] = turn;
     }
   }
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (owner[r][c] && redC[r][c] && blueC[r][c]){
+    if (owner[r][c] === turn && redC[r][c] && blueC[r][c]){
       revenue[owner[r][c]] += 1;
     }
   }
@@ -830,16 +834,18 @@ function aiChooseSquare(color, drawTile){
     let myScore = 0, oppScore = 0, myTerr = 0;
     for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
       const full = redC[rr][cc] && blueC[rr][cc];
-      let effOwner = owner[rr][cc];
-      if (full && !house[rr][cc] && effOwner === null){
-        effOwner = color; // this placement would newly claim it this turn
+      if (!isCorner(rr,cc)){
+        let effOwner = owner[rr][cc];
+        if (full && !house[rr][cc] && effOwner === null){
+          effOwner = color; // this placement would newly claim it this turn
+        }
+        if (full && effOwner === color) myScore++;
+        else if (full && effOwner === otherC) oppScore++;
       }
-      if (full && effOwner === color) myScore++;
-      else if (full && effOwner === otherC) oppScore++;
       if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
     }
     const diff = myScore - oppScore;
-    const completesHouse = (!wasHouseBefore) && redC[r][c] && blueC[r][c];
+    const completesHouse = (!wasHouseBefore) && !isCorner(r,c) && redC[r][c] && blueC[r][c];
     const val = diff + AI_ALPHA * decay * (completesHouse ? 1 : 0) + AI_BETA * myTerr;
     if (val > bestVal){
       bestVal = val; best = [r,c];
@@ -1073,18 +1079,18 @@ const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "connects to both red and blue supply. The player on whose turn this " +
   "happens can henceforth earn revenue from that house, indicated by " +
   "the roof of the house being in their colour. Houses built at setup " +
-  "are not allocated to any player. At each turn, each player earns " +
-  "revenue from houses in their colour that are simultaneously " +
-  "connected to both red and blue supply (see \"How to score\"). If " +
-  "Roadworks destroys a Park or house, a new house can be built and " +
-  "claimed on that space.";
+  "or at a corner are not allocated to any player. On their turn, " +
+  "each player earns revenue from houses in their colour that are " +
+  "simultaneously connected to both red and blue supply (see \"How to " +
+  "score\"). If Roadworks destroys a Park or house, a new house can be " +
+  "built and claimed on that space.";
 
 const HOW_TO_SCORE_TEXT = "Each round consists of one move by each " +
-  "player in turn. After every turn, each player earns one point for " +
+  "player in turn. After their turn, a player earns one point for " +
   "every house in their colour that is simultaneously connected to " +
   "both red and blue supply. A house that's only partly connected does " +
   "not contribute to the score. Each player's total is checked and " +
-  "updated after every turn in a round.";
+  "updated only once in a round, on their turn.";
 
 function toggleInfoPopup(text){
   const popup = document.getElementById('infoPopup');
