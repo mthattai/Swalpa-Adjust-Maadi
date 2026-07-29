@@ -2,16 +2,22 @@ Swalpa adjust maadi - Bengalurina prema kathe
 
 Competing contractors operate in a Bangalore neighbourhood. Each is trying to supply power and water to as many houses as possible, without much concern for how their actions affect the others. Meanwhile, roads are constantly dug up for Metro work, VIP visits, and floods, wreaking havoc on the infrastructure. The city's residents are left to deal with unpredictable power and water, and must suffer in silence.
 
+
 Components
 
 1 board
+
 1 setup deck
+
 1 play deck
+
 House tokens in each player's colour
+
 
 The board
 
 A board of 6x6, 7x7, or 8x8 spaces. Two opposite edges supply power, shown in red; the other two supply water, shown in blue. Any space along an edge with a connection reaching it is directly supplied.
+
 
 The deck
 
@@ -30,21 +36,26 @@ The play deck consists of:
 
 3x6 copies of the Straight/Bend cards and 2 Roadworks cards per player. The deck is shuffled before play.
 
+
 The connection rule
 
 When connectors of the same colour meet across an edge separating two cards, the corresponding utility (power or water) can flow across it in either direction. Every red or blue path connected all the way back to its supply is a live connection.
+
 
 Setup
 
 Fill the board with the setup cards. Check the board once. Any space already connected to both supplies becomes a house immediately.
 
+
 Parks
 
 No player may place a card on a Park. Roadworks can still strike a Park like any other space, destroying it. Once that happens, the space is open for play like any other.
 
+
 Houses and control
 
 Houses are built when an empty space first connects to both red and blue supply. The player on whose turn this happens can henceforth earn revenue from that house, indicated by the roof of the house being in their colour. Houses built at setup are not allocated to any player. At each turn, each player earns revenue from houses in their colour that are simultaneously connected to both red and blue supply (see "How to score"). If Roadworks destroys a Park or house, a new house can be built and claimed on that space.
+
 
 Play
 
@@ -56,9 +67,11 @@ To play your turn, click a space on the board to place the active card there and
 
 Once the card is played, the row of upcoming cards moves one step to the right. The current active card is updated and the next player plays their turn.
 
+
 Scoring
 
 Each round consists of one move by each player in turn. After every turn, each player earns one point for every house in their colour that is simultaneously connected to both red and blue supply. A house that's only partly connected does not contribute to the score. Each player's total is checked and updated after every turn in a round.
+
 
 Winning
 
