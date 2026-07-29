@@ -29,7 +29,7 @@
   .legendItem .label { font-size:10px; color:#666; text-align:center; }
   .copyright { font-size:10px; color:#aaa; text-align:center; margin-top:14px; }
   #app { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
-  canvas#board { display:block; cursor:pointer; max-width:100%; }
+  canvas#board { display:block; cursor:pointer; max-width:100%; outline:none; }
   .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
                display:flex; align-items:center; justify-content:center; padding:2px; }
   .pieceCell.armed { border-color:#222; }
@@ -690,6 +690,7 @@ function showMsg(t){ document.getElementById('msg').textContent = t; setTimeout(
 let pendingSquare = null;
 let inPreLaunch = true;
 let gameEpoch = 0;
+let awaitingAdvance = false;
 
 function scheduleIfCurrent(fn, delay){
   const epochAtSchedule = gameEpoch;
@@ -778,6 +779,7 @@ function advanceTileQueue(){
 }
 
 function beginTurn(){
+  awaitingAdvance = false;
   pendingSquare = null;
   previewSavedTile = null;
   render();
@@ -813,6 +815,7 @@ function commitTurn(){
 function endTurnAndAdvance(){
   applyHouseAndRevenue();
   render();
+  awaitingAdvance = true;
   scheduleIfCurrent(advanceToNextTurn, STAGE_DELAY_MS);
 }
 
@@ -880,7 +883,7 @@ function aiPlayTurn(){
 }
 
 canvas.addEventListener('click', (e)=>{
-  if (gameOver || (vsComputerOn && turn === 2)) return;
+  if (gameOver || awaitingAdvance || (vsComputerOn && turn === 2)) return;
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
   const x = (e.clientX-rect.left)*scaleX - BAND, y = (e.clientY-rect.top)*scaleY - BAND;
