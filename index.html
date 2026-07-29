@@ -358,6 +358,7 @@ function buildSetupDeck(){
 }
 
 function freshGame(){
+  gameEpoch++;
   const setupDeck = buildSetupDeck();
   board = [];
   let setupIdx = 0;
@@ -688,6 +689,12 @@ function showMsg(t){ document.getElementById('msg').textContent = t; setTimeout(
 
 let pendingSquare = null;
 let inPreLaunch = true;
+let gameEpoch = 0;
+
+function scheduleIfCurrent(fn, delay){
+  const epochAtSchedule = gameEpoch;
+  setTimeout(() => { if (gameEpoch === epochAtSchedule) fn(); }, delay);
+}
 let previewSavedTile = null;
 let lastPlayedSquare = null;
 
@@ -782,11 +789,11 @@ function beginTurn(){
     pendingSquare = [r,c];
     render();
     if (vsComputerOn && turn === 2 && !gameOver){
-      setTimeout(commitTurn, STAGE_DELAY_MS);
+      scheduleIfCurrent(commitTurn, STAGE_DELAY_MS);
     }
     // else: human's turn -- wait for a click on the tile icon to commit.
   } else if (vsComputerOn && turn === 2 && !gameOver){
-    setTimeout(aiPlayTurn, STAGE_DELAY_MS);
+    scheduleIfCurrent(aiPlayTurn, STAGE_DELAY_MS);
   }
   // else: human's turn -- wait for a board click (preview), then tile-icon click to commit.
 }
@@ -802,7 +809,7 @@ function commitTurn(){
 function endTurnAndAdvance(){
   applyHouseAndRevenue();
   render();
-  setTimeout(advanceToNextTurn, STAGE_DELAY_MS);
+  scheduleIfCurrent(advanceToNextTurn, STAGE_DELAY_MS);
 }
 
 
@@ -844,6 +851,7 @@ function aiChooseSquare(color, drawTile){
 
 function aiPlayTurn(){
   if (!vsComputerOn || turn !== 2 || gameOver) return;
+  const epochAtSchedule = gameEpoch;
   // Stage 1: the new tile is already visible in the draw area at this point.
   // Stage 2: show which square the AI has chosen, before placing anything.
   const [r,c] = aiChooseSquare(turn, currentDraw);
@@ -851,9 +859,11 @@ function aiPlayTurn(){
   render();
 
   setTimeout(() => {
-    if (!vsComputerOn || turn !== 2 || gameOver){
-      pendingSquare = null;
-      render();
+    if (gameEpoch !== epochAtSchedule || !vsComputerOn || turn !== 2 || gameOver){
+      if (gameEpoch === epochAtSchedule){
+        pendingSquare = null;
+        render();
+      }
       return;
     }
     // Stage 3: place the tile and update flows (endTurnAndAdvance shows the
