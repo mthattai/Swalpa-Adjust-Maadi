@@ -21,7 +21,7 @@
                          font-size:11px; padding:6px 10px; border-radius:5px; border:1px solid #999;
                          background:white; color:#555; cursor:pointer; }
   #infoPopup { font-size:12px; color:#333; line-height:1.4; text-align:left; background:#fff8e6;
-               border:1px solid #F1A208; border-radius:6px; padding:10px 12px; margin-top:10px; }
+               border:1px solid #F1A208; border-radius:6px; padding:10px 12px; margin-top:10px; white-space:pre-line; }
   #tileRow { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:nowrap; }
   #tileRow canvas { border:1px solid #ddd; border-radius:4px; cursor:default; }
   #legendRow { display:flex; justify-content:space-between; margin-top:10px; }
@@ -30,6 +30,14 @@
   .copyright { font-size:10px; color:#aaa; text-align:center; margin-top:14px; }
   #app { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
   canvas#board { display:block; cursor:pointer; max-width:100%; outline:none; }
+  #eventPopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                background:rgba(20,20,20,0.88); color:white; border-radius:14px;
+                border:2px solid white;
+                padding:20px 30px; text-align:center; pointer-events:none;
+                opacity:0; transition:opacity 0.2s; z-index:5; max-width:85%; }
+  #eventPopup.visible { opacity:1; }
+  #eventPopup .line1 { font-size:23px; font-weight:bold; }
+  #eventPopup .line2 { font-size:17px; margin-top:6px; opacity:0.9; }
   .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
                display:flex; align-items:center; justify-content:center; padding:2px; }
   .pieceCell.armed { border-color:#222; }
@@ -104,7 +112,10 @@
   <div id="tileRow" style="display:none;"></div>
 </div>
 <div id="app">
-  <canvas id="board" style="display:none;"></canvas>
+  <div id="boardWrap" style="position:relative;">
+    <canvas id="board" style="display:none;"></canvas>
+    <div id="eventPopup" style="display:none;"></div>
+  </div>
   <div id="scoreRow" style="display:none;">
     <div class="scoreBox scoreP1" id="scoreP1"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
     <div class="scoreBox scoreP2" id="scoreP2"><div class="num">0</div><div class="lbl">PLAYER 2</div></div>
@@ -199,11 +210,13 @@
   <p>Houses are built when an empty space first connects to both red and
   blue supply. The player on whose turn this happens can henceforth earn
   revenue from that house, indicated by the roof of the house being in
-  their colour. Houses built at setup or at a corner are not allocated
-  to any player. On their turn, each player earns revenue from houses
-  in their colour that are simultaneously connected to both red and
-  blue supply (see "How to score"). If Roadworks destroys a Park or
-  house, a new house can be built and claimed on that space.</p>
+  their colour. Houses built at setup are not allocated to any player.
+  If Roadworks destroys a Park or house, a new house can be built and
+  claimed on that space.</p>
+  <p>Stealing: On your turn, place your card on a space. If this space
+  has a house disconnected from both red and blue, and if at least one
+  of the four edgewise neighbours also contains a house of the same
+  colour, you can steal the house. Its roof switches to your colour.</p>
 
   <h2>Play</h2>
   <p>Player 1 goes first, others follow in turn. In 1-player games the
@@ -359,6 +372,7 @@ function buildSetupDeck(){
 
 function freshGame(){
   gameEpoch++;
+  hideEventPopup();
   const setupDeck = buildSetupDeck();
   board = [];
   let setupIdx = 0;
@@ -608,7 +622,7 @@ function render(){
     if (house[r][c] || (redC[r][c] && blueC[r][c])){
       const cx=px+SIZE/2, cy=py+SIZE/2;
       const rSup = redC[r][c], bSup = blueC[r][c];
-      const projectedNewHouse = !house[r][c] && rSup && bSup && !isCorner(r,c);
+      const projectedNewHouse = !house[r][c] && rSup && bSup;
       let ownerColor = null;
       const effOwner = owner[r][c] || (projectedNewHouse ? turn : null);
       if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
@@ -692,6 +706,52 @@ let inPreLaunch = true;
 let gameEpoch = 0;
 let awaitingAdvance = false;
 
+const ROADWORKS_EXCUSES = [
+  "New Metro pillar.",
+  "Re-tarring for VIP visit.",
+  "Pipe leak.",
+  "Transformer burst.",
+  "Laying internet cable.",
+  "Pothole repair.",
+  "Flyover to push congestion elsewhere.",
+  "Drains blocked by garbage.",
+  "Election season.",
+  "Traffic signal installation.",
+  "Beautification initiative.",
+  "New MLA's project.",
+  "Sinkhole appeared out of nowhere.",
+  "White-topping a perfectly good road.",
+  "Tree cutting.",
+  "Tree planting.",
+  "Road widening for airport traffic.",
+  "Replacing pedestrian overbridge.",
+  "Creating unusable footpath.",
+  "Just because."
+];
+
+let eventPopupTimer = null;
+
+function showEventPopup(line1, line2, autoHide){
+  const popup = document.getElementById('eventPopup');
+  popup.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
+  popup.querySelector('.line1').textContent = line1;
+  if (line2) popup.querySelector('.line2').textContent = line2;
+  popup.style.display = 'block';
+  requestAnimationFrame(() => popup.classList.add('visible'));
+  clearTimeout(eventPopupTimer);
+  if (autoHide){
+    eventPopupTimer = setTimeout(hideEventPopup, 2200);
+  }
+}
+
+function hideEventPopup(){
+  const popup = document.getElementById('eventPopup');
+  popup.classList.remove('visible');
+  clearTimeout(eventPopupTimer);
+  eventPopupTimer = setTimeout(() => { popup.style.display = 'none'; }, 220);
+}
+
+
 function scheduleIfCurrent(fn, delay){
   const epochAtSchedule = gameEpoch;
   setTimeout(() => { if (gameEpoch === epochAtSchedule) fn(); }, delay);
@@ -703,12 +763,42 @@ function isCorner(r, c){
   return (r === 0 || r === N-1) && (c === 0 || c === N-1);
 }
 
+function countMatchingNeighbors(r, c, ownerValue){
+  const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+  let count = 0;
+  for (const [nr,nc] of neighbors){
+    if (nr<0||nr>=N||nc<0||nc>=N) continue;
+    if (house[nr][nc] && owner[nr][nc] === ownerValue) count++;
+  }
+  return count;
+}
+
 function applyHouseAndRevenue(){
   const {redC, blueC} = connectivity();
+
+  // Playing a card on some square: if, after the move (whether or not this
+  // move itself caused it), the house there is fully disconnected (neither
+  // red nor blue), check its N/S/E/W neighbours. If 1 or more share that
+  // house's own owner (grey counts as its own category), the current player
+  // steals it. Already the mover's own house: no-op. Any house that still
+  // has at least one connection is protected from stealing.
+  if (lastPlayedSquare){
+    const [lr, lc] = lastPlayedSquare;
+    if (house[lr][lc] && !redC[lr][lc] && !blueC[lr][lc]){
+      const ownerBeforeSteal = owner[lr][lc];
+      if (countMatchingNeighbors(lr, lc, owner[lr][lc]) >= 1){
+        owner[lr][lc] = turn;
+        if (ownerBeforeSteal !== turn){
+          showEventPopup('Good steal!', null, true);
+        }
+      }
+    }
+  }
+
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (redC[r][c] && blueC[r][c] && !house[r][c]){
       house[r][c] = true;
-      if (!isCorner(r,c)) owner[r][c] = turn;
+      owner[r][c] = turn;
     }
   }
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
@@ -794,6 +884,8 @@ function beginTurn(){
     }
     pendingSquare = [r,c];
     render();
+    const excuse = ROADWORKS_EXCUSES[Math.floor(Math.random()*ROADWORKS_EXCUSES.length)];
+    showEventPopup('Roadworks!', excuse, true);
     if (vsComputerOn && turn === 2 && !gameOver){
       scheduleIfCurrent(commitTurn, STAGE_DELAY_MS);
     }
@@ -831,25 +923,31 @@ function aiChooseSquare(color, drawTile){
     if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c) continue;
     if (board[r][c].kind === 'P') continue;
     const saved = board[r][c];
-    const wasHouseBefore = house[r][c];
+    const wasHouseHere = house[r][c];
+    const ownerHere = owner[r][c];
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
     const {redC, blueC} = connectivity();
     let myScore = 0, oppScore = 0, myTerr = 0;
     for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
       const full = redC[rr][cc] && blueC[rr][cc];
-      if (!isCorner(rr,cc)){
-        let effOwner = owner[rr][cc];
-        if (full && !house[rr][cc] && effOwner === null){
-          effOwner = color; // this placement would newly claim it this turn
-        }
-        if (full && effOwner === color) myScore++;
-        else if (full && effOwner === otherC) oppScore++;
+      const wasHouse = house[rr][cc];
+      let effOwner = owner[rr][cc];
+      if (full && !wasHouse && effOwner === null){
+        effOwner = color; // this placement would newly claim it this turn
       }
+      if (full && effOwner === color) myScore++;
+      else if (full && effOwner === otherC) oppScore++;
       if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
     }
     const diff = myScore - oppScore;
-    const completesHouse = (!wasHouseBefore) && !isCorner(r,c) && redC[r][c] && blueC[r][c];
-    const val = diff + AI_ALPHA * decay * (completesHouse ? 1 : 0) + AI_BETA * myTerr;
+    const completesHouse = (!wasHouseHere) && redC[r][c] && blueC[r][c];
+    // If the house at the exact space played on ends up fully disconnected
+    // (neither red nor blue - whether or not this move itself caused it),
+    // check its N/S/E/W neighbours. 1 or more sharing its own owner (grey
+    // counts as its own category): this move would be a legal steal.
+    const isSteal = (wasHouseHere && !redC[r][c] && !blueC[r][c] && ownerHere !== color &&
+      countMatchingNeighbors(r, c, ownerHere) >= 1) ? 1 : 0;
+    const val = diff + AI_ALPHA * decay * (completesHouse ? 1 : 0) + AI_ALPHA * decay * isSteal + AI_BETA * myTerr;
     if (val > bestVal){
       bestVal = val; best = [r,c];
     }
@@ -926,6 +1024,16 @@ canvas.addEventListener('click', (e)=>{
 function finishGame(){
   gameOver = true;
   render();
+  let maxRev = -Infinity, winners = [];
+  for (let p=1; p<=effectiveN; p++){
+    if (revenue[p] > maxRev){ maxRev = revenue[p]; winners = [p]; }
+    else if (revenue[p] === maxRev){ winners.push(p); }
+  }
+  if (winners.length === 1){
+    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', false);
+  } else {
+    showEventPopup("It's a tie!", 'Residents LOSE', false);
+  }
 }
 
 document.getElementById('rulesBtn').onclick = () => {
@@ -1082,11 +1190,13 @@ const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "connects to both red and blue supply. The player on whose turn this " +
   "happens can henceforth earn revenue from that house, indicated by " +
   "the roof of the house being in their colour. Houses built at setup " +
-  "or at a corner are not allocated to any player. On their turn, " +
-  "each player earns revenue from houses in their colour that are " +
-  "simultaneously connected to both red and blue supply (see \"How to " +
-  "score\"). If Roadworks destroys a Park or house, a new house can be " +
-  "built and claimed on that space.";
+  "are not allocated to any player. If Roadworks destroys a Park or " +
+  "house, a new house can be built and claimed on that space.\n\n" +
+  "Stealing: On your turn, place your card on a space. If this space " +
+  "has a house disconnected from both red and blue, and if at least " +
+  "one of the four edgewise neighbours also contains a house of the " +
+  "same colour, you can steal the house. Its roof switches to your " +
+  "colour.";
 
 const HOW_TO_SCORE_TEXT = "Each round consists of one move by each " +
   "player in turn. After their turn, a player earns one point for " +
