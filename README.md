@@ -54,7 +54,9 @@ No player may place a card on a Park. Roadworks can still strike a Park like any
 
 Houses and control
 
-Houses are built when an empty space first connects to both red and blue supply. The player on whose turn this happens can henceforth earn revenue from that house, indicated by the roof of the house being in their colour. Houses built at setup or at a corner are not allocated to any player. On their turn, each player earns revenue from houses in their colour that are simultaneously connected to both red and blue supply (see "How to score"). If Roadworks destroys a Park or house, a new house can be built and claimed on that space.
+Houses are built when an empty space first connects to both red and blue supply. The player on whose turn this happens can henceforth earn revenue from that house, indicated by the roof of the house being in their colour. Houses built at setup are not allocated to any player. If Roadworks destroys a Park or house, a new house can be built and claimed on that space.
+
+Stealing: On your turn, place your card on a space. If this space has a house disconnected from both red and blue, and if at least one of the four edgewise neighbours also contains a house of the same colour, you can steal the house. Its roof switches to your colour.
 
 
 Play
