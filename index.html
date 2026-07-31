@@ -39,6 +39,18 @@
                       padding:16px 26px; text-align:center; }
   #eventPopupInner .line1 { font-size:23px; font-weight:bold; color:black; }
   #eventPopupInner .line2 { font-size:17px; margin-top:6px; color:black; opacity:0.85; }
+
+  #shareScorePopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                      background:white; border-radius:16px; padding:12px;
+                      z-index:6; max-width:88%; }
+  #shareScorePopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
+                           padding:18px 22px; text-align:center; }
+  #shareScorePopupInner .shareTitle { font-size:20px; font-weight:bold; color:black; margin-bottom:10px; }
+  #shareScoreText { width:100%; box-sizing:border-box; font-size:14px; font-family:inherit;
+                     color:black; background:white; border:1px solid #999; border-radius:6px;
+                     padding:8px; resize:none; margin-bottom:10px; }
+  #shareScoreCloseBtn { font-size:14px; padding:6px 20px; border-radius:6px; border:1px solid #333;
+                         background:white; color:#222; cursor:pointer; }
   .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
                display:flex; align-items:center; justify-content:center; padding:2px; }
   .pieceCell.armed { border-color:#222; }
@@ -59,14 +71,16 @@
   .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
   #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
-  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #size6Btn, #size7Btn, #size8Btn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
+  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
-  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive { background:#333; color:white; border-color:#333; }
+  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
+  #gameModeBtnRow { margin-top:26px; }
   #digUpRow { margin-top:18px; }
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px; border:none;
               background:#C0392B; color:white; cursor:pointer; }
-  #msg { font-size:12px; color:#a33; min-height:16px; }
+  #msg { position:absolute; left:0; right:0; bottom:4px; font-size:12px; color:#a33;
+         text-align:center; pointer-events:none; }
   #rulesPage { display:none; max-width:560px; margin:0 auto; padding:8px 4px 40px; text-align:left; }
   #rulesPage h1 { font-size:22px; margin:8px 0 2px; }
   #rulesPage .ruleSub { font-size:12px; color:#888; margin:0 0 16px; }
@@ -93,7 +107,7 @@
     roads are constantly dug up for Metro work, VIP visits, and floods,
     wreaking havoc on the infrastructure. The city's residents are left to
     deal with unpredictable power and water, and must suffer in silence.</p>
-    <div id="digUpRow"><button id="digUpBtn">Let's dig up the road!</button></div>
+    <div id="digUpRow"><button id="digUpBtn">Let's start digging.<br>Take me to the game!</button></div>
   </div>
   <div id="legendRow" style="display:none;">
     <div class="legendItem"><canvas id="legRed" width="52" height="52"></canvas><div class="label">Power</div></div>
@@ -116,6 +130,14 @@
   <div id="boardWrap" style="position:relative;">
     <canvas id="board" style="display:none;"></canvas>
     <div id="eventPopup" style="display:none;"><div id="eventPopupInner"></div></div>
+    <div id="msg" style="display:none;"></div>
+    <div id="shareScorePopup" style="display:none;">
+      <div id="shareScorePopupInner">
+        <div class="shareTitle">Share your score!</div>
+        <textarea id="shareScoreText" readonly rows="6"></textarea>
+        <button id="shareScoreCloseBtn">Close</button>
+      </div>
+    </div>
   </div>
   <div id="scoreRow" style="display:none;">
     <div class="scoreBox scoreP1" id="scoreP1"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
@@ -123,7 +145,10 @@
     <div class="scoreBox scoreP3" id="scoreP3" style="display:none;"><div class="num">0</div><div class="lbl">PLAYER 3</div></div>
     <div class="scoreBox scoreP4" id="scoreP4" style="display:none;"><div class="num">0</div><div class="lbl">PLAYER 4</div></div>
   </div>
-  <div id="msg" style="display:none;"></div>
+  <div class="btnRow" id="gameModeBtnRow" style="display:none;">
+    <button id="todaysGameBtn">Today's game</button>
+    <button id="randomGameBtn">Random game</button>
+  </div>
   <div class="btnRow" id="playerBtnRow" style="display:none;">
     <button id="p1Btn">1 player</button>
     <button id="p2Btn">2 player</button>
@@ -361,11 +386,11 @@ function buildSetupDeck(){
   ];
   const setupDeck = [];
   for (let i=0;i<numConnectors;i++){
-    setupDeck.push(orientations[Math.floor(Math.random()*6)]);
+    setupDeck.push(orientations[Math.floor(rng()*6)]);
   }
   for (let i=0;i<numParks;i++) setupDeck.push({kind:'P', rot:0});
   for (let i=setupDeck.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
+    const j = Math.floor(rng()*(i+1));
     [setupDeck[i],setupDeck[j]] = [setupDeck[j],setupDeck[i]];
   }
   return setupDeck;
@@ -377,6 +402,7 @@ function freshGame(){
   pendingResumeCallback = null;
   pendingResumeEpoch = null;
   hideEventPopup();
+  hideShareScorePopup();
   const setupDeck = buildSetupDeck();
   board = [];
   let setupIdx = 0;
@@ -710,6 +736,44 @@ let inPreLaunch = true;
 let gameEpoch = 0;
 let awaitingAdvance = false;
 
+let isTodaysGame = false;
+let seededRandomFn = null;
+
+// mulberry32: small, fast, deterministic PRNG. Good enough distribution for
+// shuffling a deck and picking Roadworks targets; not cryptographic, doesn't
+// need to be.
+function mulberry32(seed){
+  let a = seed;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Today's date in India (Asia/Kolkata), independent of the player's own local
+// timezone - so every player sees the same seed on the same India calendar date.
+function todaysIndiaDateString(){
+  return new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kolkata'}); // "YYYY-MM-DD"
+}
+
+function seedFromDateString(dateStr){
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++){
+    hash = (Math.imul(hash, 31) + dateStr.charCodeAt(i)) | 0;
+  }
+  return hash;
+}
+
+// All gameplay randomness (deck shuffling, setup, Roadworks) should call rng()
+// instead of Math.random() directly, so Today's-game mode can make the whole
+// game reproducible while Random-game mode stays genuinely random.
+function rng(){
+  return isTodaysGame && seededRandomFn ? seededRandomFn() : Math.random();
+}
+
+
 const ROADWORKS_EXCUSES = [
   "New Metro pillar.",
   "Re-tarring for VIP visit.",
@@ -768,6 +832,38 @@ function hideEventPopup(){
     if (cb && cbEpoch === gameEpoch) cb();
   }, 220);
 }
+
+// Built from explicit Unicode codepoints, not typed directly, to avoid any risk
+// of transcription/encoding corruption in the source.
+function buildShareText(){
+  const constructionSign = '\u{1F6A7}';
+  const womanWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}';
+  const manWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}';
+  const lightning = '\u{26A1}\u{FE0F}';
+  const droplet = '\u{1F4A7}';
+  const emojiLine = `${constructionSign} ${womanWorker}${lightning}${droplet}${manWorker} ${constructionSign}`;
+
+  const isoDate = todaysIndiaDateString(); // "YYYY-MM-DD"
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const niceDate = `${d} ${monthNames[m-1]} ${y}`;
+
+  return `${emojiLine}\nSwalpa Adjust Maadi\n${niceDate}\n\nMe: ${revenue[1]}\nOpponent: ${revenue[2]}`;
+}
+
+function showShareScorePopup(){
+  const textarea = document.getElementById('shareScoreText');
+  textarea.value = buildShareText();
+  document.getElementById('shareScorePopup').style.display = 'block';
+  textarea.focus();
+  textarea.select();
+}
+
+function hideShareScorePopup(){
+  document.getElementById('shareScorePopup').style.display = 'none';
+}
+
+document.getElementById('shareScoreCloseBtn').onclick = hideShareScorePopup;
 
 // If a popup is currently blocking the game, defer fn until it closes instead of
 // running it on the usual fixed delay - this is what makes the pause actually hold
@@ -871,7 +967,7 @@ function buildAndShuffleDeck(){
   for (let i=0;i<2*effectiveN;i++) deck.push({kind:'X', rot:0});
   // Fisher-Yates shuffle, fixed once at the start of play.
   for (let i=deck.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
+    const j = Math.floor(rng()*(i+1));
     [deck[i],deck[j]] = [deck[j],deck[i]];
   }
   deckPos = 0;
@@ -906,8 +1002,8 @@ function beginTurn(){
   render();
 
   if (currentDraw.kind === 'X'){
-    const r = Math.floor(Math.random()*N);
-    const c = Math.floor(Math.random()*N);
+    const r = Math.floor(rng()*N);
+    const c = Math.floor(rng()*N);
     if (board[r][c].kind !== 'X'){
       board[r][c] = {kind:'X', rot:0};
       house[r][c] = false;
@@ -915,7 +1011,7 @@ function beginTurn(){
     }
     pendingSquare = [r,c];
     render();
-    const excuse = ROADWORKS_EXCUSES[Math.floor(Math.random()*ROADWORKS_EXCUSES.length)];
+    const excuse = ROADWORKS_EXCUSES[Math.floor(rng()*ROADWORKS_EXCUSES.length)];
     showEventPopup('Roadworks!', excuse, true);
     if (vsComputerOn && turn === 2 && !gameOver){
       scheduleAfterPopupOrDelay(commitTurn, STAGE_DELAY_MS);
@@ -1065,6 +1161,10 @@ function finishGame(){
   } else {
     showEventPopup("It's a tie!", 'Residents LOSE', true);
   }
+  if (isTodaysGame){
+    pendingResumeCallback = showShareScorePopup;
+    pendingResumeEpoch = gameEpoch;
+  }
 }
 
 document.getElementById('rulesBtn').onclick = () => {
@@ -1158,14 +1258,30 @@ function renderRuleDiagrams(){
   }
 }
 
-document.getElementById('p1Btn').onclick = () => { numPlayers = 1; vsComputerOn = true; effectiveN = 2; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('p2Btn').onclick = () => { numPlayers = 2; vsComputerOn = false; effectiveN = 2; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('p3Btn').onclick = () => { numPlayers = 3; vsComputerOn = false; effectiveN = 3; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('p4Btn').onclick = () => { numPlayers = 4; vsComputerOn = false; effectiveN = 4; computeLayout(); updatePlayerButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('digUpBtn').onclick = () => { numPlayers = 1; vsComputerOn = true; effectiveN = 2; computeLayout(); updatePlayerButtons(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('size6Btn').onclick = () => { N = 6; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('size7Btn').onclick = () => { N = 7; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('size8Btn').onclick = () => { N = 8; computeLayout(); updateSizeButtons(); exitPreLaunch(); freshGame(); };
+function enterTodaysGameMode(){
+  isTodaysGame = true;
+  seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
+}
+function enterRandomGameMode(){
+  isTodaysGame = false;
+  seededRandomFn = null;
+}
+
+document.getElementById('p1Btn').onclick = () => { enterRandomGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p2Btn').onclick = () => { enterRandomGameMode(); numPlayers = 2; vsComputerOn = false; effectiveN = 2; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p3Btn').onclick = () => { enterRandomGameMode(); numPlayers = 3; vsComputerOn = false; effectiveN = 3; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('p4Btn').onclick = () => { enterRandomGameMode(); numPlayers = 4; vsComputerOn = false; effectiveN = 4; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('size6Btn').onclick = () => { enterRandomGameMode(); N = 6; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('size7Btn').onclick = () => { enterRandomGameMode(); N = 7; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('size8Btn').onclick = () => { enterRandomGameMode(); N = 8; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('todaysGameBtn').onclick = () => { enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode(); computeLayout(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+
+function updateGameModeButtons(){
+  document.getElementById('todaysGameBtn').classList.toggle('modeActive', isTodaysGame);
+  document.getElementById('randomGameBtn').classList.toggle('modeActive', !isTodaysGame);
+}
 
 function updatePlayerButtons(){
   document.getElementById('p1Btn').classList.toggle('modeActive', numPlayers === 1);
