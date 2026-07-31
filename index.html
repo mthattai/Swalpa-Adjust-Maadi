@@ -41,8 +41,8 @@
   #eventPopupInner .line2 { font-size:17px; margin-top:6px; color:black; opacity:0.85; }
 
   #shareScorePopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                      background:white; border-radius:16px; padding:12px;
-                      z-index:6; max-width:88%; }
+                      background:white; border-radius:16px; padding:12px; box-sizing:border-box;
+                      z-index:6; width:88%; max-width:88%; }
   #shareScorePopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
                            padding:18px 22px; text-align:center; }
   #shareScorePopupInner .shareTitle { font-size:20px; font-weight:bold; color:black; margin-bottom:10px; }
@@ -855,8 +855,6 @@ function showShareScorePopup(){
   const textarea = document.getElementById('shareScoreText');
   textarea.value = buildShareText();
   document.getElementById('shareScorePopup').style.display = 'block';
-  textarea.focus();
-  textarea.select();
 }
 
 function hideShareScorePopup(){
