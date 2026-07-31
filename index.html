@@ -31,13 +31,14 @@
   #app { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
   canvas#board { display:block; cursor:pointer; max-width:100%; outline:none; }
   #eventPopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                background:rgba(20,20,20,0.88); color:white; border-radius:14px;
-                border:2px solid white;
-                padding:20px 30px; text-align:center; pointer-events:none;
-                opacity:0; transition:opacity 0.2s; z-index:5; max-width:85%; }
+                background:white; border-radius:16px; padding:12px;
+                pointer-events:none; opacity:0; transition:opacity 0.2s;
+                z-index:5; max-width:85%; }
   #eventPopup.visible { opacity:1; }
-  #eventPopup .line1 { font-size:23px; font-weight:bold; }
-  #eventPopup .line2 { font-size:17px; margin-top:6px; opacity:0.9; }
+  #eventPopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
+                      padding:16px 26px; text-align:center; }
+  #eventPopupInner .line1 { font-size:23px; font-weight:bold; color:black; }
+  #eventPopupInner .line2 { font-size:17px; margin-top:6px; color:black; opacity:0.85; }
   .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
                display:flex; align-items:center; justify-content:center; padding:2px; }
   .pieceCell.armed { border-color:#222; }
@@ -95,11 +96,11 @@
     <div id="digUpRow"><button id="digUpBtn">Let's dig up the road!</button></div>
   </div>
   <div id="legendRow" style="display:none;">
-    <div class="legendItem"><canvas id="legRed" width="26" height="26"></canvas><div class="label">Power</div></div>
-    <div class="legendItem"><canvas id="legBlue" width="26" height="26"></canvas><div class="label">Water</div></div>
-    <div class="legendItem"><canvas id="legRoad" width="26" height="26"></canvas><div class="label">Roadworks</div></div>
-    <div class="legendItem"><canvas id="legPark" width="26" height="26"></canvas><div class="label">Park</div></div>
-    <div class="legendItem"><canvas id="legHouse" width="26" height="26"></canvas><div class="label">House</div></div>
+    <div class="legendItem"><canvas id="legRed" width="52" height="52"></canvas><div class="label">Power</div></div>
+    <div class="legendItem"><canvas id="legBlue" width="52" height="52"></canvas><div class="label">Water</div></div>
+    <div class="legendItem"><canvas id="legRoad" width="52" height="52"></canvas><div class="label">Roadworks</div></div>
+    <div class="legendItem"><canvas id="legPark" width="52" height="52"></canvas><div class="label">Park</div></div>
+    <div class="legendItem"><canvas id="legHouse" width="52" height="52"></canvas><div class="label">House</div></div>
   </div>
   <div id="infoBtnGrid" style="display:none;">
     <button id="deckRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> Deck rules</button>
@@ -114,7 +115,7 @@
 <div id="app">
   <div id="boardWrap" style="position:relative;">
     <canvas id="board" style="display:none;"></canvas>
-    <div id="eventPopup" style="display:none;"></div>
+    <div id="eventPopup" style="display:none;"><div id="eventPopupInner"></div></div>
   </div>
   <div id="scoreRow" style="display:none;">
     <div class="scoreBox scoreP1" id="scoreP1"><div class="num">0</div><div class="lbl">PLAYER 1</div></div>
@@ -372,6 +373,9 @@ function buildSetupDeck(){
 
 function freshGame(){
   gameEpoch++;
+  popupBlocking = false;
+  pendingResumeCallback = null;
+  pendingResumeEpoch = null;
   hideEventPopup();
   const setupDeck = buildSetupDeck();
   board = [];
@@ -731,15 +735,21 @@ const ROADWORKS_EXCUSES = [
 
 let eventPopupTimer = null;
 
+let popupBlocking = false;
+let pendingResumeCallback = null;
+let pendingResumeEpoch = null;
+
 function showEventPopup(line1, line2, autoHide){
   const popup = document.getElementById('eventPopup');
-  popup.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
-  popup.querySelector('.line1').textContent = line1;
-  if (line2) popup.querySelector('.line2').textContent = line2;
+  const inner = document.getElementById('eventPopupInner');
+  inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
+  inner.querySelector('.line1').textContent = line1;
+  if (line2) inner.querySelector('.line2').textContent = line2;
   popup.style.display = 'block';
   requestAnimationFrame(() => popup.classList.add('visible'));
   clearTimeout(eventPopupTimer);
   if (autoHide){
+    popupBlocking = true;
     eventPopupTimer = setTimeout(hideEventPopup, 2200);
   }
 }
@@ -748,7 +758,28 @@ function hideEventPopup(){
   const popup = document.getElementById('eventPopup');
   popup.classList.remove('visible');
   clearTimeout(eventPopupTimer);
-  eventPopupTimer = setTimeout(() => { popup.style.display = 'none'; }, 220);
+  eventPopupTimer = setTimeout(() => {
+    popup.style.display = 'none';
+    popupBlocking = false;
+    const cb = pendingResumeCallback;
+    const cbEpoch = pendingResumeEpoch;
+    pendingResumeCallback = null;
+    pendingResumeEpoch = null;
+    if (cb && cbEpoch === gameEpoch) cb();
+  }, 220);
+}
+
+// If a popup is currently blocking the game, defer fn until it closes instead of
+// running it on the usual fixed delay - this is what makes the pause actually hold
+// the game (no clicks, no AI action) until the box disappears, rather than the
+// popup being purely cosmetic while play continues underneath it.
+function scheduleAfterPopupOrDelay(fn, delay){
+  if (popupBlocking){
+    pendingResumeCallback = fn;
+    pendingResumeEpoch = gameEpoch;
+  } else {
+    scheduleIfCurrent(fn, delay);
+  }
 }
 
 
@@ -887,7 +918,7 @@ function beginTurn(){
     const excuse = ROADWORKS_EXCUSES[Math.floor(Math.random()*ROADWORKS_EXCUSES.length)];
     showEventPopup('Roadworks!', excuse, true);
     if (vsComputerOn && turn === 2 && !gameOver){
-      scheduleIfCurrent(commitTurn, STAGE_DELAY_MS);
+      scheduleAfterPopupOrDelay(commitTurn, STAGE_DELAY_MS);
     }
     // else: human's turn -- wait for a click on the tile icon to commit.
   } else if (vsComputerOn && turn === 2 && !gameOver){
@@ -908,7 +939,7 @@ function endTurnAndAdvance(){
   applyHouseAndRevenue();
   render();
   awaitingAdvance = true;
-  scheduleIfCurrent(advanceToNextTurn, STAGE_DELAY_MS);
+  scheduleAfterPopupOrDelay(advanceToNextTurn, STAGE_DELAY_MS);
 }
 
 
@@ -981,7 +1012,7 @@ function aiPlayTurn(){
 }
 
 canvas.addEventListener('click', (e)=>{
-  if (gameOver || awaitingAdvance || (vsComputerOn && turn === 2)) return;
+  if (gameOver || awaitingAdvance || popupBlocking || (vsComputerOn && turn === 2)) return;
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
   const x = (e.clientX-rect.left)*scaleX - BAND, y = (e.clientY-rect.top)*scaleY - BAND;
@@ -1030,9 +1061,9 @@ function finishGame(){
     else if (revenue[p] === maxRev){ winners.push(p); }
   }
   if (winners.length === 1){
-    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', false);
+    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', true);
   } else {
-    showEventPopup("It's a tie!", 'Residents LOSE', false);
+    showEventPopup("It's a tie!", 'Residents LOSE', true);
   }
 }
 
@@ -1149,15 +1180,90 @@ function updateSizeButtons(){
   document.getElementById('size8Btn').classList.toggle('modeActive', N === 8);
 }
 
+const LEGEND_SUPERSAMPLE = 4;
+const LEGEND_DISPLAY_SIZE = 52;
+
+function setupSupersampledLegendCanvas(cnv){
+  const internal = LEGEND_DISPLAY_SIZE * LEGEND_SUPERSAMPLE;
+  cnv.width = internal;
+  cnv.height = internal;
+  cnv.style.width = LEGEND_DISPLAY_SIZE + 'px';
+  cnv.style.height = LEGEND_DISPLAY_SIZE + 'px';
+  return cnv.getContext('2d');
+}
+
+// Legend-only versions with a stroke width PROPORTIONAL to size (matching how
+// drawTileOn's Roadworks stroke already works), instead of the board's fixed-pixel
+// stroke - this is what lets them stay crisp and visible when supersampled. The
+// board's own drawing functions are untouched.
+function drawLightningBoltLegend(ctx, s, color, strokeRatio){
+  const cx = s/2;
+  ctx.beginPath();
+  ctx.moveTo(cx+s*0.08, s*0.08);
+  ctx.lineTo(cx-s*0.22, s*0.55);
+  ctx.lineTo(cx-s*0.02, s*0.55);
+  ctx.lineTo(cx-s*0.1, s*0.92);
+  ctx.lineTo(cx+s*0.26, s*0.4);
+  ctx.lineTo(cx+s*0.04, s*0.4);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#222'; ctx.lineWidth = s*strokeRatio;
+  ctx.stroke();
+}
+function drawWaterDropLegend(ctx, s, color, strokeRatio){
+  const cx = s/2;
+  ctx.beginPath();
+  ctx.moveTo(cx, s*0.08);
+  ctx.bezierCurveTo(cx+s*0.34, s*0.55, cx+s*0.3, s*0.9, cx, s*0.9);
+  ctx.bezierCurveTo(cx-s*0.3, s*0.9, cx-s*0.34, s*0.55, cx, s*0.08);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#222'; ctx.lineWidth = s*strokeRatio;
+  ctx.stroke();
+}
+function drawHouseShapeLegend(ctx, cx, cy, s, strokeRatio){
+  const baseW = s*0.5, baseH = s*0.4;
+  const baseX = cx - baseW/2, baseY = cy - baseH*0.15;
+  const roofOverhang = s*0.06;
+  const roofTopY = baseY - s*0.32;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(baseX, baseY, baseW, baseH);
+  ctx.clip();
+  ctx.fillStyle = RED_DARK;
+  ctx.beginPath();
+  ctx.moveTo(baseX, baseY); ctx.lineTo(baseX+baseW, baseY); ctx.lineTo(baseX, baseY+baseH);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = BLUE_DARK;
+  ctx.beginPath();
+  ctx.moveTo(baseX+baseW, baseY); ctx.lineTo(baseX+baseW, baseY+baseH); ctx.lineTo(baseX, baseY+baseH);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = '#333'; ctx.lineWidth = s*strokeRatio;
+  ctx.strokeRect(baseX, baseY, baseW, baseH);
+  ctx.beginPath();
+  ctx.moveTo(baseX - roofOverhang, baseY);
+  ctx.lineTo(cx, roofTopY);
+  ctx.lineTo(baseX + baseW + roofOverhang, baseY);
+  ctx.closePath();
+  ctx.fillStyle = '#eee';
+  ctx.fill();
+  ctx.strokeStyle = '#333'; ctx.lineWidth = s*strokeRatio; ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
 function renderTitleAndLegend(){
-  drawLightningBolt(document.getElementById('legRed').getContext('2d'), 26, RED_DARK);
-  drawWaterDrop(document.getElementById('legBlue').getContext('2d'), 26, BLUE_DARK);
-  const roadCtx = document.getElementById('legRoad').getContext('2d');
-  roadCtx.fillStyle='white'; roadCtx.fillRect(0,0,26,26);
-  drawTileOn(roadCtx, 0, 0, 26, {kind:'X', rot:0}, true, true);
-  const parkCtx = document.getElementById('legPark').getContext('2d');
-  drawTileOn(parkCtx, 0, 0, 26, {kind:'P', rot:0}, true, true);
-  drawHouseShape(document.getElementById('legHouse').getContext('2d'), 13, 15, 22, true, true);
+  const internal = LEGEND_DISPLAY_SIZE * LEGEND_SUPERSAMPLE;
+  drawLightningBoltLegend(setupSupersampledLegendCanvas(document.getElementById('legRed')), internal, RED_DARK, 0.045);
+  drawWaterDropLegend(setupSupersampledLegendCanvas(document.getElementById('legBlue')), internal, BLUE_DARK, 0.045);
+  const roadCtx = setupSupersampledLegendCanvas(document.getElementById('legRoad'));
+  drawTileOn(roadCtx, 0, internal*0.09, internal, {kind:'X', rot:0}, true, true);
+  const parkCtx = setupSupersampledLegendCanvas(document.getElementById('legPark'));
+  drawTileOn(parkCtx, 0, 0, internal, {kind:'P', rot:0}, true, true);
+  const houseCtx = setupSupersampledLegendCanvas(document.getElementById('legHouse'));
+  drawHouseShapeLegend(houseCtx, internal*0.5, internal*0.5, internal*0.8, 0.045);
 }
 
 function drawInfoIcon(ctx, s){
