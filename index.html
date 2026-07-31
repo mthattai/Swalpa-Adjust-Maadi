@@ -60,12 +60,12 @@
                       z-index:6; width:78%; max-width:78%; }
   #shareScorePopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
                            padding:18px 22px; text-align:center; }
-  .shareTitleRow { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-  #shareScorePopupInner .shareTitle { font-size:20px; font-weight:bold; color:black; }
+  .shareTitleRow { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
+  .shareBtnGroup { display:flex; gap:6px; }
   #shareScoreText { width:100%; box-sizing:border-box; font-size:11px; font-family:inherit;
                      color:black; background:white; border:1px solid #999; border-radius:6px;
                      padding:8px; resize:none; }
-  #shareScoreCloseBtn { font-size:13px; padding:5px 14px; border-radius:6px; border:1px solid #333;
+  #shareScoreCopyBtn, #shareScoreCloseBtn { font-size:13px; padding:5px 14px; border-radius:6px; border:1px solid #333;
                          background:white; color:#222; cursor:pointer; }
   .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
                display:flex; align-items:center; justify-content:center; padding:2px; }
@@ -150,8 +150,10 @@
     <div id="shareScorePopup" style="display:none;">
       <div id="shareScorePopupInner">
         <div class="shareTitleRow">
-          <div class="shareTitle">Share!</div>
-          <button id="shareScoreCloseBtn">Close</button>
+          <div class="shareBtnGroup">
+            <button id="shareScoreCopyBtn">Copy</button>
+            <button id="shareScoreCloseBtn">Close</button>
+          </div>
         </div>
         <textarea id="shareScoreText" readonly rows="8"></textarea>
       </div>
@@ -885,6 +887,19 @@ function hideShareScorePopup(){
 }
 
 document.getElementById('shareScoreCloseBtn').onclick = hideShareScorePopup;
+
+document.getElementById('shareScoreCopyBtn').onclick = () => {
+  const btn = document.getElementById('shareScoreCopyBtn');
+  const text = document.getElementById('shareScoreText').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  }).catch(() => {
+    // Clipboard API unavailable or blocked - the text is still visible and
+    // selectable in the textarea below as a fallback, so no error shown here.
+  });
+};
 
 // If a popup is currently blocking the game, defer fn until it closes instead of
 // running it on the usual fixed delay - this is what makes the pause actually hold
