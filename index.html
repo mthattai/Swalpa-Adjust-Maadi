@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Swalpa Adjust Maadi</title>
+<meta property="og:title" content="Swalpa Adjust Maadi">
+<meta property="og:description" content="A Bangalore infrastructure game. Build houses, survive Roadworks, steal your rival's supply. Play today's puzzle and share your score.">
+<meta property="og:image" content="https://mthattai.github.io/Swalpa-Adjust-Maadi/preview.png">
+<meta property="og:url" content="https://mthattai.github.io/Swalpa-Adjust-Maadi/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Swalpa Adjust Maadi">
+<meta name="twitter:description" content="A Bangalore infrastructure game. Build houses, survive Roadworks, steal your rival's supply.">
+<meta name="twitter:image" content="https://mthattai.github.io/Swalpa-Adjust-Maadi/preview.png">
 <style>
   * { box-sizing:border-box; }
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; background:#f4f4f2; margin:0; padding:12px;
@@ -31,22 +40,22 @@
   #app { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
   canvas#board { display:block; cursor:pointer; max-width:100%; outline:none; }
   #eventPopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                background:white; border-radius:16px; padding:12px;
+                background:white; border-radius:16px; padding:12px; box-sizing:border-box;
                 pointer-events:none; opacity:0; transition:opacity 0.2s;
-                z-index:5; max-width:85%; }
+                z-index:5; width:78%; max-width:78%; }
   #eventPopup.visible { opacity:1; }
   #eventPopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
-                      padding:16px 26px; text-align:center; }
-  #eventPopupInner .line1 { font-size:23px; font-weight:bold; color:black; }
+                      padding:16px 14px; text-align:center; }
+  #eventPopupInner .line1 { font-size:16px; font-weight:bold; color:black; }
   #eventPopupInner .line2 { font-size:17px; margin-top:6px; color:black; opacity:0.85; }
 
   #shareScorePopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
                       background:white; border-radius:16px; padding:12px; box-sizing:border-box;
-                      z-index:6; width:88%; max-width:88%; }
+                      z-index:6; width:78%; max-width:78%; }
   #shareScorePopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
                            padding:18px 22px; text-align:center; }
   #shareScorePopupInner .shareTitle { font-size:20px; font-weight:bold; color:black; margin-bottom:10px; }
-  #shareScoreText { width:100%; box-sizing:border-box; font-size:14px; font-family:inherit;
+  #shareScoreText { width:100%; box-sizing:border-box; font-size:12px; font-family:inherit;
                      color:black; background:white; border:1px solid #999; border-radius:6px;
                      padding:8px; resize:none; margin-bottom:10px; }
   #shareScoreCloseBtn { font-size:14px; padding:6px 20px; border-radius:6px; border:1px solid #333;
@@ -77,8 +86,8 @@
   .btnRow { display:flex; gap:8px; }
   #gameModeBtnRow { margin-top:26px; }
   #digUpRow { margin-top:18px; }
-  #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px; border:none;
-              background:#C0392B; color:white; cursor:pointer; }
+  #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px;
+              border:3px solid black; background:#FFD400; color:black; cursor:pointer; }
   #msg { position:absolute; left:0; right:0; bottom:4px; font-size:12px; color:#a33;
          text-align:center; pointer-events:none; }
   #rulesPage { display:none; max-width:560px; margin:0 auto; padding:8px 4px 40px; text-align:left; }
@@ -133,7 +142,7 @@
     <div id="msg" style="display:none;"></div>
     <div id="shareScorePopup" style="display:none;">
       <div id="shareScorePopupInner">
-        <div class="shareTitle">Share your score!</div>
+        <div class="shareTitle">Share!</div>
         <textarea id="shareScoreText" readonly rows="6"></textarea>
         <button id="shareScoreCloseBtn">Close</button>
       </div>
@@ -803,12 +812,18 @@ let popupBlocking = false;
 let pendingResumeCallback = null;
 let pendingResumeEpoch = null;
 
+function escapeHtml(s){
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
 function showEventPopup(line1, line2, autoHide){
   const popup = document.getElementById('eventPopup');
   const inner = document.getElementById('eventPopupInner');
   inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
-  inner.querySelector('.line1').textContent = line1;
-  if (line2) inner.querySelector('.line2').textContent = line2;
+  inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
+  if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
   popup.style.display = 'block';
   requestAnimationFrame(() => popup.classList.add('visible'));
   clearTimeout(eventPopupTimer);
@@ -839,16 +854,13 @@ function buildShareText(){
   const constructionSign = '\u{1F6A7}';
   const womanWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}';
   const manWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}';
-  const lightning = '\u{26A1}\u{FE0F}';
-  const droplet = '\u{1F4A7}';
-  const emojiLine = `${constructionSign} ${womanWorker}${lightning}${droplet}${manWorker} ${constructionSign}`;
 
   const isoDate = todaysIndiaDateString(); // "YYYY-MM-DD"
   const [y, m, d] = isoDate.split('-').map(Number);
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const niceDate = `${d} ${monthNames[m-1]} ${y}`;
 
-  return `${emojiLine}\nSwalpa Adjust Maadi\n${niceDate}\n\nMe: ${revenue[1]}\nOpponent: ${revenue[2]}`;
+  return `Swalpa Adjust Maadi\n${niceDate}\n${womanWorker}${constructionSign} Me: ${revenue[1]}\n${manWorker}${constructionSign} Opponent: ${revenue[2]}\n\ntinyurl.com/adjust-maadi`;
 }
 
 function showShareScorePopup(){
@@ -1010,7 +1022,7 @@ function beginTurn(){
     pendingSquare = [r,c];
     render();
     const excuse = ROADWORKS_EXCUSES[Math.floor(rng()*ROADWORKS_EXCUSES.length)];
-    showEventPopup('Roadworks!', excuse, true);
+    showEventPopup('Swalpa adjust maadi!', excuse, true);
     if (vsComputerOn && turn === 2 && !gameOver){
       scheduleAfterPopupOrDelay(commitTurn, STAGE_DELAY_MS);
     }
