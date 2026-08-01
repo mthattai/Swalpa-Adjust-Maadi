@@ -87,7 +87,7 @@
   .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
   #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
-  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
+  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
   #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
@@ -182,6 +182,7 @@
   </div>
   <div class="btnRow" id="rulesBtnRow" style="display:none;">
     <button id="rulesBtn">Rules</button>
+    <button id="tutorialBtn">Tutorial</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
@@ -1220,6 +1221,9 @@ document.getElementById('rulesBtn').onclick = () => {
   document.getElementById('rulesPage').style.display = 'block';
   renderRuleDiagrams();
   window.scrollTo(0,0);
+};
+document.getElementById('tutorialBtn').onclick = () => {
+  window.open('tutorial.html', '_blank', 'noopener');
 };
 function exitPreLaunch(){
   inPreLaunch = false;
