@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>How to play - Swalpa Adjust Maadi</title>
+<meta property="og:title" content="Swalpa Adjust Maadi">
+<meta property="og:description" content="A game where you dig up Bangalore's roads.">
+<meta property="og:image" content="https://mthattai.github.io/Swalpa-Adjust-Maadi/preview.png">
+<meta property="og:url" content="https://mthattai.github.io/Swalpa-Adjust-Maadi/tutorial.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Swalpa Adjust Maadi">
+<meta name="twitter:description" content="A game where you dig up Bangalore's roads.">
+<meta name="twitter:image" content="https://mthattai.github.io/Swalpa-Adjust-Maadi/preview.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <style>
   :root {
     --bg: #f4f4f2;
@@ -45,7 +57,7 @@
     color: var(--muted);
     margin: 0 0 36px;
   }
-  #printBtn {
+  #printBtn, #playBtn {
     flex-shrink: 0;
     font-size: 13px;
     font-weight: 800;
@@ -57,7 +69,8 @@
     cursor: pointer;
     margin-top: 2px;
   }
-  #printBtn:hover { background: #ffdd33; }
+  #printBtn:hover, #playBtn:hover { background: #ffdd33; }
+  .headerBtnGroup { display: flex; gap: 8px; flex-shrink: 0; }
 
   /* Step structure - a genuine ordered sequence, so numbering is justified */
   .step {
@@ -135,7 +148,7 @@
   @media print {
     @page { margin: 14mm 12mm; }
     body { background: white; }
-    #printBtn { display: none; }
+    #printBtn, #playBtn { display: none; }
     .wrap { max-width: 100%; padding: 0; }
     .step {
       page-break-inside: avoid;
@@ -157,7 +170,10 @@
 
   <div class="pageHeaderRow">
     <h1 class="pageTitle">How to play Swalpa Adjust Maadi</h1>
-    <button id="printBtn" onclick="window.print()">Print</button>
+    <div class="headerBtnGroup">
+      <button id="playBtn">Play</button>
+      <button id="printBtn" onclick="window.print()">Print</button>
+    </div>
   </div>
   <p class="pageSub">A step-by-step guide to the board, the cards, and the rules.</p>
 
@@ -417,6 +433,21 @@
 
 </div>
 <script>
+  // If this tab was opened from the game (via its Tutorial button), this
+  // closes the tab and returns focus to that exact game tab, preserving
+  // whatever's in progress there. If the tutorial was opened some other
+  // way (bookmark, typed URL), the browser silently refuses to close it,
+  // and this line has no effect.
+  // history.length is 1 only when this tab has never navigated anywhere
+  // else on its own - true if the game's Tutorial button opened it via
+  // window.open, false if it was reached directly (bookmark, shared link,
+  // typed URL), since even a browser's own "new tab" page counts as one
+  // history entry before that navigation. Closing only succeeds in the
+  // first case; the second case gets the game opened fresh instead.
+  document.getElementById('playBtn').onclick = () => {
+    window.open('index.html', '_blank', 'noopener');
+  };
+
   // Equalize the two shotLabel heights within each pair, so a longer title
   // wrapping to more lines never pushes one image below its partner. This is
   // dynamic (not a fixed CSS guess) so it stays correct regardless of label
