@@ -52,8 +52,8 @@
   #eventPopup.visible { opacity:1; }
   #eventPopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
                       padding:16px 14px; text-align:center; }
-  #eventPopupInner .line1 { font-size:16px; font-weight:bold; color:black; }
-  #eventPopupInner .line2 { font-size:17px; margin-top:6px; color:black; opacity:0.85; }
+  #eventPopupInner .line1, #eventPopupInner .line2 { font-size:17px; font-weight:normal; color:black; }
+  #eventPopupInner .line2 { margin-top:6px; }
 
   #shareScorePopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
                       background:white; border-radius:16px; padding:12px; box-sizing:border-box;
@@ -64,7 +64,7 @@
   .shareBtnGroup { display:flex; gap:6px; }
   #shareScoreText { width:100%; box-sizing:border-box; font-size:11px; font-family:inherit;
                      color:black; background:white; border:1px solid #999; border-radius:6px;
-                     padding:8px; resize:none; }
+                     padding:8px; resize:none; overflow-x:auto; }
   #shareScoreCopyBtn, #shareScoreCloseBtn { font-size:13px; padding:5px 14px; border-radius:6px; border:1px solid #333;
                          background:white; color:#222; cursor:pointer; }
   .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
@@ -155,7 +155,7 @@
             <button id="shareScoreCloseBtn">Close</button>
           </div>
         </div>
-        <textarea id="shareScoreText" readonly rows="8"></textarea>
+        <textarea id="shareScoreText" readonly rows="7" wrap="off"></textarea>
       </div>
     </div>
   </div>
@@ -425,6 +425,16 @@ function freshGame(){
   pendingResumeEpoch = null;
   hideEventPopup();
   hideShareScorePopup();
+  // Excuse order is deliberately NOT tied to the seeded RNG, even in Today's-game
+  // mode - this doesn't affect scoring or AI behaviour at all, but lets a player
+  // replay the exact same Today's-game board without seeing an identical excuse
+  // sequence every time.
+  shuffledExcuses = [...ROADWORKS_EXCUSES];
+  for (let i=shuffledExcuses.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [shuffledExcuses[i],shuffledExcuses[j]] = [shuffledExcuses[j],shuffledExcuses[i]];
+  }
+  excuseDrawIndex = 0;
   const setupDeck = buildSetupDeck();
   board = [];
   let setupIdx = 0;
@@ -759,6 +769,8 @@ let gameEpoch = 0;
 let awaitingAdvance = false;
 
 let isTodaysGame = false;
+let shuffledExcuses = [];
+let excuseDrawIndex = 0;
 let seededRandomFn = null;
 
 // mulberry32: small, fast, deterministic PRNG. Good enough distribution for
@@ -864,7 +876,6 @@ function hideEventPopup(){
 // Built from explicit Unicode codepoints, not typed directly, to avoid any risk
 // of transcription/encoding corruption in the source.
 function buildShareText(){
-  const construction = '\u{1F6A7}';
   const womanWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}';
   const manWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}';
 
@@ -873,7 +884,7 @@ function buildShareText(){
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const niceDate = `${d} ${monthNames[m-1]} ${y}`;
 
-  return `I dug up half of Bangalore!\nCan you do better?\n${construction}\n${niceDate}\n${womanWorker}(me) ${revenue[1]} vs. ${revenue[2]} ${manWorker}\n${construction}\nPlay today's game:\ntinyurl.com/adjust-maadi`;
+  return `I played 'Swalpa adjust maadi', the game where you dig up Bangalore roads for fun!\n\n${niceDate}\n${womanWorker}(me) ${revenue[1]} vs. ${revenue[2]} ${manWorker}\n\nCan you beat my score in today's game?\ntinyurl.com/adjust-maadi`;
 }
 
 function showShareScorePopup(){
@@ -1047,8 +1058,8 @@ function beginTurn(){
     }
     pendingSquare = [r,c];
     render();
-    const excuse = ROADWORKS_EXCUSES[Math.floor(rng()*ROADWORKS_EXCUSES.length)];
-    showEventPopup('Swalpa adjust maadi!', excuse, true);
+    const excuse = shuffledExcuses[excuseDrawIndex++];
+    showEventPopup(excuse, 'Swalpa adjust maadi!', true);
     if (vsComputerOn && turn === 2 && !gameOver){
       scheduleAfterPopupOrDelay(commitTurn, STAGE_DELAY_MS);
     }
