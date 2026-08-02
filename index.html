@@ -95,6 +95,7 @@
   #digUpRow { margin-top:18px; }
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px;
               border:3px solid black; background:#FFD400; color:black; cursor:pointer; }
+  #digUpBtn:disabled { background:#e8e8e8; color:#888; cursor:default; }
   #msg { position:absolute; left:0; right:0; bottom:4px; font-size:12px; color:#a33;
          text-align:center; pointer-events:none; }
   #rulesPage { display:none; max-width:560px; margin:0 auto; padding:8px 4px 40px; text-align:left; }
@@ -123,7 +124,7 @@
     roads are constantly dug up for Metro work, VIP visits, and floods,
     wreaking havoc on the infrastructure. The city's residents are left to
     deal with unpredictable power and water, and must suffer in silence.</p>
-    <div id="digUpRow"><button id="digUpBtn">Let's start digging.<br>Take me to the game!</button></div>
+    <div id="digUpRow"><button id="digUpBtn" disabled>Loading...</button></div>
   </div>
   <div id="legendRow" style="display:none;">
     <div class="legendItem"><canvas id="legRed" width="52" height="52"></canvas><div class="label">Power</div></div>
@@ -319,7 +320,6 @@ let vsComputerOn = true;
 let numPlayers = 1;
 let effectiveN = 2;
 const TOTAL_ROUNDS = 20;
-const WIN_THRESHOLD = 500;
 let SIZE, BAND, INSET, CANVAS_SIZE;
 const RED_DARK = '#C0392B', RED_LIGHT = '#E8B4AC';
 const BLUE_DARK = '#2E86C1', BLUE_LIGHT = '#AED0EA';
@@ -770,6 +770,9 @@ let gameEpoch = 0;
 let awaitingAdvance = false;
 
 let isTodaysGame = false;
+let todaysScoreDiffs = [];
+const NUM_RANK_SIMULATIONS = 99;
+let simulationModeActive = false;
 let shuffledExcuses = [];
 let excuseDrawIndex = 0;
 let seededRandomFn = null;
@@ -876,6 +879,29 @@ function hideEventPopup(){
 
 // Built from explicit Unicode codepoints, not typed directly, to avoid any risk
 // of transcription/encoding corruption in the source.
+function ordinalSuffix(n){
+  const lastTwo = n % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return 'th';
+  const last = n % 10;
+  if (last === 1) return 'st';
+  if (last === 2) return 'nd';
+  if (last === 3) return 'rd';
+  return 'th';
+}
+
+// Rank 1 = best, 100 = worst. Ties are counted in the player's favour: only
+// simulated scores strictly greater than the player's own count against them.
+function computeTodaysRank(){
+  const myDiff = revenue[1] - revenue[2];
+  const countAbove = todaysScoreDiffs.filter(d => d > myDiff).length;
+  return countAbove + 1;
+}
+
+function formatRank(x){
+  if (x === 1) return 'First of 100';
+  return `${x}${ordinalSuffix(x)} highest of 100`;
+}
+
 function buildShareText(){
   const womanWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}';
   const manWorker = '\u{1F477}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}';
@@ -883,9 +909,10 @@ function buildShareText(){
   const isoDate = todaysIndiaDateString(); // "YYYY-MM-DD"
   const [y, m, d] = isoDate.split('-').map(Number);
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const niceDate = `${d} ${monthNames[m-1]} ${y}`;
+  const niceDate = `${d} ${monthNames[m-1]}`;
+  const rankText = formatRank(computeTodaysRank());
 
-  return `I played 'Swalpa adjust maadi', the game where you dig up Bangalore roads for fun!\n\n${niceDate}\n${womanWorker}(me) ${revenue[1]} vs. ${revenue[2]} ${manWorker}\n\nCan you beat my score in today's game?\ntinyurl.com/adjust-maadi`;
+  return `I played 'Swalpa adjust maadi', the game where you dig up Bangalore roads for fun!\n\n${womanWorker} (me) ${revenue[1]} vs. ${revenue[2]} (rival) ${manWorker}\n${niceDate} rank: ${rankText}.\n\nCan you beat my rank in today's game?\ntinyurl.com/adjust-maadi`;
 }
 
 function showShareScorePopup(){
@@ -934,10 +961,6 @@ function scheduleIfCurrent(fn, delay){
 let previewSavedTile = null;
 let lastPlayedSquare = null;
 
-function isCorner(r, c){
-  return (r === 0 || r === N-1) && (c === 0 || c === N-1);
-}
-
 function countMatchingNeighbors(r, c, ownerValue){
   const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
   let count = 0;
@@ -963,7 +986,7 @@ function applyHouseAndRevenue(){
       const ownerBeforeSteal = owner[lr][lc];
       if (countMatchingNeighbors(lr, lc, owner[lr][lc]) >= 1){
         owner[lr][lc] = turn;
-        if (ownerBeforeSteal !== turn){
+        if (ownerBeforeSteal !== turn && !simulationModeActive){
           showEventPopup('Good steal!', null, true);
         }
       }
@@ -1090,13 +1113,32 @@ function endTurnAndAdvance(){
 const AI_ALPHA = 0.7;
 const AI_BETA = 0.1;
 
-function aiChooseSquare(color, drawTile){
+const AI_SUBSET_SIZE = 18;
+
+// The AI no longer scans the full board. Each turn, it shuffles the list of
+// currently-valid candidate spaces (via rng(), so this automatically uses
+// Today's seeded stream in Today's-game mode, or true randomness in a
+// random game) and only evaluates the first AI_SUBSET_SIZE of them - always
+// that many distinct spaces, never fewer unless fewer are actually valid.
+function aiChooseSquare(color, drawTile, randFn){
+  if (!randFn) randFn = rng;
   const otherC = color===1 ? 2 : 1;
   const decay = Math.max(0, (TOTAL_ROUNDS - roundNum) / TOTAL_ROUNDS);
-  let bestVal = -Infinity, best = null;
+
+  const candidates = [];
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c) continue;
     if (board[r][c].kind === 'P') continue;
+    candidates.push([r,c]);
+  }
+  for (let i=candidates.length-1;i>0;i--){
+    const j = Math.floor(randFn()*(i+1));
+    [candidates[i],candidates[j]] = [candidates[j],candidates[i]];
+  }
+  const subset = AI_SUBSET_SIZE >= candidates.length ? candidates : candidates.slice(0, AI_SUBSET_SIZE);
+
+  let bestVal = -Infinity, best = null;
+  for (const [r,c] of subset){
     const saved = board[r][c];
     const wasHouseHere = house[r][c];
     const ownerHere = owner[r][c];
@@ -1309,6 +1351,95 @@ function renderRuleDiagrams(){
   }
 }
 
+// Generates today's fixed set of NUM_RANK_SIMULATIONS score-differences, used
+// later to rank the player's own result once their game ends. Runs once, at
+// Today's-game launch, before the player's own board is set up.
+//
+// Two separate RNG roles, matching the confirmed design:
+//  - Board/deck/Roadworks-targeting/Player 2's subset choice: re-seeded fresh
+//    from today's date before EVERY one of the 99 games, so every single
+//    game plays out on today's exact board, with today's exact opponent
+//    behaviour - matching what the human player actually faces.
+//  - Player 1's subset choice: a single stream, seeded once and left running
+//    continuously across all 99 games without ever being re-seeded. This is
+//    the only source of variation between the 99 games; because it always
+//    starts from the same seed, the whole batch reproduces identically on
+//    every launch on the same date.
+//
+// All live game state is saved beforehand and restored afterward, so the
+// player's own upcoming game is completely unaffected.
+// Runs exactly one of the day's rank simulations, using the given RNG
+// specifically for Player 1's subset choice (the continuous, cross-batch
+// simDriverRNG). Board/deck/Roadworks/Player 2 use the global rng(), which
+// the caller must have pointed at a freshly-reseeded stream first. Returns
+// the resulting score difference.
+function runOneRankSimulation(simDriverRNG){
+  const setupDeck = buildSetupDeck();
+  board = []; house = []; owner = [];
+  for (let r=0;r<N;r++){
+    board.push([]); house.push(new Array(N).fill(false)); owner.push(new Array(N).fill(null));
+    for (let c=0;c<N;c++) board[r].push(setupDeck[r*N+c]);
+  }
+  revenue = {1:0,2:0,3:0,4:0};
+  roundNum = 1; turn = 1; lastPlayedSquare = null; gameOver = false;
+  initTileQueue();
+
+  let moves = 0;
+  while (roundNum <= TOTAL_ROUNDS && !gameOver && moves < 500){
+    moves++;
+    if (currentDraw.kind === 'X'){
+      const r = Math.floor(rng()*N), c = Math.floor(rng()*N);
+      if (board[r][c].kind !== 'X'){ board[r][c]={kind:'X',rot:0}; house[r][c]=false; owner[r][c]=null; }
+      lastPlayedSquare = [r,c];
+    } else if (turn === 1){
+      const rc = aiChooseSquare(1, currentDraw, simDriverRNG);
+      board[rc[0]][rc[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
+      lastPlayedSquare = rc;
+    } else {
+      const rc = aiChooseSquare(2, currentDraw);
+      board[rc[0]][rc[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
+      lastPlayedSquare = rc;
+    }
+    applyHouseAndRevenue();
+    advanceTileQueue();
+    const wasLast = (turn === effectiveN);
+    if (wasLast){ if (roundNum >= TOTAL_ROUNDS) break; roundNum++; }
+    turn = wasLast ? 1 : turn+1;
+  }
+  return revenue[1] - revenue[2];
+}
+
+// Runs all NUM_RANK_SIMULATIONS as a single synchronous block (no chunking -
+// simpler and more robust). simulationModeActive is set for the whole
+// duration so any visual side-effects the reused game functions normally
+// trigger (e.g. the "Good steal!" popup) are suppressed, since these games
+// are never meant to be seen. Calls onComplete() once todaysScoreDiffs is
+// fully populated and all live state has been restored.
+function runTodaysRankSimulations(onComplete){
+  const saved = {
+    board, house, owner, revenue, turn, currentDraw, upcomingTiles, roundNum, gameOver,
+    lastPlayedSquare, deck, deckPos, seededRandomFn,
+  };
+
+  simulationModeActive = true;
+  const simDriverRNG = mulberry32(seedFromDateString(todaysIndiaDateString()));
+  const diffs = [];
+  for (let i=0;i<NUM_RANK_SIMULATIONS;i++){
+    seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
+    diffs.push(runOneRankSimulation(simDriverRNG));
+  }
+  simulationModeActive = false;
+
+  todaysScoreDiffs = diffs;
+  board=saved.board; house=saved.house; owner=saved.owner; revenue=saved.revenue;
+  turn=saved.turn; currentDraw=saved.currentDraw; upcomingTiles=saved.upcomingTiles;
+  roundNum=saved.roundNum; gameOver=saved.gameOver; lastPlayedSquare=saved.lastPlayedSquare;
+  deck=saved.deck; deckPos=saved.deckPos;
+  // Fresh, unconsumed stream for the player's own upcoming game.
+  seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
+  if (onComplete) onComplete();
+}
+
 function enterTodaysGameMode(){
   isTodaysGame = true;
   seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
@@ -1498,6 +1629,27 @@ document.querySelectorAll('.infoIcon').forEach(cnv => {
 });
 
 renderTitleAndLegend();
+
+// Prepare today's rank-comparison list before the player can click anything,
+// so there is no delay once they actually start. digUpBtn already shows
+// "Loading..." and is disabled from page load; the single setTimeout below
+// lets the browser actually paint that text before the batch (a single,
+// synchronous block - simpler and more robust than chunking it) runs. Later
+// clicks on digUpBtn or the in-game todaysGameBtn do NOT re-run this; the
+// list is already populated and, being seeded from today's date, would only
+// ever come out identical anyway.
+enterTodaysGameMode();
+numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6;
+computeLayout();
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    runTodaysRankSimulations(() => {
+      const btn = document.getElementById('digUpBtn');
+      btn.innerHTML = "Let's start digging.<br>Take me to the game!";
+      btn.disabled = false;
+    });
+  });
+});
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3129623529be4e2e8dce13d003159228"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
