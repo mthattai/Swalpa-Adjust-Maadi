@@ -1113,17 +1113,22 @@ function endTurnAndAdvance(){
 const AI_ALPHA = 0.7;
 const AI_BETA = 0.1;
 
-const AI_SUBSET_SIZE = 18;
+const AI_SUBSET_SIZE_CONFIG = {6:18, 7:25, 8:32};
 
 // The AI no longer scans the full board. Each turn, it shuffles the list of
 // currently-valid candidate spaces (via rng(), so this automatically uses
 // Today's seeded stream in Today's-game mode, or true randomness in a
-// random game) and only evaluates the first AI_SUBSET_SIZE of them - always
-// that many distinct spaces, never fewer unless fewer are actually valid.
+// random game) and only evaluates the first N of them, where N is looked up
+// per board size (AI_SUBSET_SIZE_CONFIG) - 18 was calibrated specifically for
+// 6x6 and would be a disproportionately smaller fraction of a larger board,
+// so 7x7 and 8x8 each get their own value instead of inheriting 6x6's. This
+// is always that many distinct spaces, never fewer unless fewer are
+// actually valid.
 function aiChooseSquare(color, drawTile, randFn){
   if (!randFn) randFn = rng;
   const otherC = color===1 ? 2 : 1;
   const decay = Math.max(0, (TOTAL_ROUNDS - roundNum) / TOTAL_ROUNDS);
+  const subsetSize = AI_SUBSET_SIZE_CONFIG[N];
 
   const candidates = [];
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
@@ -1135,7 +1140,7 @@ function aiChooseSquare(color, drawTile, randFn){
     const j = Math.floor(randFn()*(i+1));
     [candidates[i],candidates[j]] = [candidates[j],candidates[i]];
   }
-  const subset = AI_SUBSET_SIZE >= candidates.length ? candidates : candidates.slice(0, AI_SUBSET_SIZE);
+  const subset = subsetSize >= candidates.length ? candidates : candidates.slice(0, subsetSize);
 
   let bestVal = -Infinity, best = null;
   for (const [r,c] of subset){

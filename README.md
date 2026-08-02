@@ -298,7 +298,7 @@ feeling identical in every last detail.
 
 The game ends the instant the deck's cards run out at the end of round 20
 (the two are the same event, per Β§5). Winner determination
-(`finishGame()`, lines 1241-1258): whichever player(s) have the strictly
+(`finishGame()`, lines 1246-1263): whichever player(s) have the strictly
 highest final score win; if more than one player ties for the highest score,
 it is declared a tie. A popup announces "Player X WINS" (or "It's a tie!"),
 paired with the fixed second line "Residents LOSE" -- this popup also
@@ -385,7 +385,7 @@ slot currently points to.
 
 Today's game's core guarantee is: every player who launches it on the same
 India calendar date sees the identical starting board and deck order,
-because `enterTodaysGameMode()` (lines 1443-1446) always constructs a fresh
+because `enterTodaysGameMode()` (lines 1448-1451) always constructs a fresh
 `mulberry32` instance from the same, date-derived seed, and `freshGame()`
 then consumes that instance's sequence via `rng()` in exactly the same order
 every time (setup deck, then play deck).
@@ -407,7 +407,7 @@ comparing scores across different players on the same Today's-game board
 meaningful -- the opponent is not "luckier" for one player than another,
 given identical play.
 
-Switching to Random-game mode (`enterRandomGameMode()`, lines 1447-1450)
+Switching to Random-game mode (`enterRandomGameMode()`, lines 1452-1455)
 simply sets `isTodaysGame = false` and nulls out `seededRandomFn`; every one
 of the same code paths above then falls through `rng()` to `Math.random()`
 instead, with no special-casing required anywhere else in the codebase.
@@ -416,7 +416,7 @@ instead, with no special-casing required anywhere else in the codebase.
 ## 15. The AI
 
 A single function, `aiChooseSquare(color, drawTile, randFn)` (lines
-1123-1174), governs every AI-controlled move in the game -- there is no
+1127-1179), governs every AI-controlled move in the game -- there is no
 separate logic for "the Today's-game opponent" versus "an AI used in a
 background simulation" versus any hypothetical future AI seat; only the
 `randFn` argument passed in differs by context (defaulting to the global
@@ -429,16 +429,31 @@ Each call:
    restrictions as a human's turn: not a Park, not the immediately-preceding
    move's space).
 2. Fisher-Yates shuffles that list using `randFn`.
-3. Takes only the first `AI_SUBSET_SIZE = 18` of the shuffled list (or all of
-   them, if fewer than 18 are actually valid) -- always exactly 18 *distinct*
-   spaces when at least 18 exist, never a repeat, since the shuffle operates
-   on a list with no duplicate entries to begin with. (This value was
-   briefly changed to 12 during calibration, on the reasoning that a lower
-   value would let novice players see a higher/better rank more easily; that
-   made the AI too easy to beat, and 18 was restored and is now the frozen,
-   final value.)
+3. Takes only the first N of the shuffled list (or all of them, if fewer
+   than N are actually valid), where N is looked up per board size from
+   `AI_SUBSET_SIZE_CONFIG`:
 
-**Scoring each candidate.** For each of the (up to 18) candidate spaces, the
+   | Board size (N) | Subset size |
+   |---|---|
+   | 6x6 | 18 |
+   | 7x7 | 25 |
+   | 8x8 | 32 |
+
+   This is always exactly N *distinct* spaces when at least N exist, never a
+   repeat, since the shuffle operates on a list with no duplicate entries to
+   begin with. (The 6x6 value was briefly changed to 12 during calibration,
+   on the reasoning that a lower value would let novice players see a
+   higher/better rank more easily; that made the AI too easy to beat, and 18
+   was restored and is now frozen for 6x6. The per-board-size table itself
+   was added after an initial oversight: a single fixed value of 18 had been
+   applied uniformly to all three board sizes, which is a much smaller
+   *fraction* of the board on 7x7/8x8 than on 6x6, disproportionately
+   weakening the AI on larger boards with no such effect intended. Only
+   6x6's own value, used by Today's game, needed to stay unchanged for
+   consistency with the already-frozen calibration and the existing
+   `todaysScoreDiffs` comparison batch, which is always built at N=6.)
+
+**Scoring each candidate.** For each of the (up to N) candidate spaces, the
 AI hypothetically places the current card there, recomputes connectivity,
 and computes:
 
@@ -486,14 +501,15 @@ load, since the result is seeded from the date and would only ever come out
 identical anyway.
 
 **Two independent RNG roles**, deliberately kept as two separate `mulberry32`
-instances (`runTodaysRankSimulations()`, lines 1418-1441, and
-`runOneRankSimulation()`, lines 1376-1410):
+instances (`runTodaysRankSimulations()`, lines 1423-1446, and
+`runOneRankSimulation()`, lines 1381-1415):
 
 1. **Per-game board/deck/Roadworks/Player-2 stream**: a fresh `mulberry32`
    instance, re-seeded from the identical date-derived seed, created anew
    before *each* of the 99 games individually. This drives that game's setup
-   deck, play deck, Roadworks targeting, and Player 2's own 18-subset
-   choice, via the ordinary `rng()` dispatcher -- meaning every one of the 99
+   deck, play deck, Roadworks targeting, and Player 2's own subset choice
+   (18, the 6x6 lookup value from Β§15's table, since Today's game is always
+   6x6), via the ordinary `rng()` dispatcher -- meaning every one of the 99
    games plays out on the literal, identical board a real human would face
    that day, against the identical-strength opponent.
 2. **Continuous cross-batch stream for Player 1**: a single `mulberry32`
@@ -588,7 +604,8 @@ tinyurl.com/adjust-maadi
   ms**, during which player input is fully blocked (`popupBlocking`) --
   gameplay does not silently continue underneath a visible popup.
 - `NUM_RANK_SIMULATIONS = 99`.
-- `AI_SUBSET_SIZE = 18`.
+- `AI_SUBSET_SIZE_CONFIG` -- see Β§15 for the full, per-board-size table (18 /
+  25 / 32 for 6x6 / 7x7 / 8x8 respectively).
 
 
 ## 19. File and deployment structure
