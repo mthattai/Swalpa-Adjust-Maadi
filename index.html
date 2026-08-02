@@ -912,7 +912,7 @@ function buildShareText(){
   const niceDate = `${d} ${monthNames[m-1]}`;
   const rankText = formatRank(computeTodaysRank());
 
-  return `I played 'Swalpa adjust maadi', the game where you dig up Bangalore's roads for fun!\n\n${womanWorker} (me) ${revenue[1]} vs. ${revenue[2]} (rival) ${manWorker}\n${niceDate} rank: ${rankText}.\n\nCan you beat my rank in today's game?\ntinyurl.com/adjust-maadi`;
+  return `I played Swalpa Adjust Maadi, the game where you dig up Bangalore's roads for fun!\n\n${niceDate}: ${rankText}\n${womanWorker}(me) ${revenue[1]} vs ${revenue[2]} (rival)${manWorker}\n\nCan you beat my rank in today's game? https://tinyurl.com/adjust-maadi`;
 }
 
 function showShareScorePopup(){
