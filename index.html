@@ -690,8 +690,19 @@ function render(){
       const cx=px+SIZE/2, cy=py+SIZE/2;
       const rSup = redC[r][c], bSup = blueC[r][c];
       const projectedNewHouse = !house[r][c] && rSup && bSup;
+      // If this space already has a house, is now fully disconnected given
+      // the current (possibly still-being-previewed) board, isn't already
+      // the mover's own, and has a matching-owner neighbour, this is a
+      // projected steal - show the mover's colour immediately, same
+      // principle as projectedNewHouse above. Purely visual: the actual
+      // owner[][] reassignment still only happens on commit, via
+      // applyHouseAndRevenue(). Naturally reverts if the player instead
+      // previews a different space, since this is recomputed fresh from
+      // the live board on every render() call.
+      const projectedSteal = house[r][c] && !rSup && !bSup && owner[r][c] !== turn
+        && countMatchingNeighbors(r, c, owner[r][c]) >= 1;
       let ownerColor = null;
-      const effOwner = owner[r][c] || (projectedNewHouse ? turn : null);
+      const effOwner = (projectedSteal || projectedNewHouse) ? turn : owner[r][c];
       if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
       drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup, ownerColor);
     }
@@ -783,9 +794,17 @@ function renderDrawArea(){
       const isActive = (idx === upcomingTiles.length - 1);
       c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
       drawTileOn(c, 2, 2, psize-4, tile, true, true);
-      if (isActive){
+      if (isActive && !awaitingAdvance){
         c.strokeStyle='#F1A208'; c.lineWidth=4; c.setLineDash([6,4]);
         c.strokeRect(3,3,psize-6,psize-6); c.setLineDash([]);
+      } else if (isActive && awaitingAdvance){
+        // Just committed, still in this same rightmost slot since the deck
+        // hasn't shifted yet - a real grey overlay painted on top of the
+        // tile, not just reduced element opacity (which barely read as
+        // "greyed out" against this card's own previous, brightly
+        // highlighted state a moment before).
+        c.fillStyle = 'rgba(120,120,120,0.65)'; c.fillRect(0,0,psize,psize);
+        c.strokeStyle='#999'; c.lineWidth=2; c.strokeRect(1,1,psize-2,psize-2);
       } else {
         c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
         cnv.style.opacity = '0.55';
@@ -891,7 +910,7 @@ function showEventPopup(line1, line2, autoHide, duration){
   clearTimeout(eventPopupTimer);
   if (autoHide){
     popupBlocking = true;
-    eventPopupTimer = setTimeout(hideEventPopup, duration || 2200);
+    eventPopupTimer = setTimeout(hideEventPopup, duration || LONG_DELAY_MS);
   }
 }
 
@@ -1029,7 +1048,7 @@ function applyHouseAndRevenue(){
       if (countMatchingNeighbors(lr, lc, owner[lr][lc]) >= 1){
         owner[lr][lc] = turn;
         if (ownerBeforeSteal !== turn && !simulationModeActive){
-          showEventPopup('Good steal!', null, true, STEAL_POPUP_DURATION_MS);
+          showEventPopup('Good steal!', null, true, LONG_DELAY_MS);
         }
       }
     }
@@ -1064,35 +1083,25 @@ function advanceToNextTurn(){
     }
     roundNum++;
   }
+  // The deck only shifts now, at the moment the turn actually moves to the
+  // next player - not at commit time - so the just-played card stays
+  // visible (greyed out, per renderDrawArea()) throughout the scoring
+  // reveal for the player who just moved, rather than the deck already
+  // having moved on while that reveal is still playing out.
+  advanceTileQueue();
   beginTurn();
 }
 
-const STAGE_DELAY_MS = 800;
-// Specifically how long the AI's chosen square stays visible (dashed
-// border shown, tile not yet placed) before it actually commits - kept
-// separate from STAGE_DELAY_MS, which also governs unrelated pacing (the
-// "thinking" pause before the AI even reveals its choice, and the pause
-// after any move before the turn advances), so lengthening this one alone
-// doesn't slow those down too.
-const AI_PREVIEW_DELAY_MS = 1200;
-
-// The "Good steal!" popup specifically felt like it lingered too long -
-// shortened just for this one popup, leaving the Roadworks-excuse and
-// game-over popups (still using showEventPopup's 2200ms default) unchanged.
-const STEAL_POPUP_DURATION_MS = 1300;
-
-// The post-move reveal now happens in distinct stages, rather than the
-// grey "last played" square, the green scoring highlight, and the +X score
-// text all appearing simultaneously the instant a move is confirmed (which
-// felt like too much happening at once, too fast to actually follow):
-//   1. Grey square only, scoring not yet calculated at all.
-//   2. Scoring runs; green highlight + "+X" appear on top of the grey square.
-//   3. Highlight clears; the plain running total is shown - still the same
-//      player's turn, nothing has advanced yet.
-//   4. Only now does the turn actually advance to the next player.
-const GREY_STAGE_DELAY_MS = 600;
-const SCORE_HIGHLIGHT_DURATION_MS = 2000;
-const SCORE_SETTLE_DELAY_MS = 800;
+// Exactly two timing values exist in the whole game, on purpose: QUICK for
+// every gap between two distinct, sequential events (nothing to read, just
+// pacing), and LONG for every duration meant to actually be observed/read
+// (a popup, a highlight, the AI's own chosen-square preview). Two things
+// are never shown at once other than the one deliberate exception: the
+// deck shifting and the new player's scorebox highlighting, which both
+// happen together, at the exact moment a turn begins (see beginTurn(),
+// called from advanceToNextTurn() right after advanceTileQueue()).
+const QUICK_DELAY_MS = 500;
+const LONG_DELAY_MS = 1300;
 
 const VISIBLE_TILES = 8;
 
@@ -1145,28 +1154,38 @@ function beginTurn(){
   render();
 
   if (currentDraw.kind === 'X'){
-    const r = Math.floor(rng()*N);
-    const c = Math.floor(rng()*N);
-    if (board[r][c].kind !== 'X'){
-      board[r][c] = {kind:'X', rot:0};
-      house[r][c] = false;
-      owner[r][c] = null;
-    }
-    pendingSquare = [r,c];
-    render();
-    const excuse = shuffledExcuses[excuseDrawIndex++];
-    showEventPopup(excuse, 'Swalpa adjust maadi!', true);
-    if (vsComputerOn && turn === 2 && !gameOver){
-      // The popup was hiding the highlighted target the whole time it was
-      // up, so committing the instant it closes would mean the player never
-      // actually gets to see that square unobscured at all. Wait for the
-      // popup to close, then hold the highlight for the same duration a
-      // regular AI move's preview normally gets, before committing.
-      scheduleAfterPopupOrDelay(() => scheduleIfCurrent(commitTurn, AI_PREVIEW_DELAY_MS), 0);
-    }
-    // else: human's turn -- wait for a click on the tile icon to commit.
+    // A short pause before the popup even appears, rather than it showing
+    // in the very same instant as the deck/scorebox update above. The
+    // popup must then fully, completely close before the target tile
+    // appears on the board at all - not just a short overlap while it's
+    // still up. Only once it's gone does a further short pause run before
+    // the tile actually lands and gets outlined. This applies uniformly
+    // whether it's the human's or the AI's turn; only what happens once
+    // the tile has landed differs below.
+    scheduleIfCurrent(() => {
+      const excuse = shuffledExcuses[excuseDrawIndex++];
+      showEventPopup(excuse, 'Swalpa adjust maadi!', true, LONG_DELAY_MS);
+      scheduleAfterPopupOrDelay(() => scheduleIfCurrent(() => {
+        const r = Math.floor(rng()*N);
+        const c = Math.floor(rng()*N);
+        if (board[r][c].kind !== 'X'){
+          board[r][c] = {kind:'X', rot:0};
+          house[r][c] = false;
+          owner[r][c] = null;
+        }
+        pendingSquare = [r,c];
+        render();
+        if (vsComputerOn && turn === 2 && !gameOver){
+          // The popup is already, definitely closed by this point - just
+          // hold the highlight for the same duration anything else meant
+          // to be observed gets, before committing.
+          scheduleIfCurrent(commitTurn, LONG_DELAY_MS);
+        }
+        // else: human's turn -- wait for a click on the tile icon to commit.
+      }, QUICK_DELAY_MS), 0);
+    }, QUICK_DELAY_MS);
   } else if (vsComputerOn && turn === 2 && !gameOver){
-    scheduleIfCurrent(aiPlayTurn, STAGE_DELAY_MS);
+    scheduleIfCurrent(aiPlayTurn, QUICK_DELAY_MS);
   }
   // else: human's turn -- wait for a board click (preview), then tile-icon click to commit.
 }
@@ -1175,40 +1194,42 @@ function commitTurn(){
   lastPlayedSquare = pendingSquare ? [pendingSquare[0], pendingSquare[1]] : null;
   pendingSquare = null;
   previewSavedTile = null;
-  advanceTileQueue();
   // Block input for the entire, multi-stage reveal sequence below, not just
   // once the highlight itself appears - otherwise a stray click during the
   // grey-only stage could start previewing a new card mid-reveal.
   awaitingAdvance = true;
   render(); // Stage 1: only the grey "last played" square - scoring hasn't run yet.
-  scheduleIfCurrent(revealScoringStage, GREY_STAGE_DELAY_MS);
+  scheduleIfCurrent(revealScoringStage, QUICK_DELAY_MS);
 }
 
 function revealScoringStage(){
   applyHouseAndRevenue();
   if (lastScoringAmount === 0){
-    // Nothing to highlight this turn - skip straight to the (unchanged)
-    // settled-score stage rather than showing an empty highlight window.
-    scheduleAfterPopupOrDelay(showSettledScoreStage, 0);
+    // Nothing changed since the grey stage began (scoreHighlightActive was
+    // never turned on in this branch), so going via showSettledScoreStage()
+    // would just be a second, redundant QUICK gap with nothing new to show
+    // at the end of it. Go straight to advancing instead - a single QUICK
+    // gap, not two stacked back to back.
+    scheduleAfterPopupOrDelay(advanceToNextTurn, QUICK_DELAY_MS);
     return;
   }
   // If a steal just triggered its own popup above, let it fully close before
   // showing the scoring highlight - otherwise the two compete for attention
   // at the same time. scheduleAfterPopupOrDelay already does exactly this
-  // check; passing 0 means "as soon as possible" when nothing is blocking.
-  scheduleAfterPopupOrDelay(showScoreHighlightStage, 0);
+  // check.
+  scheduleAfterPopupOrDelay(showScoreHighlightStage, QUICK_DELAY_MS);
 }
 
 function showScoreHighlightStage(){
   scoreHighlightActive = true;
   render(); // Stage 2: green highlight + "+X" appear.
-  scheduleAfterPopupOrDelay(showSettledScoreStage, SCORE_HIGHLIGHT_DURATION_MS);
+  scheduleAfterPopupOrDelay(showSettledScoreStage, LONG_DELAY_MS);
 }
 
 function showSettledScoreStage(){
   scoreHighlightActive = false;
   render(); // Stage 3: highlight clears, plain total shown - still this player's turn.
-  scheduleAfterPopupOrDelay(advanceToNextTurn, SCORE_SETTLE_DELAY_MS);
+  scheduleAfterPopupOrDelay(advanceToNextTurn, QUICK_DELAY_MS);
 }
 
 
@@ -1302,7 +1323,7 @@ function aiPlayTurn(){
     // before the turn actually advances).
     board[r][c] = {kind: currentDraw.kind, rot: currentDraw.rot};
     commitTurn();
-  }, AI_PREVIEW_DELAY_MS);
+  }, LONG_DELAY_MS);
 }
 
 canvas.addEventListener('click', (e)=>{
@@ -1355,9 +1376,9 @@ function finishGame(){
     else if (revenue[p] === maxRev){ winners.push(p); }
   }
   if (winners.length === 1){
-    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', true);
+    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', true, LONG_DELAY_MS);
   } else {
-    showEventPopup("It's a tie!", 'Residents LOSE', true);
+    showEventPopup("It's a tie!", 'Residents LOSE', true, LONG_DELAY_MS);
   }
   if (isTodaysGame){
     pendingResumeCallback = showShareScorePopup;
