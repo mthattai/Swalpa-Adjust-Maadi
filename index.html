@@ -451,6 +451,10 @@ function freshGame(){
   roundNum = 1;
   gameOver = false;
   lastPlayedSquare = null;
+  lastScoringSquares = [];
+  lastScoringPlayer = null;
+  lastScoringAmount = 0;
+  scoreHighlightActive = false;
 
   const {redC, blueC} = connectivity();
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
@@ -698,6 +702,31 @@ function render(){
       ctx.strokeStyle='#F1A208'; ctx.lineWidth=4; ctx.setLineDash([6,4]);
       ctx.strokeRect(px+3,py+3,SIZE-6,SIZE-6); ctx.setLineDash([]);
     }
+
+    if (scoreHighlightActive && lastScoringSquares.some(([sr,sc]) => sr===r && sc===c)){
+      // Player's own colour (same values as the scorebox), rounded rect,
+      // with a thick white border specifically so that when several
+      // adjacent squares score at once, each one stays visually distinct
+      // rather than the highlights merging into one blob. Each square is
+      // always worth exactly 1 point individually, so every one of them
+      // shows its own "+1", reinforcing that points come per
+      // doubly-connected house, not as a single lump sum.
+      const inset = 2;
+      const borderWidth = Math.max(6, SIZE*0.12);
+      const radius = SIZE*0.18;
+      ctx.beginPath();
+      ctx.roundRect(px+inset, py+inset, SIZE-2*inset, SIZE-2*inset, radius);
+      ctx.fillStyle = PLAYER_COLORS[lastScoringPlayer-1];
+      ctx.fill();
+      ctx.lineWidth = borderWidth;
+      ctx.strokeStyle = 'white';
+      ctx.stroke();
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${Math.round(SIZE*0.4)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('+1', px+SIZE/2, py+SIZE/2);
+    }
   }
 
   const boardEdge0 = BAND, boardEdgeN = BAND + N*SIZE;
@@ -712,7 +741,11 @@ function render(){
   for (let p=1; p<=4; p++){
     const box = document.getElementById('scoreP'+p);
     const numEl = box.querySelector('.num');
-    numEl.textContent = revenue[p];
+    if (scoreHighlightActive && p === lastScoringPlayer){
+      numEl.textContent = '+' + lastScoringAmount;
+    } else {
+      numEl.textContent = revenue[p];
+    }
     try {
       fitTextToWidth(numEl, box.offsetWidth * 0.8, 22, 12);
     } catch (e) {
@@ -847,7 +880,7 @@ function escapeHtml(s){
   return div.innerHTML;
 }
 
-function showEventPopup(line1, line2, autoHide){
+function showEventPopup(line1, line2, autoHide, duration){
   const popup = document.getElementById('eventPopup');
   const inner = document.getElementById('eventPopupInner');
   inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
@@ -858,7 +891,7 @@ function showEventPopup(line1, line2, autoHide){
   clearTimeout(eventPopupTimer);
   if (autoHide){
     popupBlocking = true;
-    eventPopupTimer = setTimeout(hideEventPopup, 2200);
+    eventPopupTimer = setTimeout(hideEventPopup, duration || 2200);
   }
 }
 
@@ -960,6 +993,15 @@ function scheduleIfCurrent(fn, delay){
 }
 let previewSavedTile = null;
 let lastPlayedSquare = null;
+// Which squares just earned the current mover a point this turn, and how
+// many total - populated fresh by applyHouseAndRevenue() every turn, shown
+// briefly (scoreHighlightActive) so it's visually obvious that points come
+// specifically from doubly-connected, owned houses, not from building a
+// house or from a running tally of same-colour houses in general.
+let lastScoringSquares = [];
+let lastScoringPlayer = null;
+let lastScoringAmount = 0;
+let scoreHighlightActive = false;
 
 function countMatchingNeighbors(r, c, ownerValue){
   const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
@@ -987,7 +1029,7 @@ function applyHouseAndRevenue(){
       if (countMatchingNeighbors(lr, lc, owner[lr][lc]) >= 1){
         owner[lr][lc] = turn;
         if (ownerBeforeSteal !== turn && !simulationModeActive){
-          showEventPopup('Good steal!', null, true);
+          showEventPopup('Good steal!', null, true, STEAL_POPUP_DURATION_MS);
         }
       }
     }
@@ -999,14 +1041,19 @@ function applyHouseAndRevenue(){
       owner[r][c] = turn;
     }
   }
+  lastScoringSquares = [];
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (owner[r][c] === turn && redC[r][c] && blueC[r][c]){
       revenue[owner[r][c]] += 1;
+      lastScoringSquares.push([r,c]);
     }
   }
+  lastScoringPlayer = turn;
+  lastScoringAmount = lastScoringSquares.length;
 }
 
 function advanceToNextTurn(){
+  scoreHighlightActive = false;
   const wasLastPlayer = (turn === effectiveN);
   turn = wasLastPlayer ? 1 : turn + 1;
 
@@ -1021,6 +1068,31 @@ function advanceToNextTurn(){
 }
 
 const STAGE_DELAY_MS = 800;
+// Specifically how long the AI's chosen square stays visible (dashed
+// border shown, tile not yet placed) before it actually commits - kept
+// separate from STAGE_DELAY_MS, which also governs unrelated pacing (the
+// "thinking" pause before the AI even reveals its choice, and the pause
+// after any move before the turn advances), so lengthening this one alone
+// doesn't slow those down too.
+const AI_PREVIEW_DELAY_MS = 1200;
+
+// The "Good steal!" popup specifically felt like it lingered too long -
+// shortened just for this one popup, leaving the Roadworks-excuse and
+// game-over popups (still using showEventPopup's 2200ms default) unchanged.
+const STEAL_POPUP_DURATION_MS = 1300;
+
+// The post-move reveal now happens in distinct stages, rather than the
+// grey "last played" square, the green scoring highlight, and the +X score
+// text all appearing simultaneously the instant a move is confirmed (which
+// felt like too much happening at once, too fast to actually follow):
+//   1. Grey square only, scoring not yet calculated at all.
+//   2. Scoring runs; green highlight + "+X" appear on top of the grey square.
+//   3. Highlight clears; the plain running total is shown - still the same
+//      player's turn, nothing has advanced yet.
+//   4. Only now does the turn actually advance to the next player.
+const GREY_STAGE_DELAY_MS = 600;
+const SCORE_HIGHLIGHT_DURATION_MS = 2000;
+const SCORE_SETTLE_DELAY_MS = 800;
 
 const VISIBLE_TILES = 8;
 
@@ -1085,7 +1157,12 @@ function beginTurn(){
     const excuse = shuffledExcuses[excuseDrawIndex++];
     showEventPopup(excuse, 'Swalpa adjust maadi!', true);
     if (vsComputerOn && turn === 2 && !gameOver){
-      scheduleAfterPopupOrDelay(commitTurn, STAGE_DELAY_MS);
+      // The popup was hiding the highlighted target the whole time it was
+      // up, so committing the instant it closes would mean the player never
+      // actually gets to see that square unobscured at all. Wait for the
+      // popup to close, then hold the highlight for the same duration a
+      // regular AI move's preview normally gets, before committing.
+      scheduleAfterPopupOrDelay(() => scheduleIfCurrent(commitTurn, AI_PREVIEW_DELAY_MS), 0);
     }
     // else: human's turn -- wait for a click on the tile icon to commit.
   } else if (vsComputerOn && turn === 2 && !gameOver){
@@ -1099,14 +1176,39 @@ function commitTurn(){
   pendingSquare = null;
   previewSavedTile = null;
   advanceTileQueue();
-  endTurnAndAdvance();
+  // Block input for the entire, multi-stage reveal sequence below, not just
+  // once the highlight itself appears - otherwise a stray click during the
+  // grey-only stage could start previewing a new card mid-reveal.
+  awaitingAdvance = true;
+  render(); // Stage 1: only the grey "last played" square - scoring hasn't run yet.
+  scheduleIfCurrent(revealScoringStage, GREY_STAGE_DELAY_MS);
 }
 
-function endTurnAndAdvance(){
+function revealScoringStage(){
   applyHouseAndRevenue();
-  render();
-  awaitingAdvance = true;
-  scheduleAfterPopupOrDelay(advanceToNextTurn, STAGE_DELAY_MS);
+  if (lastScoringAmount === 0){
+    // Nothing to highlight this turn - skip straight to the (unchanged)
+    // settled-score stage rather than showing an empty highlight window.
+    scheduleAfterPopupOrDelay(showSettledScoreStage, 0);
+    return;
+  }
+  // If a steal just triggered its own popup above, let it fully close before
+  // showing the scoring highlight - otherwise the two compete for attention
+  // at the same time. scheduleAfterPopupOrDelay already does exactly this
+  // check; passing 0 means "as soon as possible" when nothing is blocking.
+  scheduleAfterPopupOrDelay(showScoreHighlightStage, 0);
+}
+
+function showScoreHighlightStage(){
+  scoreHighlightActive = true;
+  render(); // Stage 2: green highlight + "+X" appear.
+  scheduleAfterPopupOrDelay(showSettledScoreStage, SCORE_HIGHLIGHT_DURATION_MS);
+}
+
+function showSettledScoreStage(){
+  scoreHighlightActive = false;
+  render(); // Stage 3: highlight clears, plain total shown - still this player's turn.
+  scheduleAfterPopupOrDelay(advanceToNextTurn, SCORE_SETTLE_DELAY_MS);
 }
 
 
@@ -1195,11 +1297,12 @@ function aiPlayTurn(){
       }
       return;
     }
-    // Stage 3: place the tile and update flows (endTurnAndAdvance shows the
-    // result, then pauses before advancing to the next turn).
+    // Stage 3: place the tile and update flows (commitTurn() now runs the
+    // grey-square / scoring-highlight / settled-total reveal sequence
+    // before the turn actually advances).
     board[r][c] = {kind: currentDraw.kind, rot: currentDraw.rot};
     commitTurn();
-  }, STAGE_DELAY_MS);
+  }, AI_PREVIEW_DELAY_MS);
 }
 
 canvas.addEventListener('click', (e)=>{
