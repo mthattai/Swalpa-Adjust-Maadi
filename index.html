@@ -92,7 +92,7 @@
   .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
   #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
-  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #muteBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
+  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #muteBtn, #resetBoardBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
   #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
@@ -176,12 +176,13 @@
   <div class="btnRow" id="gameModeBtnRow" style="display:none;">
     <button id="todaysGameBtn">Today's game</button>
     <button id="randomGameBtn">Random game</button>
+    <button id="resetBoardBtn">Reset board</button>
   </div>
   <div class="btnRow" id="playerBtnRow" style="display:none;">
     <button id="p1Btn">1 player</button>
     <button id="p2Btn">2 player</button>
     <button id="p3Btn">3 player</button>
-    <button id="p4Btn">4-player</button>
+    <button id="p4Btn">4 player</button>
   </div>
   <div class="btnRow" id="sizeBtnRow" style="display:none;">
     <button id="size6Btn">6x6 board</button>
@@ -621,23 +622,43 @@ function buildSetupDeck(){
   ];
   const setupDeck = [];
   for (let i=0;i<numConnectors;i++){
-    setupDeck.push(orientations[Math.floor(rng()*6)]);
+    setupDeck.push(orientations[Math.floor(boardRNG()*6)]);
   }
   for (let i=0;i<numParks;i++) setupDeck.push({kind:'P', rot:0});
   for (let i=setupDeck.length-1;i>0;i--){
-    const j = Math.floor(rng()*(i+1));
+    const j = Math.floor(boardRNG()*(i+1));
     [setupDeck[i],setupDeck[j]] = [setupDeck[j],setupDeck[i]];
   }
   return setupDeck;
 }
 
-function freshGame(){
+function freshGame(reuseSeed=false){
   gameEpoch++;
   popupBlocking = false;
   pendingResumeCallback = null;
   pendingResumeEpoch = null;
   hideEventPopup();
   hideShareScorePopup();
+  if (isTodaysGame){
+    // Always restart from the beginning of today's, date-derived sequence -
+    // otherwise a second freshGame() call within the same page-session
+    // (e.g. via "Reset board", or re-clicking Today's game) would continue
+    // consuming from wherever the previous game's own setup+play left the
+    // stream, producing a different board each time instead of reliably
+    // reproducing today's, same one.
+    seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
+  } else {
+    // A genuinely new board picks a fresh seed and remembers it, so a
+    // later "Reset board" can reproduce this exact board/deck. A reset
+    // reuses that same, already-stored seed instead. Either way, a fresh
+    // generator instance is created here so the sequence always restarts
+    // from the beginning, rather than continuing from wherever a previous
+    // board's setup left off.
+    if (!reuseSeed || randomBoardSeed === null){
+      randomBoardSeed = Math.floor(Math.random() * 2**31);
+    }
+    randomBoardRandomFn = mulberry32(randomBoardSeed);
+  }
   // Excuse order is deliberately NOT tied to the seeded RNG, even in Today's-game
   // mode - this doesn't affect scoring or AI behaviour at all, but lets a player
   // replay the exact same Today's-game board without seeing an identical excuse
@@ -1138,6 +1159,20 @@ function rng(){
   return isTodaysGame && seededRandomFn ? seededRandomFn() : Math.random();
 }
 
+// Separate from rng() above and used only by board-setup, deck-building, and
+// Roadworks-target-selection - never by AI move-choice (which keeps using
+// the ordinary rng()/Math.random() via aiChooseSquare()'s own default,
+// completely untouched by this). This separation is what lets "Reset
+// board" reproduce an identical board/deck for Random game while AI
+// behaviour (and excuses, already separately unseeded) stays genuinely
+// random each time. For Today's-game mode this is functionally identical
+// to rng() itself, since Today's game already has its own, single seed.
+let randomBoardSeed = null;
+let randomBoardRandomFn = null;
+function boardRNG(){
+  return isTodaysGame && seededRandomFn ? seededRandomFn() : randomBoardRandomFn();
+}
+
 
 const ROADWORKS_EXCUSES = [
   "New Metro pillar.",
@@ -1459,7 +1494,7 @@ function buildAndShuffleDeck(){
   for (let i=0;i<2*effectiveN;i++) deck.push({kind:'X', rot:0});
   // Fisher-Yates shuffle, fixed once at the start of play.
   for (let i=deck.length-1;i>0;i--){
-    const j = Math.floor(rng()*(i+1));
+    const j = Math.floor(boardRNG()*(i+1));
     [deck[i],deck[j]] = [deck[j],deck[i]];
   }
   deckPos = 0;
@@ -1507,8 +1542,8 @@ function beginTurn(){
       showEventPopup(excuse, 'Swalpa adjust maadi!', true, LONG_DELAY_MS);
       sounds.roadworks();
       scheduleAfterPopupOrDelay(() => scheduleIfCurrent(() => {
-        const r = Math.floor(rng()*N);
-        const c = Math.floor(rng()*N);
+        const r = Math.floor(boardRNG()*N);
+        const c = Math.floor(boardRNG()*N);
         if (board[r][c].kind !== 'X'){
           board[r][c] = {kind:'X', rot:0};
           house[r][c] = false;
@@ -1945,6 +1980,13 @@ document.getElementById('size7Btn').onclick = () => { enterRandomGameMode(); N =
 document.getElementById('size8Btn').onclick = () => { enterRandomGameMode(); N = 8; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('todaysGameBtn').onclick = () => { enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode(); computeLayout(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+// Reverts the currently-visible board and deck to their starting state.
+// Today's game: the board/deck are already fixed by today's date, so this
+// reproduces the same one regardless of the reuseSeed flag below. Random
+// game: reuseSeed=true re-creates the exact same board/deck the current
+// game started with, while AI behaviour and Roadworks excuses - both
+// already unseeded, independent of boardRNG() - stay genuinely random.
+document.getElementById('resetBoardBtn').onclick = () => { freshGame(true); };
 
 function updateGameModeButtons(){
   document.getElementById('todaysGameBtn').classList.toggle('modeActive', isTodaysGame);
