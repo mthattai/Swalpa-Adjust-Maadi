@@ -6,12 +6,10 @@ from scratch without needing to read the original source. This is a design
 record for the author, not player-facing material. Visual/rendering details
 (exact pixel sizes, colours used purely for decoration, canvas drawing code)
 are intentionally omitted or kept brief, since those can be redesigned freely
-without changing how the game plays. Every number and rule below was checked
-directly against the shipped implementation while writing this, not recalled
-from memory.
+without changing how the game plays.
 
 All source line numbers refer to the shipped file
-`swalpa_adjust_maadi_v15.html` at the time of writing.
+`index.html` at the time of writing.
 
 
 ## 1. Premise
