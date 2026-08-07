@@ -536,6 +536,19 @@ const sounds = {
   tick: () => { if (soundMuted) return; playClick(); },
 };
 
+// Safety net: wrap every sounds.* method so that if anything inside it ever
+// throws (e.g. an unexpected Web Audio restriction on some browser/device),
+// the error is caught and logged rather than propagating out to whatever
+// called it - a sound failing to play should never be able to break the
+// game logic that triggered it (freshGame(), commitTurn(), etc.).
+Object.keys(sounds).forEach(name => {
+  const original = sounds[name];
+  sounds[name] = (...args) => {
+    try { original(...args); }
+    catch (e) { console.warn('sound "' + name + '" failed:', e); }
+  };
+});
+
 function toggleSoundMuted(){
   soundMuted = !soundMuted;
   localStorage.setItem('swalpaSoundMuted', soundMuted ? 'true' : 'false');
@@ -632,6 +645,41 @@ function buildSetupDeck(){
   return setupDeck;
 }
 
+// Builds a fresh board, deck, and initial game state from whatever RNG
+// (boardRNG()/rng()) the caller has already, correctly set up beforehand -
+// this function itself never touches seeding at all, only consumes it.
+// Used by BOTH the live game (via freshGame()) and the 99-simulation batch
+// (via runOneRankSimulation()), so there is only ever one implementation of
+// "what a fresh board/deck looks like" - including marking any squares
+// already doubly-connected from the setup-deck layout as houses before
+// play begins. Splitting this out is what makes it structurally impossible
+// for the live game and the simulation to silently drift apart again the
+// way they did before (the simulation had hand-duplicated this setup
+// separately and simply omitted the house-marking step).
+function initFreshBoard(){
+  const setupDeck = buildSetupDeck();
+  board = [];
+  let setupIdx = 0;
+  for (let r=0;r<N;r++){
+    const row=[];
+    for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
+    board.push(row);
+  }
+  house = Array.from({length:N},()=>Array(N).fill(false));
+  owner = Array.from({length:N},()=>Array(N).fill(null));
+  revenue = {1:0, 2:0, 3:0, 4:0};
+  turn = 1;
+  roundNum = 1;
+  gameOver = false;
+  lastPlayedSquare = null;
+
+  const {redC, blueC} = connectivity();
+  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    if (redC[r][c] && blueC[r][c]) house[r][c] = true;
+  }
+  initTileQueue();
+}
+
 function freshGame(reuseSeed=false){
   gameEpoch++;
   popupBlocking = false;
@@ -655,7 +703,7 @@ function freshGame(reuseSeed=false){
     // from the beginning, rather than continuing from wherever a previous
     // board's setup left off.
     if (!reuseSeed || randomBoardSeed === null){
-      randomBoardSeed = Math.floor(Math.random() * 2**31);
+      randomBoardSeed = Math.floor(Math.random() * Math.pow(2, 31));
     }
     randomBoardRandomFn = mulberry32(randomBoardSeed);
   }
@@ -669,21 +717,8 @@ function freshGame(reuseSeed=false){
     [shuffledExcuses[i],shuffledExcuses[j]] = [shuffledExcuses[j],shuffledExcuses[i]];
   }
   excuseDrawIndex = 0;
-  const setupDeck = buildSetupDeck();
-  board = [];
-  let setupIdx = 0;
-  for (let r=0;r<N;r++){
-    const row=[];
-    for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
-    board.push(row);
-  }
-  house = Array.from({length:N},()=>Array(N).fill(false));
-  owner = Array.from({length:N},()=>Array(N).fill(null));
-  revenue = {1:0, 2:0, 3:0, 4:0};
-  turn = 1;
-  roundNum = 1;
-  gameOver = false;
-  lastPlayedSquare = null;
+
+  initFreshBoard();
   pendingSquare = null;
   previewSavedTile = null;
   awaitingStealReveal = false;
@@ -692,11 +727,6 @@ function freshGame(reuseSeed=false){
   lastScoringAmount = 0;
   scoreHighlightActive = false;
 
-  const {redC, blueC} = connectivity();
-  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (redC[r][c] && blueC[r][c]) house[r][c] = true;
-  }
-  initTileQueue();
   if (isTodaysGame){
     showTodaysTargetPopup();
   } else {
@@ -1522,6 +1552,30 @@ function advanceTileQueue(){
   if (upcomingTiles.length > 0) currentDraw = upcomingTiles[upcomingTiles.length-1];
 }
 
+// The actual Roadworks rule: choose a random square via boardRNG() and
+// clear it to rubble if it isn't already. Returns the chosen [r,c]. Used
+// by BOTH the live game (beginTurn()'s Roadworks branch) and every
+// simulation run (runOneRankSimulation()), so there is only one
+// implementation of "how Roadworks picks and applies its target" - if this
+// rule is ever changed (e.g. targeting the biggest connected cluster
+// instead of a uniformly random square, an idea raised earlier in this
+// project's design history), both contexts pick up the change identically,
+// automatically, rather than needing to be updated in two separate places
+// and risking exactly the kind of silent drift that caused the original
+// daily-target bug. Deliberately does NOT touch pendingSquare/render/
+// lastPlayedSquare/popups itself - those are each caller's own concern,
+// same separation aiChooseSquare() already uses.
+function pickRoadworksTarget(){
+  const r = Math.floor(boardRNG()*N);
+  const c = Math.floor(boardRNG()*N);
+  if (board[r][c].kind !== 'X'){
+    board[r][c] = {kind:'X', rot:0};
+    house[r][c] = false;
+    owner[r][c] = null;
+  }
+  return [r,c];
+}
+
 function beginTurn(){
   awaitingAdvance = false;
   pendingSquare = null;
@@ -1542,13 +1596,7 @@ function beginTurn(){
       showEventPopup(excuse, 'Swalpa adjust maadi!', true, LONG_DELAY_MS);
       sounds.roadworks();
       scheduleAfterPopupOrDelay(() => scheduleIfCurrent(() => {
-        const r = Math.floor(boardRNG()*N);
-        const c = Math.floor(boardRNG()*N);
-        if (board[r][c].kind !== 'X'){
-          board[r][c] = {kind:'X', rot:0};
-          house[r][c] = false;
-          owner[r][c] = null;
-        }
+        const [r,c] = pickRoadworksTarget();
         pendingSquare = [r,c];
         render();
         sounds.previewTap();
@@ -1895,23 +1943,13 @@ function renderRuleDiagrams(){
 // the caller must have pointed at a freshly-reseeded stream first. Returns
 // the resulting score difference.
 function runOneRankSimulation(simDriverRNG){
-  const setupDeck = buildSetupDeck();
-  board = []; house = []; owner = [];
-  for (let r=0;r<N;r++){
-    board.push([]); house.push(new Array(N).fill(false)); owner.push(new Array(N).fill(null));
-    for (let c=0;c<N;c++) board[r].push(setupDeck[r*N+c]);
-  }
-  revenue = {1:0,2:0,3:0,4:0};
-  roundNum = 1; turn = 1; lastPlayedSquare = null; gameOver = false;
-  initTileQueue();
+  initFreshBoard();
 
   let moves = 0;
   while (roundNum <= TOTAL_ROUNDS && !gameOver && moves < 500){
     moves++;
     if (currentDraw.kind === 'X'){
-      const r = Math.floor(rng()*N), c = Math.floor(rng()*N);
-      if (board[r][c].kind !== 'X'){ board[r][c]={kind:'X',rot:0}; house[r][c]=false; owner[r][c]=null; }
-      lastPlayedSquare = [r,c];
+      lastPlayedSquare = pickRoadworksTarget();
     } else if (turn === 1){
       const rc = aiChooseSquare(1, currentDraw, simDriverRNG);
       board[rc[0]][rc[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
