@@ -91,10 +91,15 @@
             box-shadow:0 0 0 3px white, 0 0 0 6px #F1C40F !important; }
   .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
-  #roundNum { font-size:34px; font-weight:bold; color:#333; text-align:center; margin-top:6px; }
-  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #muteBtn, #resetBoardBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
+  #roundRow { display:none; justify-content:space-between; align-items:center; margin-top:6px; }
+  #roundNum { font-size:26px; font-weight:bold; color:#333; text-align:left; }
+  #triesArea { display:flex; align-items:center; gap:6px; font-size:16px; color:#333; }
+  #triesDots { display:flex; gap:6px; }
+  .tryDot { width:11px; height:11px; border-radius:50%; background:#333; display:inline-block; }
+  .tryDot.used { background:#ddd; }
+  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #muteBtn, #resetBoardBtn, #practiceBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
                 background:white; color:#666; cursor:pointer; }
-  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive { background:#333; color:white; border-color:#333; }
+  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive, #practiceBtn.modeActive, #muteBtn.modeActive { background:#333; color:white; border-color:#333; }
   .btnRow { display:flex; gap:8px; }
   #gameModeBtnRow { margin-top:26px; }
   #digUpRow { margin-top:18px; }
@@ -147,7 +152,19 @@
     <button id="howToScoreBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to score</button>
   </div>
   <div id="infoPopup" style="display:none;"></div>
-  <div id="roundNum" style="display:none;">Round 1/20</div>
+  <div id="roundRow" style="display:none;">
+    <div id="roundNum">Round 1/20</div>
+    <div id="triesArea">
+      Tries:
+      <div id="triesDots">
+        <span class="tryDot"></span>
+        <span class="tryDot"></span>
+        <span class="tryDot"></span>
+        <span class="tryDot used"></span>
+        <span class="tryDot used"></span>
+      </div>
+    </div>
+  </div>
   <div id="tileRowWrap" style="position:relative;">
     <div id="tileRow" style="display:none;"></div>
     <div id="msg" style="display:none;"></div>
@@ -194,6 +211,7 @@
     <button id="size8Btn">8x8 board</button>
   </div>
   <div class="btnRow" id="rulesBtnRow" style="display:none;">
+    <button id="practiceBtn">Practice: off</button>
     <button id="rulesBtn">Rules</button>
     <button id="tutorialBtn">Tutorial</button>
     <button id="muteBtn">Sound: on</button>
@@ -290,9 +308,10 @@
   the last few rounds, fewer than 8 cards remain in the deck, so this row
   shrinks; the very last card is used on the final turn of the game.</p>
   <p>To play your turn, click a space on the board to place the active
-  card there and see what it does. You can try out as many spaces as
-  you like except for Parks, and the space the previous player just
-  played on (which is greyed out). If the active card is Roadworks it
+  card there and see what it does. You can try out any space except for
+  Parks, and the space the previous player just played on (which is
+  greyed out). You have up to five tries, indicated by dots (unlimited
+  in Practice mode). If the active card is Roadworks it
   lands on a random space, you can't choose where. Roadworks destroys
   any Park or house it lands on (ouch!), leaving the space up for
   grabs in subsequent turns. The current chosen space is always
@@ -350,6 +369,7 @@ const ctx = canvas.getContext('2d');
 // off once turned off, across sessions.
 let soundMuted = localStorage.getItem('swalpaSoundMuted') === 'true';
 document.getElementById('muteBtn').textContent = soundMuted ? 'Sound: off' : 'Sound: on';
+document.getElementById('muteBtn').classList.toggle('modeActive', !soundMuted);
 
 let audioCtx = null;
 function getAudioCtx(){
@@ -611,6 +631,7 @@ function toggleSoundMuted(){
   soundMuted = !soundMuted;
   localStorage.setItem('swalpaSoundMuted', soundMuted ? 'true' : 'false');
   document.getElementById('muteBtn').textContent = soundMuted ? 'Sound: off' : 'Sound: on';
+  document.getElementById('muteBtn').classList.toggle('modeActive', !soundMuted);
 }
 
 function fitTextToWidth(el, targetWidth, maxFontSize, minFontSize){
@@ -1150,6 +1171,9 @@ function render(){
     box.classList.toggle('winner', gameOver && p<=effectiveN && revenue[p] === maxRevenue);
   }
   document.getElementById('roundNum').textContent = `Round ${roundNum}/${TOTAL_ROUNDS}`;
+  document.querySelectorAll('#triesDots .tryDot').forEach((dot, i) => {
+    dot.classList.toggle('used', practiceMode || i >= triesRemaining);
+  });
 
   renderDrawArea();
 }
@@ -1208,6 +1232,8 @@ function showMsg(t){
 }
 
 let pendingSquare = null;
+let triesRemaining = 5;
+let practiceMode = false;
 let inPreLaunch = true;
 let gameEpoch = 0;
 let awaitingAdvance = false;
@@ -1645,6 +1671,7 @@ function beginTurn(){
   awaitingAdvance = false;
   pendingSquare = null;
   previewSavedTile = null;
+  triesRemaining = 5;
   render();
 
   if (currentDraw.kind === 'X'){
@@ -1867,12 +1894,19 @@ canvas.addEventListener('click', (e)=>{
     return;
   }
 
+  if (!practiceMode && triesRemaining <= 0){
+    sounds.invalidTap();
+    showMsg("You've run out of tries.");
+    return;
+  }
+
   if (pendingSquare){
     board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
   }
   previewSavedTile = board[r][c];
   board[r][c] = {kind: currentDraw.kind, rot: currentDraw.rot};
   pendingSquare = [r,c];
+  if (!practiceMode) triesRemaining--;
   render();
   sounds.previewTap();
 });
@@ -1915,7 +1949,7 @@ function exitPreLaunch(){
   document.getElementById('preLaunchBox').style.display = 'none';
   document.getElementById('legendRow').style.display = 'flex';
   document.getElementById('infoBtnGrid').style.display = 'grid';
-  document.getElementById('roundNum').style.display = 'block';
+  document.getElementById('roundRow').style.display = 'flex';
   document.getElementById('tileRow').style.display = 'flex';
   document.getElementById('board').style.display = 'block';
   document.getElementById('scoreRow').style.display = 'flex';
@@ -2085,11 +2119,11 @@ document.getElementById('p1Btn').onclick = () => { enterRandomGameMode(); numPla
 document.getElementById('p2Btn').onclick = () => { enterRandomGameMode(); numPlayers = 2; vsComputerOn = false; effectiveN = 2; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('p3Btn').onclick = () => { enterRandomGameMode(); numPlayers = 3; vsComputerOn = false; effectiveN = 3; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('p4Btn').onclick = () => { enterRandomGameMode(); numPlayers = 4; vsComputerOn = false; effectiveN = 4; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('digUpBtn').onclick = () => { enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { practiceMode = false; document.getElementById('practiceBtn').textContent = 'Practice: off'; document.getElementById('practiceBtn').classList.remove('modeActive'); enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size6Btn').onclick = () => { enterRandomGameMode(); N = 6; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size7Btn').onclick = () => { enterRandomGameMode(); N = 7; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size8Btn').onclick = () => { enterRandomGameMode(); N = 8; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('todaysGameBtn').onclick = () => { enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('todaysGameBtn').onclick = () => { practiceMode = false; document.getElementById('practiceBtn').textContent = 'Practice: off'; document.getElementById('practiceBtn').classList.remove('modeActive'); enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode(); computeLayout(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 // Reverts the currently-visible board and deck to their starting state.
 // Today's game: the board/deck are already fixed by today's date, so this
@@ -2098,6 +2132,15 @@ document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode()
 // game started with, while AI behaviour and Roadworks excuses - both
 // already unseeded, independent of boardRNG() - stay genuinely random.
 document.getElementById('resetBoardBtn').onclick = () => { freshGame(true); };
+document.getElementById('practiceBtn').onclick = () => {
+  practiceMode = !practiceMode;
+  document.getElementById('practiceBtn').textContent = practiceMode ? 'Practice: on' : 'Practice: off';
+  document.getElementById('practiceBtn').classList.toggle('modeActive', practiceMode);
+  enterRandomGameMode();
+  computeLayout();
+  updateGameModeButtons();
+  freshGame();
+};
 // Player aid: tapping the deck/active card (a common first-time mistake)
 // gently points to the board instead, rather than doing nothing at all.
 document.getElementById('tileRow').onclick = () => {
@@ -2226,9 +2269,10 @@ const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
 
 const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
   "to place the active card there and see what it does. You can try " +
-  "out as many spaces as you like except for Parks, and the space the " +
-  "previous player just played on (which is greyed out). If the active " +
-  "card is Roadworks it lands on a random space, you can't choose " +
+  "out any space except for Parks, and the space the " +
+  "previous player just played on (which is greyed out). You have up " +
+  "to five tries, indicated by dots (unlimited in Practice mode). If " +
+  "the active card is Roadworks it lands on a random space, you can't choose " +
   "where. Roadworks destroys any Park or house it lands on (ouch!), " +
   "leaving the space up for grabs in subsequent turns. The current " +
   "chosen space is always highlighted by an orange border. Click the " +
