@@ -101,8 +101,10 @@
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px;
               border:3px solid black; background:#FFD400; color:black; cursor:pointer; }
   #digUpBtn:disabled { background:#e8e8e8; color:#888; cursor:default; }
-  #msg { position:absolute; left:0; right:0; bottom:4px; font-size:12px; color:#a33;
-         text-align:center; pointer-events:none; }
+  #msg { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+         background:white; color:black; border:1px solid #999; border-radius:5px;
+         font-size:12px; text-align:center; padding:5px 10px;
+         pointer-events:none; }
   #rulesPage { display:none; max-width:560px; margin:0 auto; padding:8px 4px 40px; text-align:left; }
   #rulesPage h1 { font-size:22px; margin:8px 0 2px; }
   #rulesPage .ruleSub { font-size:12px; color:#888; margin:0 0 16px; }
@@ -146,13 +148,15 @@
   </div>
   <div id="infoPopup" style="display:none;"></div>
   <div id="roundNum" style="display:none;">Round 1/20</div>
-  <div id="tileRow" style="display:none;"></div>
+  <div id="tileRowWrap" style="position:relative;">
+    <div id="tileRow" style="display:none;"></div>
+    <div id="msg" style="display:none;"></div>
+  </div>
 </div>
 <div id="app">
   <div id="boardWrap" style="position:relative;">
     <canvas id="board" style="display:none;"></canvas>
     <div id="eventPopup" style="display:none;"><div id="eventPopupInner"></div></div>
-    <div id="msg" style="display:none;"></div>
     <div id="shareScorePopup" style="display:none;">
       <div id="shareScorePopupInner">
         <div id="resultLine"></div>
@@ -195,7 +199,7 @@
     <button id="muteBtn">Sound: on</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 4 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 8 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -312,7 +316,7 @@
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 4 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 8 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -505,11 +509,56 @@ function playClick(volume=0.12){
   source.stop(t0 + 0.03);
 }
 
+// Short, percussive noise burst (not a long sweep) - the gritty, metallic
+// "bit striking concrete" texture layered under each jackhammer thump.
+function playGritBurst(duration, {volume=0.15, filterStart=2500, filterEnd=1200, startTime=0} = {}){
+  const ctx = getAudioCtx();
+  const t0 = ctx.currentTime + startTime;
+  const source = ctx.createBufferSource();
+  source.buffer = getNoiseBuffer();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(filterStart, t0);
+  filter.frequency.exponentialRampToValueAtTime(filterEnd, t0 + duration);
+  filter.Q.value = 1.2;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(volume, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(t0);
+  source.stop(t0 + duration + 0.02);
+  activeSoundNodes.push({osc: source, gain});
+}
+
+// One jackhammer "hit": a short, low thump plus a gritty noise burst,
+// layered together at the same instant.
+function playHit(startTime, {pitch=100, thumpDuration=0.04, gritDuration=0.03, volume=0.22} = {}){
+  playTone(pitch, thumpDuration, {type:'sine', volume, attack:0.001, startTime});
+  playGritBurst(gritDuration, {volume: volume*0.55, startTime});
+}
+
 const sounds = {
   previewTap: () => { if (soundMuted) return; cutOffCurrentSound(); playTone(700, 0.05, {type:'triangle', volume:0.15}); },
   confirmTap: () => { if (soundMuted) return; cutOffCurrentSound(); playTone(480, 0.08, {type:'triangle', volume:0.18}); },
   scoreChime: (n) => { if (soundMuted) return; cutOffCurrentSound(); playSequence([659.25,783.99,987.77,1174.66].slice(0, Math.min(n,4)), {type:'sine', volume:0.2, noteDuration:0.11, gap:0.04}); },
-  roadworks: () => { if (soundMuted) return; cutOffCurrentSound(); playNoiseSweep(0.4, {volume:0.22, filterStart:5000, filterEnd:250, peakAt:0.25}); },
+  // Jackhammer: fixed, hand-picked deep pitches and uneven gaps -
+  // deliberately irregular-sounding, but the same irregularity every time
+  // this plays (not re-randomized per call). ~1.125s total, leaving a
+  // ~175ms safety margin before the 1300ms Roadworks popup closes.
+  roadworks: () => {
+    if (soundMuted) return;
+    cutOffCurrentSound();
+    const pitches = [62, 54, 68, 58, 50, 65, 56, 60, 52, 64, 55, 67, 51, 63, 57, 66, 53, 61, 59, 64];
+    const gaps    = [0.045, 0.07, 0.05, 0.06, 0.04, 0.075, 0.05, 0.065, 0.045,
+                      0.055, 0.07, 0.045, 0.06, 0.05, 0.07, 0.04, 0.065, 0.05, 0.06];
+    let t = 0;
+    for (let i=0;i<pitches.length;i++){
+      playHit(t, {pitch: pitches[i], thumpDuration:0.06, gritDuration:0.04, volume:0.26});
+      if (i < gaps.length) t += gaps[i];
+    }
+  },
   steal: () => {
     if (soundMuted) return;
     cutOffCurrentSound();
@@ -1140,7 +1189,14 @@ function renderDrawArea(){
   }
 }
 
-function showMsg(t){ document.getElementById('msg').textContent = t; setTimeout(()=>{ document.getElementById('msg').textContent=''; }, 1800); }
+let msgHideTimeout = null;
+function showMsg(t){
+  const el = document.getElementById('msg');
+  el.textContent = t;
+  el.style.display = 'flex';
+  clearTimeout(msgHideTimeout);
+  msgHideTimeout = setTimeout(() => { el.style.display = 'none'; el.textContent = ''; }, 1800);
+}
 
 let pendingSquare = null;
 let inPreLaunch = true;
@@ -1762,7 +1818,9 @@ function aiPlayTurn(){
 }
 
 canvas.addEventListener('click', (e)=>{
-  if (gameOver || awaitingAdvance || popupBlocking || (vsComputerOn && turn === 2)) return;
+  if (gameOver) return;
+  if (vsComputerOn && turn === 2){ showMsg("Please wait for Player 2."); return; }
+  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment."); return; }
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
   const x = (e.clientX-rect.left)*scaleX - BAND, y = (e.clientY-rect.top)*scaleY - BAND;
@@ -1775,6 +1833,8 @@ canvas.addEventListener('click', (e)=>{
     if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
       commitTurn();
       sounds.confirmTap();
+    } else {
+      showMsg("Tap the highlighted roadworks card.");
     }
     return;
   }
@@ -1786,10 +1846,12 @@ canvas.addEventListener('click', (e)=>{
   }
 
   if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c){
+    showMsg("The space just played is off limits.");
     return;
   }
 
   if (board[r][c].kind === 'P'){
+    showMsg("You can't dig up a park.");
     return;
   }
 
@@ -1845,7 +1907,6 @@ function exitPreLaunch(){
   document.getElementById('tileRow').style.display = 'flex';
   document.getElementById('board').style.display = 'block';
   document.getElementById('scoreRow').style.display = 'flex';
-  document.getElementById('msg').style.display = 'block';
   document.querySelectorAll('.btnRow').forEach(el => { el.style.display = 'flex'; });
   updateScoreBoxVisibility();
 }
@@ -2025,6 +2086,11 @@ document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode()
 // game started with, while AI behaviour and Roadworks excuses - both
 // already unseeded, independent of boardRNG() - stay genuinely random.
 document.getElementById('resetBoardBtn').onclick = () => { freshGame(true); };
+// Player aid: tapping the deck/active card (a common first-time mistake)
+// gently points to the board instead, rather than doing nothing at all.
+document.getElementById('tileRow').onclick = () => {
+  showMsg("Tap the board to place your card");
+};
 
 function updateGameModeButtons(){
   document.getElementById('todaysGameBtn').classList.toggle('modeActive', isTodaysGame);
