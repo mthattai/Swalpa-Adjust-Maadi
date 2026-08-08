@@ -542,6 +542,15 @@ function playHit(startTime, {pitch=100, thumpDuration=0.04, gritDuration=0.03, v
 const sounds = {
   previewTap: () => { if (soundMuted) return; cutOffCurrentSound(); playTone(700, 0.05, {type:'triangle', volume:0.15}); },
   confirmTap: () => { if (soundMuted) return; cutOffCurrentSound(); playTone(480, 0.08, {type:'triangle', volume:0.18}); },
+  // Distinct from the tap sounds above via both shape (two descending notes,
+  // not one) and direction (falling pitch reads as "no") - for tapping
+  // somewhere that's off-limits, not a normal preview/confirm action.
+  invalidTap: () => {
+    if (soundMuted) return;
+    cutOffCurrentSound();
+    playTone(350, 0.04, {type:'triangle', volume:0.14});
+    playTone(260, 0.05, {type:'triangle', volume:0.14, startTime:0.05});
+  },
   scoreChime: (n) => { if (soundMuted) return; cutOffCurrentSound(); playSequence([659.25,783.99,987.77,1174.66].slice(0, Math.min(n,4)), {type:'sine', volume:0.2, noteDuration:0.11, gap:0.04}); },
   // Jackhammer: fixed, hand-picked deep pitches and uneven gaps -
   // deliberately irregular-sounding, but the same irregularity every time
@@ -1834,6 +1843,7 @@ canvas.addEventListener('click', (e)=>{
       commitTurn();
       sounds.confirmTap();
     } else {
+      sounds.invalidTap();
       showMsg("Tap the highlighted roadworks card.");
     }
     return;
@@ -1846,11 +1856,13 @@ canvas.addEventListener('click', (e)=>{
   }
 
   if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c){
+    sounds.invalidTap();
     showMsg("The space just played is off limits.");
     return;
   }
 
   if (board[r][c].kind === 'P'){
+    sounds.invalidTap();
     showMsg("You can't dig up a park.");
     return;
   }
