@@ -2133,13 +2133,14 @@ document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode()
 // already unseeded, independent of boardRNG() - stay genuinely random.
 document.getElementById('resetBoardBtn').onclick = () => { freshGame(true); };
 document.getElementById('practiceBtn').onclick = () => {
+  const wasAlreadyRandomGame = !isTodaysGame;
   practiceMode = !practiceMode;
   document.getElementById('practiceBtn').textContent = practiceMode ? 'Practice: on' : 'Practice: off';
   document.getElementById('practiceBtn').classList.toggle('modeActive', practiceMode);
   enterRandomGameMode();
   computeLayout();
   updateGameModeButtons();
-  freshGame();
+  freshGame(wasAlreadyRandomGame);
 };
 // Player aid: tapping the deck/active card (a common first-time mistake)
 // gently points to the board instead, rather than doing nothing at all.
