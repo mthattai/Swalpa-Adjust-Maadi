@@ -1360,18 +1360,6 @@ function hideEventPopup(){
   }, 220);
 }
 
-// Built from explicit Unicode codepoints, not typed directly, to avoid any risk
-// of transcription/encoding corruption in the source.
-function ordinalSuffix(n){
-  const lastTwo = n % 100;
-  if (lastTwo >= 11 && lastTwo <= 13) return 'th';
-  const last = n % 10;
-  if (last === 1) return 'st';
-  if (last === 2) return 'nd';
-  if (last === 3) return 'rd';
-  return 'th';
-}
-
 // Rank 1 = best, 100 = worst. Ties are counted in the player's favour: only
 // simulated scores strictly greater than the player's own count against them.
 function computeTodaysRank(){
@@ -1381,20 +1369,29 @@ function computeTodaysRank(){
 }
 
 function formatRank(x){
-  if (x === 1) return 'First of 100';
-  return `${x}${ordinalSuffix(x)} highest of 100`;
+  return `#${x} of 100`;
 }
 
 // Shared between the animated popup and the copyable share text, so the
 // win/loss/draw wording and emoji only ever need to be defined once.
 // Shared diff/pluralisation logic between the popup ("you") and the
 // copyable share text ("I") - only the pronoun differs between them.
-function buildResultLine(pronoun){
+function buildResultLine(){
   const diff = revenue[1] - revenue[2];
-  const emoji = pronoun === 'I' ? {win: ' \u{1F60A}', loss: ' \u{1F61E}', draw: ' \u{1F610}'} : {win:'', loss:'', draw:''};
-  if (diff > 0) return `${pronoun} won by ${diff} point${diff===1?'':'s'}!${emoji.win}`;
-  if (diff < 0) return `${pronoun} lost by ${-diff} point${diff===-1?'':'s'}!${emoji.loss}`;
-  return (pronoun === 'You' ? "It's a draw!" : "It was a draw!") + emoji.draw;
+  if (diff > 0) return `You won by ${diff} point${diff===1?'':'s'}!`;
+  if (diff < 0) return `You lost by ${-diff} point${diff===-1?'':'s'}!`;
+  return "It's a draw!";
+}
+
+// Deliberately separate from buildResultLine() above, rather than a shared
+// function with a pronoun switch - the share text names "today's game"
+// explicitly (useful context for whoever receives it) while the in-app
+// popup doesn't need to (the player is already looking at it).
+function buildShareResultLine(){
+  const diff = revenue[1] - revenue[2];
+  if (diff > 0) return `I won today's game by ${diff} point${diff===1?'':'s'}! \u{1F60A}`;
+  if (diff < 0) return `I lost today's game by ${-diff} point${diff===-1?'':'s'}! \u{1F61E}`;
+  return "Today's game was a draw! \u{1F610}";
 }
 
 function buildShareText(){
@@ -1404,7 +1401,7 @@ function buildShareText(){
   const niceDate = `${d} ${monthNames[m-1]}`;
   const rankText = formatRank(computeTodaysRank());
 
-  return `I played Swalpa Adjust Maadi, the game where you dig up Bangalore's roads for fun!\n\n${buildResultLine('I')}\n${niceDate}: ${rankText}\n\nCan you do better in today's game? https://tinyurl.com/adjust-maadi`;
+  return `Swalpa Adjust Maadi!\n${buildShareResultLine()}\n\n${niceDate} rank: ${rankText}\nYour turn! https://tinyurl.com/adjust-maadi`;
 }
 
 // Animates the bar filling and the number counting down from 100 (the
@@ -1448,7 +1445,7 @@ function animateRankBar(finalRank){
 }
 
 function showShareScorePopup(){
-  document.getElementById('resultLine').textContent = buildResultLine('You');
+  document.getElementById('resultLine').textContent = buildResultLine();
   document.getElementById('rankBarFill').style.width = '0%';
   document.getElementById('rankNumber').textContent = '#100';
   animateRankBar(computeTodaysRank());
