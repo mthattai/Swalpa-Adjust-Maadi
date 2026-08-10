@@ -27,6 +27,18 @@
                  font-weight:900; color:#2C2C2C; letter-spacing:0.5px; white-space:nowrap; }
   #tagline { display:inline-block; color:#666; margin:8px 0 0; white-space:nowrap; }
   #motivation { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:14px 0 0; }
+  #rulesAnimWrap { position:relative; width:133px; height:133px; margin:16px auto 0; }
+  #rulesAnimWrap canvas {
+    position:absolute; top:0; left:0;
+    background:#fafafa; border:1px solid #eee; border-radius:6px;
+    transition: opacity 0.8s ease;
+  }
+  #rulesAnimCaptionWrap { position:relative; max-width:310px; margin:8px auto 0; min-height:18px; }
+  #rulesAnimCaptionWrap div {
+    position:absolute; top:0; left:0; width:100%; white-space:nowrap;
+    font-size:12px; color:#555; text-align:center; line-height:1.4;
+    transition: opacity 0.8s ease;
+  }
   #infoBtnGrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;
                  max-width:340px; margin-left:auto; margin-right:auto; }
   #infoBtnGrid button { display:inline-flex; align-items:center; justify-content:center; gap:5px;
@@ -91,9 +103,12 @@
             box-shadow:0 0 0 3px white, 0 0 0 6px #F1C40F !important; }
   .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
-  #roundRow { display:none; justify-content:space-between; align-items:center; margin-top:6px; }
-  #roundNum { font-size:26px; font-weight:bold; color:#333; text-align:left; }
-  #triesArea { display:flex; align-items:center; gap:6px; font-size:16px; color:#333; }
+  #roundRow { display:none; grid-template-columns: 1fr auto 1fr; column-gap:10px; align-items:center; margin-top:6px; }
+  #roundNum { font-size:26px; font-weight:bold; color:#333; text-align:left; grid-column:1; }
+  #hintBtn { grid-column:2; justify-self:center; font-size:12px; padding:6px 12px; border-radius:6px;
+             border:1px solid #999; background:white; color:#222; cursor:pointer; }
+  #hintBtn.used { background:#e8e8e8; color:#888; border-color:#ccc; }
+  #triesArea { grid-column:3; justify-self:end; display:flex; align-items:center; gap:6px; font-size:16px; color:#333; }
   #triesDots { display:flex; gap:6px; }
   .tryDot { width:11px; height:11px; border-radius:50%; background:#333; display:inline-block; }
   .tryDot.used { background:#ddd; }
@@ -136,6 +151,14 @@
     roads are constantly dug up for Metro work, VIP visits, and floods,
     wreaking havoc on the infrastructure. The city's residents are left to
     deal with unpredictable power and water, and must suffer in silence.</p>
+    <div id="rulesAnimWrap">
+      <canvas id="rulesAnimCanvasA" width="133" height="133"></canvas>
+      <canvas id="rulesAnimCanvasB" width="133" height="133"></canvas>
+    </div>
+    <div id="rulesAnimCaptionWrap">
+      <div id="rulesAnimCaptionA"></div>
+      <div id="rulesAnimCaptionB"></div>
+    </div>
     <div id="digUpRow"><button id="digUpBtn" disabled>Loading...</button></div>
   </div>
   <div id="legendRow" style="display:none;">
@@ -154,6 +177,7 @@
   <div id="infoPopup" style="display:none;"></div>
   <div id="roundRow" style="display:none;">
     <div id="roundNum">Round 1/20</div>
+    <button id="hintBtn">Hint</button>
     <div id="triesArea">
       Tries:
       <div id="triesDots">
@@ -217,7 +241,7 @@
     <button id="muteBtn">Sound: on</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 8 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 10 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -335,7 +359,7 @@
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 8 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 10 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -761,6 +785,7 @@ function initFreshBoard(){
 
 function freshGame(reuseSeed=false){
   gameEpoch++;
+  hintsUsedThisGame = 0;
   popupBlocking = false;
   pendingResumeCallback = null;
   pendingResumeEpoch = null;
@@ -1174,6 +1199,17 @@ function render(){
   document.querySelectorAll('#triesDots .tryDot').forEach((dot, i) => {
     dot.classList.toggle('used', practiceMode || i >= triesRemaining);
   });
+  // Highlighted only when a hint could actually, meaningfully be used right
+  // now: it's a human's active turn, nothing is paused, the card isn't
+  // Roadworks (whose space is already forcibly fixed, not a choice for the
+  // AI to suggest), and this turn's hint hasn't already been spent. Purely
+  // visual - never the native disabled attribute - since every one of
+  // these "can't use it" cases still needs to remain clickable so it can
+  // show its own explanatory message.
+  const hintCanBeUsedNow = !gameOver && !(vsComputerOn && turn === 2) &&
+    !awaitingAdvance && !popupBlocking && currentDraw.kind !== 'X' &&
+    (practiceMode || !hintUsedThisTurn);
+  document.getElementById('hintBtn').classList.toggle('used', !hintCanBeUsedNow);
 
   renderDrawArea();
 }
@@ -1234,6 +1270,8 @@ function showMsg(t){
 let pendingSquare = null;
 let triesRemaining = 5;
 let practiceMode = false;
+let hintUsedThisTurn = false;
+let hintsUsedThisGame = 0;
 let inPreLaunch = true;
 let gameEpoch = 0;
 let awaitingAdvance = false;
@@ -1400,8 +1438,11 @@ function buildShareText(){
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const niceDate = `${d} ${monthNames[m-1]}`;
   const rankText = formatRank(computeTodaysRank());
+  const hintsText = hintsUsedThisGame > 0
+    ? ` (with ${hintsUsedThisGame} hint${hintsUsedThisGame===1?'':'s'})`
+    : '';
 
-  return `Swalpa Adjust Maadi!\n${buildShareResultLine()}\n\n${niceDate} rank: ${rankText}\nYour turn! https://tinyurl.com/adjust-maadi`;
+  return `Swalpa Adjust Maadi!\n${buildShareResultLine()}\n\n${niceDate} rank: ${rankText}${hintsText}\nYour turn! https://tinyurl.com/adjust-maadi`;
 }
 
 // Animates the bar filling and the number counting down from 100 (the
@@ -1669,6 +1710,7 @@ function beginTurn(){
   pendingSquare = null;
   previewSavedTile = null;
   triesRemaining = 5;
+  hintUsedThisTurn = false;
   render();
 
   if (currentDraw.kind === 'X'){
@@ -1946,7 +1988,7 @@ function exitPreLaunch(){
   document.getElementById('preLaunchBox').style.display = 'none';
   document.getElementById('legendRow').style.display = 'flex';
   document.getElementById('infoBtnGrid').style.display = 'grid';
-  document.getElementById('roundRow').style.display = 'flex';
+  document.getElementById('roundRow').style.display = 'grid';
   document.getElementById('tileRow').style.display = 'flex';
   document.getElementById('board').style.display = 'block';
   document.getElementById('scoreRow').style.display = 'flex';
@@ -2129,6 +2171,41 @@ document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode()
 // game started with, while AI behaviour and Roadworks excuses - both
 // already unseeded, independent of boardRNG() - stay genuinely random.
 document.getElementById('resetBoardBtn').onclick = () => { freshGame(true); };
+document.getElementById('hintBtn').onclick = () => {
+  if (gameOver) return;
+  if (vsComputerOn && turn === 2){ showMsg("Please wait for Player 2."); return; }
+  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment."); return; }
+
+  if (currentDraw.kind === 'X'){
+    sounds.invalidTap();
+    showMsg("Tap the highlighted roadworks card.");
+    return;
+  }
+
+  if (!practiceMode && hintUsedThisTurn){
+    sounds.invalidTap();
+    showMsg("You've used up your hint.");
+    return;
+  }
+
+  const suggested = aiChooseSquare(turn, currentDraw, Math.random);
+
+  if (pendingSquare){
+    board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
+  }
+  previewSavedTile = board[suggested[0]][suggested[1]];
+  board[suggested[0]][suggested[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
+  pendingSquare = suggested;
+
+  hintsUsedThisGame++;
+  if (!practiceMode){
+    triesRemaining = 0;
+    hintUsedThisTurn = true;
+  }
+
+  render();
+  sounds.previewTap();
+};
 document.getElementById('practiceBtn').onclick = () => {
   const wasAlreadyRandomGame = !isTodaysGame;
   practiceMode = !practiceMode;
@@ -2336,6 +2413,99 @@ requestAnimationFrame(() => {
     });
   });
 });
+
+// Pre-launch "3 simple rules" animation. Wrapped in an IIFE, and reuses the
+// game's own drawTileOn()/drawHouseShape()/edge functions/colour constants
+// directly (defined above) rather than redeclaring copies - kept isolated
+// from the outer scope so its own local names (TILE, BAND, CANVAS_SIZE,
+// etc.) can never collide with the main game's identically-named globals.
+(function(){
+  const TILE = 60, BAND = 13;
+  const CANVAS_SIZE = BAND + TILE*2;
+
+  function drawCornerCrop(ctx, spec, houseAt, ownerColor, changedAt){
+    ctx.clearRect(0,0,CANVAS_SIZE,CANVAS_SIZE);
+    const originX = BAND, originY = BAND;
+    ctx.fillStyle = RED_DARK;
+    ctx.fillRect(originX, 0, TILE*2, BAND);
+    ctx.fillStyle = BLUE_DARK;
+    ctx.fillRect(0, originY, BAND, TILE*2);
+    for (let r=0;r<2;r++){
+      for (let c=0;c<2;c++){
+        const px = originX + c*TILE, py = originY + r*TILE;
+        ctx.fillStyle = 'white'; ctx.fillRect(px, py, TILE, TILE);
+        if (changedAt && changedAt[0]===r && changedAt[1]===c){
+          ctx.fillStyle = 'rgba(120,120,120,0.35)';
+          ctx.fillRect(px, py, TILE, TILE);
+        }
+        const cell = spec[r][c];
+        drawTileOn(ctx, px, py, TILE, cell.tile, cell.r, cell.b);
+        if (houseAt && houseAt[0]===r && houseAt[1]===c){
+          drawHouseShape(ctx, px+TILE/2, py+TILE/2, TILE*0.85, cell.r, cell.b, ownerColor);
+        }
+        ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+        ctx.strokeRect(px, py, TILE, TILE);
+      }
+    }
+  }
+
+  const FRAMES = [
+    (ctx) => drawCornerCrop(ctx, [
+      [ {tile:{kind:'B',rot:2}, r:false, b:false}, {tile:{kind:'B',rot:2}, r:false, b:false} ],
+      [ {tile:{kind:'S',rot:1}, r:false, b:false}, {tile:{kind:'S',rot:0}, r:false, b:false} ],
+    ], null, null, null),
+    (ctx) => drawCornerCrop(ctx, [
+      [ {tile:{kind:'B',rot:0}, r:true,  b:true},  {tile:{kind:'B',rot:2}, r:true,  b:false} ],
+      [ {tile:{kind:'S',rot:1}, r:false, b:true},  {tile:{kind:'S',rot:0}, r:true,  b:false} ],
+    ], null, null, [0,0]),
+    (ctx) => drawCornerCrop(ctx, [
+      [ {tile:{kind:'B',rot:0}, r:true, b:true},  {tile:{kind:'B',rot:2}, r:true,  b:false} ],
+      [ {tile:{kind:'B',rot:2}, r:false, b:true}, {tile:{kind:'S',rot:0}, r:true,  b:true} ],
+    ], [1,1], P1_COLOR, [1,0]),
+    (ctx) => drawCornerCrop(ctx, [
+      [ {tile:{kind:'B',rot:0}, r:true,  b:true},  {tile:{kind:'B',rot:1}, r:false, b:false} ],
+      [ {tile:{kind:'B',rot:2}, r:false, b:true},  {tile:{kind:'S',rot:0}, r:false, b:true} ],
+    ], [1,1], P1_COLOR, [0,1]),
+  ];
+
+  const CAPTIONS = [
+    'Red pipes carry power, blue pipes carry water.',
+    'Dark colours show power or water actually flowing.',
+    'Houses form when a space gets both power and water.',
+    'Houses lacking power or water do not earn points.',
+  ];
+
+  const PERSIST_MS = 2000, FADE_MS = 800;
+  const canvasA = document.getElementById('rulesAnimCanvasA');
+  const canvasB = document.getElementById('rulesAnimCanvasB');
+  const captionA = document.getElementById('rulesAnimCaptionA');
+  const captionB = document.getElementById('rulesAnimCaptionB');
+  let activeCanvas = canvasA, inactiveCanvas = canvasB;
+  let activeCaption = captionA, inactiveCaption = captionB;
+  let frameIndex = 0;
+
+  FRAMES[0](activeCanvas.getContext('2d'));
+  activeCaption.textContent = CAPTIONS[0];
+  activeCanvas.style.transition = 'none'; activeCanvas.style.opacity = 1;
+  inactiveCanvas.style.transition = 'none'; inactiveCanvas.style.opacity = 0;
+  activeCaption.style.transition = 'none'; activeCaption.style.opacity = 1;
+  inactiveCaption.style.transition = 'none'; inactiveCaption.style.opacity = 0;
+  requestAnimationFrame(() => {
+    [canvasA, canvasB, captionA, captionB].forEach(el => { el.style.transition = 'opacity 0.8s ease'; });
+  });
+
+  function advanceRulesAnim(){
+    frameIndex = (frameIndex + 1) % FRAMES.length;
+    FRAMES[frameIndex](inactiveCanvas.getContext('2d'));
+    inactiveCaption.textContent = CAPTIONS[frameIndex];
+    inactiveCanvas.style.opacity = 1; activeCanvas.style.opacity = 0;
+    inactiveCaption.style.opacity = 1; activeCaption.style.opacity = 0;
+    [activeCanvas, inactiveCanvas] = [inactiveCanvas, activeCanvas];
+    [activeCaption, inactiveCaption] = [inactiveCaption, activeCaption];
+    setTimeout(advanceRulesAnim, FADE_MS + PERSIST_MS);
+  }
+  setTimeout(advanceRulesAnim, PERSIST_MS);
+})();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3129623529be4e2e8dce13d003159228"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
