@@ -46,8 +46,9 @@
                          background:white; color:#555; cursor:pointer; }
   #infoPopup { font-size:12px; color:#333; line-height:1.4; text-align:left; background:#fff8e6;
                border:1px solid #F1A208; border-radius:6px; padding:10px 12px; margin-top:10px; white-space:pre-line; }
-  #tileRow { display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:nowrap; }
-  #tileRow canvas { border:1px solid #ddd; border-radius:4px; cursor:default; }
+  #tileRow { position:relative; margin:8px auto 0; }
+  #tileRow canvas { position:absolute; top:0; border:1px solid #ddd; border-radius:4px; cursor:default;
+                     box-shadow: -3px 0 5px rgba(0,0,0,0.18); }
   #legendRow { display:flex; justify-content:space-between; margin-top:10px; }
   .legendItem { display:flex; flex-direction:column; align-items:center; gap:3px; width:25%; }
   .legendItem .label { font-size:10px; color:#666; text-align:center; }
@@ -103,7 +104,7 @@
             box-shadow:0 0 0 3px white, 0 0 0 6px #F1C40F !important; }
   .scoreBox .num { font-size:22px; font-weight:bold; }
   .scoreBox .lbl { font-size:10px; opacity:0.85; }
-  #roundRow { display:none; position:relative; min-height:30px; margin-top:6px; }
+  #roundRow { display:none; position:relative; min-height:30px; margin:10px 0 14px; }
   #roundNum { font-size:22px; font-weight:bold; color:#333; text-align:left;
               max-width:min(30%, 145px); box-sizing:border-box; padding-right:6px; }
   #hintMiddleZone { position:absolute; left:min(30%, 145px); right:130px; top:0; bottom:0;
@@ -1228,20 +1229,30 @@ function render(){
 function renderDrawArea(){
   const area = document.getElementById('tileRow');
   area.innerHTML = '';
-  // 8 icons + 7 gaps (5px each) + 2px border per icon must fit within
-  // CANVAS_SIZE (the fixed width of the container). Solve for the
-  // largest icon size that guarantees this, capped at the original 42px
-  // design size so it doesn't grow larger on wide screens.
+  // Same sizing basis as before (fitting 8 cards, non-overlapping) - keeps
+  // the card size itself unchanged; only their arrangement (overlapping)
+  // changes here.
   const gapTotal = 7 * 5;
   const borderTotal = VISIBLE_TILES * 2;
   const psize = Math.max(20, Math.min(42, Math.floor((CANVAS_SIZE - gapTotal - borderTotal - 8) / VISIBLE_TILES)));
+  // Left 2/3 of each card visible, right 1/3 covered by the next card.
+  const overlapOffset = (2/3) * psize;
+
+  // Always the full, 8-slot width/position, regardless of how many real
+  // tiles remain - blank slots at the start (same convention as before)
+  // keep the deck's location and width constant as the queue runs down,
+  // rather than the whole deck visibly shrinking and shifting.
+  area.style.height = `${psize}px`;
+  area.style.width = `${(VISIBLE_TILES - 1) * overlapOffset + psize}px`;
 
   const numBlanks = VISIBLE_TILES - upcomingTiles.length;
   for (let slot=0; slot<VISIBLE_TILES; slot++){
     const cnv = document.createElement('canvas');
     cnv.width = psize; cnv.height = psize;
+    cnv.style.left = `${slot * overlapOffset}px`;
     const c = cnv.getContext('2d');
     if (slot < numBlanks){
+      c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
       c.strokeStyle='#ddd'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
     } else {
       const idx = slot - numBlanks;
@@ -1262,7 +1273,6 @@ function renderDrawArea(){
         c.strokeStyle='#999'; c.lineWidth=2; c.strokeRect(1,1,psize-2,psize-2);
       } else {
         c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
-        cnv.style.opacity = '0.55';
       }
     }
     area.appendChild(cnv);
