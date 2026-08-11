@@ -2179,11 +2179,11 @@ document.getElementById('p1Btn').onclick = () => { enterRandomGameMode(); numPla
 document.getElementById('p2Btn').onclick = () => { enterRandomGameMode(); numPlayers = 2; vsComputerOn = false; effectiveN = 2; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('p3Btn').onclick = () => { enterRandomGameMode(); numPlayers = 3; vsComputerOn = false; effectiveN = 3; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('p4Btn').onclick = () => { enterRandomGameMode(); numPlayers = 4; vsComputerOn = false; effectiveN = 4; computeLayout(); updatePlayerButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('digUpBtn').onclick = () => { practiceMode = false; document.getElementById('practiceBtn').textContent = 'Practice: off'; document.getElementById('practiceBtn').classList.remove('modeActive'); enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('digUpBtn').onclick = () => { practiceMode = false; document.getElementById('practiceBtn').textContent = 'Practice: off'; document.getElementById('practiceBtn').classList.remove('modeActive'); enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 7; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size6Btn').onclick = () => { enterRandomGameMode(); N = 6; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size7Btn').onclick = () => { enterRandomGameMode(); N = 7; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('size8Btn').onclick = () => { enterRandomGameMode(); N = 8; computeLayout(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
-document.getElementById('todaysGameBtn').onclick = () => { practiceMode = false; document.getElementById('practiceBtn').textContent = 'Practice: off'; document.getElementById('practiceBtn').classList.remove('modeActive'); enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
+document.getElementById('todaysGameBtn').onclick = () => { practiceMode = false; document.getElementById('practiceBtn').textContent = 'Practice: off'; document.getElementById('practiceBtn').classList.remove('modeActive'); enterTodaysGameMode(); numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 7; computeLayout(); updatePlayerButtons(); updateSizeButtons(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode(); computeLayout(); updateGameModeButtons(); exitPreLaunch(); freshGame(); };
 // Reverts the currently-visible board and deck to their starting state.
 // Today's game: the board/deck are already fixed by today's date, so this
@@ -2423,7 +2423,7 @@ renderTitleAndLegend();
 // list is already populated and, being seeded from today's date, would only
 // ever come out identical anyway.
 enterTodaysGameMode();
-numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 6;
+numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 7;
 computeLayout();
 requestAnimationFrame(() => {
   requestAnimationFrame(() => {
