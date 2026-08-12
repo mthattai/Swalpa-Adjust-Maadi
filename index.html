@@ -246,7 +246,7 @@
     <button id="muteBtn">Sound: on</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 10 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 12 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -276,27 +276,15 @@
   along an edge with a connection reaching it is directly supplied.</p>
 
   <h2>The deck</h2>
-  <p>There are 8 card types.</p>
-  <ul>
-    <li><b>Straight</b> (2 possible versions): red and blue
-    connectors, perpendicular to each other.</li>
-    <li><b>Bend</b> (4 possible versions): red and blue L-shaped
-    connectors, on opposite corners.</li>
-    <li><b>Roadworks</b>: a yellow triangle and no connectors.</li>
-    <li><b>Park</b>: a tree and no connectors.</li>
-  </ul>
+  <p>There are 8 card types: 2 Straight, 4 Bend, Roadworks, and Park. Every
+  card except Park shows a red connector and a blue connector.</p>
   <div id="ruleTileDiagram" class="ruleDiagramRow"></div>
-  <p>The setup deck consists of:</p>
-  <ul>
-    <li>6/8/10 Park cards with a random selection of Straight/Bend
-    cards to make up 36/49/64 cards (for 6x6, 7x7, or 8x8 boards,
-    respectively). The deck is shuffled before setup.</li>
-  </ul>
-  <p>The play deck consists of:</p>
-  <ul>
-    <li>3x6 copies of the Straight/Bend cards and 2 Roadworks cards
-    per player. The deck is shuffled before play.</li>
-  </ul>
+  <p>The play deck is fixed, and contains the following per player (so a
+  2-player game has twice as many of each, and so on):</p>
+  <div id="ruleDeckCompositionDiagram" class="ruleDiagramRow"></div>
+  <p>The deck is shuffled once before play begins, and drawn from without
+  replacement - once a card is drawn, it's gone until the deck is rebuilt
+  for a new game.</p>
 
   <h2>The connection rule</h2>
   <p>When connectors of the same colour meet across an edge separating two
@@ -306,15 +294,24 @@
   <div id="ruleJunctionDiagram" class="ruleDiagramRow"></div>
 
   <h2>Setup</h2>
-  <p>Fill the board with the setup cards. Check the board
-  once. Any space already connected to both supplies becomes a house
+  <p>The board starts with a fixed number of Parks for its size (6, 8, or
+  10 for a 6x6, 7x7, or 8x8 board), placed so that no single space on the
+  board is adjacent to more than one Park. Every other space is filled
+  with a Straight or Bend card, drawn at random <i>with</i>
+  replacement, using the same relative proportions as the deck above (so a
+  Straight A is twice as likely to appear as a Straight B, for example,
+  matching their 4-to-2 split in the deck). If this setup would produce
+  more than 4 houses immediately (see below), the board is discarded and a
+  new one is drawn, repeating until it comes in at 4 or fewer. Any space
+  already connected to both supplies at this point becomes a house
   immediately.</p>
 
   <h2>Parks</h2>
   <p>No player may place a
   card on a Park. Roadworks can still strike a Park like any other
   space, destroying it. Once that happens, the space is open for play
-  like any other.</p>
+  like any other. Park cards are placed so that any space has at most
+  one Park adjacent to it.</p>
 
   <h2>Houses and control</h2>
   <p>Houses are built when an empty space first connects to both red and
@@ -364,7 +361,7 @@
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 10 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 12 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -383,6 +380,20 @@ let vsComputerOn = true;
 let numPlayers = 1;
 let effectiveN = 2;
 const TOTAL_ROUNDS = 20;
+// Single source of truth for the play deck's composition - buildAndShuffleDeck()
+// (the ongoing, per-turn deck), buildSetupDeck() (the initial board fill, which
+// draws with replacement from the same connector proportions, Roadworks excluded),
+// and the in-game rules diagram all read from this one list. Change counts here
+// only, and both the actual game behaviour and the displayed rules update together.
+const DECK_COMPOSITION = [
+  {tile:{kind:'S', rot:0}, countPerPlayer:4, label:'Straight A'},
+  {tile:{kind:'S', rot:1}, countPerPlayer:2, label:'Straight B'},
+  {tile:{kind:'B', rot:0}, countPerPlayer:3, label:'Bend A'},
+  {tile:{kind:'B', rot:1}, countPerPlayer:3, label:'Bend B'},
+  {tile:{kind:'B', rot:2}, countPerPlayer:3, label:'Bend C'},
+  {tile:{kind:'B', rot:3}, countPerPlayer:3, label:'Bend D'},
+  {tile:{kind:'X', rot:0}, countPerPlayer:2, label:'Roadworks'},
+];
 let SIZE, BAND, INSET, CANVAS_SIZE;
 const RED_DARK = '#C0392B', RED_LIGHT = '#E8B4AC';
 const BLUE_DARK = '#2E86C1', BLUE_LIGHT = '#AED0EA';
@@ -803,17 +814,15 @@ function pickParkPositions(N, numParks){
 function buildSetupDeck(){
   const parksConfig = {6:6, 7:8, 8:10};
   const numParks = parksConfig[N];
-  // Weighted to match the ongoing deck's own 4:2 natural:unnatural straight
-  // ratio (see buildAndShuffleDeck), rather than a uniform 1/6 draw - so the
-  // initial board-fill reflects the same bias the deck itself uses.
-  const orientations = [
-    {kind:'S', rot:0}, {kind:'S', rot:0}, {kind:'S', rot:0}, {kind:'S', rot:0},
-    {kind:'S', rot:1}, {kind:'S', rot:1},
-    {kind:'B', rot:0}, {kind:'B', rot:0}, {kind:'B', rot:0},
-    {kind:'B', rot:1}, {kind:'B', rot:1}, {kind:'B', rot:1},
-    {kind:'B', rot:2}, {kind:'B', rot:2}, {kind:'B', rot:2},
-    {kind:'B', rot:3}, {kind:'B', rot:3}, {kind:'B', rot:3},
-  ];
+  // Weighted to match the ongoing deck's own connector proportions (see
+  // DECK_COMPOSITION) - Roadworks excluded, since it's never part of the
+  // setup fill - drawn with replacement, so the initial board reflects the
+  // same bias the deck itself uses, rather than a uniform draw.
+  const orientations = [];
+  for (const {tile, countPerPlayer} of DECK_COMPOSITION){
+    if (tile.kind === 'X') continue;
+    for (let i=0;i<countPerPlayer;i++) orientations.push(tile);
+  }
   const parkPositions = pickParkPositions(N, numParks);
   const isPark = Array.from({length:N}, () => Array(N).fill(false));
   for (const [r,c] of parkPositions) isPark[r][c] = true;
@@ -1744,13 +1753,9 @@ let deckPos = 0;
 
 function buildAndShuffleDeck(){
   deck = [];
-  for (let i=0;i<4*effectiveN;i++) deck.push({kind:'S', rot:0});
-  for (let i=0;i<2*effectiveN;i++) deck.push({kind:'S', rot:1});
-  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:0});
-  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:1});
-  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:2});
-  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:3});
-  for (let i=0;i<2*effectiveN;i++) deck.push({kind:'X', rot:0});
+  for (const {tile, countPerPlayer} of DECK_COMPOSITION){
+    for (let i=0;i<countPerPlayer*effectiveN;i++) deck.push(tile);
+  }
   // Fisher-Yates shuffle, fixed once at the start of play.
   for (let i=deck.length-1;i>0;i--){
     const j = Math.floor(boardRNG()*(i+1));
@@ -2139,6 +2144,12 @@ function renderRuleDiagrams(){
     smallTileCanvas(tileArea, {kind:'B', rot:0}, 'Bend');
     smallTileCanvas(tileArea, {kind:'X', rot:0}, 'Roadworks');
     smallTileCanvas(tileArea, {kind:'P', rot:0}, 'Park');
+  }
+  const deckCompArea = document.getElementById('ruleDeckCompositionDiagram');
+  if (deckCompArea && deckCompArea.childNodes.length === 0){
+    for (const {tile, countPerPlayer, label} of DECK_COMPOSITION){
+      smallTileCanvas(deckCompArea, tile, `${label}: \u00d7${countPerPlayer}`);
+    }
   }
   const juncArea = document.getElementById('ruleJunctionDiagram');
   if (juncArea.childNodes.length === 0){
