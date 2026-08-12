@@ -314,8 +314,10 @@
   <h2>Houses and control</h2>
   <p>Houses are built when an empty space first connects to both red and
   blue supply. The player on whose turn this happens can henceforth earn
-  revenue from that house, indicated by the roof of the house being in
-  their colour. Houses built at setup are not allocated to any player.
+  points from that house, indicated by the roof of the house being in
+  their colour. You only earn points for houses that are simultaneously
+  connected to both red and blue supply, with houses closer to the
+  centre earning more points. Houses built at setup are not allocated to any player.
   If Roadworks destroys a Park or house, a new house can be built and
   claimed on that space.</p>
   <p>Stealing: On your turn, place your card on a space. If this space
@@ -347,8 +349,11 @@
 
   <h2>Scoring</h2>
   <p>Each round consists of one move by each player in turn. After
-  their turn, a player earns one point for every house in their
+  their turn, a player earns points for every house in their
   colour that is simultaneously connected to both red and blue supply.
+  The points-per-house depends on location, increasing closer to
+  centre: houses in the outermost zone are worth 1 point each, houses
+  in the next inner zone are worth 2 points each, and so on.
   A house that's only partly connected does not contribute to the
   score. Each player's total is checked and updated only once in a
   round, on their turn.</p>
@@ -1242,14 +1247,16 @@ function render(){
       ctx.strokeRect(px+3,py+3,SIZE-6,SIZE-6); ctx.setLineDash([]);
     }
 
-    if (scoreHighlightActive && lastScoringSquares.some(([sr,sc]) => sr===r && sc===c)){
+    const scoringSquare = scoreHighlightActive && lastScoringSquares.find(([sr,sc]) => sr===r && sc===c);
+    if (scoringSquare){
       // Player's own colour (same values as the scorebox), rounded rect,
       // with a thick white border specifically so that when several
       // adjacent squares score at once, each one stays visually distinct
-      // rather than the highlights merging into one blob. Each square is
-      // always worth exactly 1 point individually, so every one of them
-      // shows its own "+1", reinforcing that points come per
-      // doubly-connected house, not as a single lump sum.
+      // rather than the highlights merging into one blob. Each square's
+      // own point value is its board-distance to the nearest edge plus 1
+      // (edge-adjacent = 1, centre-most = highest), so different squares
+      // scoring in the same turn can show different "+X" amounts.
+      const points = scoringSquare[2];
       const inset = 2;
       const borderWidth = Math.max(6, SIZE*0.12);
       const radius = SIZE*0.18;
@@ -1264,7 +1271,7 @@ function render(){
       ctx.font = `bold ${Math.round(SIZE*0.4)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('+1', px+SIZE/2, py+SIZE/2);
+      ctx.fillText('+' + points, px+SIZE/2, py+SIZE/2);
     }
   }
 
@@ -1702,14 +1709,16 @@ function applyHouseAndRevenue(){
     }
   }
   lastScoringSquares = [];
+  lastScoringAmount = 0;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (owner[r][c] === turn && redC[r][c] && blueC[r][c]){
-      revenue[owner[r][c]] += 1;
-      lastScoringSquares.push([r,c]);
+      const points = Math.min(r, N-1-r, c, N-1-c) + 1;
+      revenue[owner[r][c]] += points;
+      lastScoringSquares.push([r,c,points]);
+      lastScoringAmount += points;
     }
   }
   lastScoringPlayer = turn;
-  lastScoringAmount = lastScoringSquares.length;
 }
 
 function advanceToNextTurn(){
@@ -1942,8 +1951,11 @@ function aiChooseSquare(color, drawTile, randFn){
       if (full && !wasHouse && effOwner === null){
         effOwner = color; // this placement would newly claim it this turn
       }
-      if (full && effOwner === color) myScore++;
-      else if (full && effOwner === otherC) oppScore++;
+      if (full && effOwner === color){
+        myScore += Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
+      } else if (full && effOwner === otherC){
+        oppScore += Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
+      }
       if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
     }
     const diff = myScore - oppScore;
@@ -2464,8 +2476,11 @@ const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
 
 const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "connects to both red and blue supply. The player on whose turn this " +
-  "happens can henceforth earn revenue from that house, indicated by " +
-  "the roof of the house being in their colour. Houses built at setup " +
+  "happens can henceforth earn points from that house, indicated by " +
+  "the roof of the house being in their colour. You only earn points " +
+  "for houses that are simultaneously connected to both red and blue " +
+  "supply, with houses closer to the centre earning more points. " +
+  "Houses built at setup " +
   "are not allocated to any player. If Roadworks destroys a Park or " +
   "house, a new house can be built and claimed on that space.\n\n" +
   "Stealing: On your turn, place your card on a space. If this space " +
@@ -2475,9 +2490,12 @@ const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
   "colour.";
 
 const HOW_TO_SCORE_TEXT = "Each round consists of one move by each " +
-  "player in turn. After their turn, a player earns one point for " +
+  "player in turn. After their turn, a player earns points for " +
   "every house in their colour that is simultaneously connected to " +
-  "both red and blue supply. A house that's only partly connected does " +
+  "both red and blue supply. The points-per-house depends on location, " +
+  "increasing closer to centre: houses in the outermost zone are worth " +
+  "1 point each, houses in the next inner zone are worth 2 points each, " +
+  "and so on. A house that's only partly connected does " +
   "not contribute to the score. Each player's total is checked and " +
   "updated only once in a round, on their turn.";
 
