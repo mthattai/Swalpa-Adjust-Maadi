@@ -803,9 +803,16 @@ function pickParkPositions(N, numParks){
 function buildSetupDeck(){
   const parksConfig = {6:6, 7:8, 8:10};
   const numParks = parksConfig[N];
+  // Weighted to match the ongoing deck's own 4:2 natural:unnatural straight
+  // ratio (see buildAndShuffleDeck), rather than a uniform 1/6 draw - so the
+  // initial board-fill reflects the same bias the deck itself uses.
   const orientations = [
-    {kind:'S', rot:0}, {kind:'S', rot:1},
-    {kind:'B', rot:0}, {kind:'B', rot:1}, {kind:'B', rot:2}, {kind:'B', rot:3},
+    {kind:'S', rot:0}, {kind:'S', rot:0}, {kind:'S', rot:0}, {kind:'S', rot:0},
+    {kind:'S', rot:1}, {kind:'S', rot:1},
+    {kind:'B', rot:0}, {kind:'B', rot:0}, {kind:'B', rot:0},
+    {kind:'B', rot:1}, {kind:'B', rot:1}, {kind:'B', rot:1},
+    {kind:'B', rot:2}, {kind:'B', rot:2}, {kind:'B', rot:2},
+    {kind:'B', rot:3}, {kind:'B', rot:3}, {kind:'B', rot:3},
   ];
   const parkPositions = pickParkPositions(N, numParks);
   const isPark = Array.from({length:N}, () => Array(N).fill(false));
@@ -815,7 +822,7 @@ function buildSetupDeck(){
   for (let r=0;r<N;r++){
     for (let c=0;c<N;c++){
       if (isPark[r][c]) setupDeck.push({kind:'P', rot:0});
-      else setupDeck.push(orientations[Math.floor(boardRNG()*6)]);
+      else setupDeck.push(orientations[Math.floor(boardRNG()*orientations.length)]);
     }
   }
   return setupDeck;
@@ -1726,8 +1733,8 @@ let deckPos = 0;
 
 function buildAndShuffleDeck(){
   deck = [];
-  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'S', rot:0});
-  for (let i=0;i<3*effectiveN;i++) deck.push({kind:'S', rot:1});
+  for (let i=0;i<4*effectiveN;i++) deck.push({kind:'S', rot:0});
+  for (let i=0;i<2*effectiveN;i++) deck.push({kind:'S', rot:1});
   for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:0});
   for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:1});
   for (let i=0;i<3*effectiveN;i++) deck.push({kind:'B', rot:2});
