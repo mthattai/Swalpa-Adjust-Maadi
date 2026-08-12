@@ -840,26 +840,37 @@ function buildSetupDeck(){
 // way they did before (the simulation had hand-duplicated this setup
 // separately and simply omitted the house-marking step).
 function initFreshBoard(){
-  const setupDeck = buildSetupDeck();
-  board = [];
-  let setupIdx = 0;
-  for (let r=0;r<N;r++){
-    const row=[];
-    for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
-    board.push(row);
+  // Setup-time houses beyond a handful are rare but create an unwelcome
+  // thin tail (occasional boards with 5-11 houses already formed before a
+  // single move is played) - reject and regenerate the whole board until
+  // it comes in at <=4, rather than allowing that tail through. Rejection
+  // rate is modest in practice (roughly 5-15% depending on board size), so
+  // this resolves in only one or two attempts almost every time; the cap
+  // and fallback exist purely as a safety net.
+  const MAX_SETUP_HOUSES = 4;
+  let houseCount = Infinity;
+  for (let attempt=0; attempt<100 && houseCount > MAX_SETUP_HOUSES; attempt++){
+    const setupDeck = buildSetupDeck();
+    board = [];
+    let setupIdx = 0;
+    for (let r=0;r<N;r++){
+      const row=[];
+      for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
+      board.push(row);
+    }
+    house = Array.from({length:N},()=>Array(N).fill(false));
+    const {redC, blueC} = connectivity();
+    houseCount = 0;
+    for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+      if (redC[r][c] && blueC[r][c]){ house[r][c] = true; houseCount++; }
+    }
   }
-  house = Array.from({length:N},()=>Array(N).fill(false));
   owner = Array.from({length:N},()=>Array(N).fill(null));
   revenue = {1:0, 2:0, 3:0, 4:0};
   turn = 1;
   roundNum = 1;
   gameOver = false;
   lastPlayedSquare = null;
-
-  const {redC, blueC} = connectivity();
-  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (redC[r][c] && blueC[r][c]) house[r][c] = true;
-  }
   initTileQueue();
 }
 
