@@ -6,10 +6,12 @@ from scratch without needing to read the original source. This is a design
 record for the author, not player-facing material. Visual/rendering details
 (exact pixel sizes, colours used purely for decoration, canvas drawing code)
 are intentionally omitted or kept brief, since those can be redesigned freely
-without changing how the game plays.
+without changing how the game plays. Every number and rule below was checked
+directly against the shipped implementation while writing this, not recalled
+from memory.
 
 All source line numbers refer to the shipped file
-`index.html` at the time of writing.
+`swalpa_adjust_maadi_v24.html` at the time of writing.
 
 
 ## 1. Premise
@@ -38,11 +40,11 @@ wins, the residents lose."
   on that specific side, ending at the space in question. Water-connectivity
   is defined identically, sourced from the left/right edges instead.
 - This is computed as two independent breadth-first floods over the grid
-  (`connectivity()`, source lines 465-501): one flood for power seeded from
-  every tile on row 0/row N-1 whose N/S edge carries power, one flood for
-  water seeded from every tile on column 0/column N-1 whose W/E edge carries
-  water. A flood only propagates from tile A to an adjacent tile B if **both**
-  A's edge facing B and B's edge facing A carry that colour.
+  (`connectivity()`), one flood for power seeded from every tile on row 0/row
+  N-1 whose N/S edge carries power, one flood for water seeded from every
+  tile on column 0/column N-1 whose W/E edge carries water. A flood only
+  propagates from tile A to an adjacent tile B if **both** A's edge facing B
+  and B's edge facing A carry that colour.
 - Connectivity is recomputed from scratch after every single card placement
   (there is no incremental/cached connectivity state).
 
@@ -53,24 +55,26 @@ Every tile on the board has one of four kinds: **Straight (S)**, **Bend
 (B)**, **Park (P)**, or **Roadworks-rubble (X)**. Each kind, combined with a
 rotation, defines which of its four sides (N/E/S/W) carry power ("R") and/or
 water ("B" in the code, meaning "blue") -- see `edgesOf()` /
-`straightEdges()` / `bendEdges()`, lines 381-398:
+`straightEdges()` / `bendEdges()`:
 
 - **Straight, rotation 0 or 2** (both rotations give the identical
   configuration, since the check is `rot % 2`): N and S carry power; E and W
-  carry water.
-- **Straight, rotation 1 or 3**: N and S carry water; E and W carry power.
-  (Only rotations 0 and 1 of Straight are ever actually used when building
-  decks -- see Β§4/Β§5 -- since rotation 2/3 are redundant with 0/1 for this
-  kind.)
+  carry water. This is referred to elsewhere in this document (and in the
+  in-game rules diagram) as "Straight A."
+- **Straight, rotation 1 or 3**: N and S carry water; E and W carry power
+  ("Straight B"). (Only rotations 0 and 1 of Straight are ever actually used
+  when building decks -- see Β§4/Β§5 -- since rotation 2/3 are redundant with
+  0/1 for this kind.)
 - **Bend**, one of 4 distinct rotations, each routing power through one pair
   of adjacent sides and water through the other pair:
-  - rot 0: power on N+E, water on S+W
-  - rot 1: power on E+S, water on W+N
-  - rot 2: power on S+W, water on N+E
-  - rot 3: power on W+N, water on E+S
+  - rot 0 ("Bend A"): power on N+E, water on S+W
+  - rot 1 ("Bend B"): power on E+S, water on W+N
+  - rot 2 ("Bend C"): power on S+W, water on N+E
+  - rot 3 ("Bend D"): power on W+N, water on E+S
 - **Park**: carries neither colour on any side (`blankEdges()`). A card can
   never be placed on a Park; it is permanent for the rest of the game unless
-  destroyed by Roadworks (see Β§10).
+  destroyed by Roadworks (see Β§11). See Β§4 for the deliberate, non-uniform
+  rule governing where Parks are placed at setup.
 - **Roadworks-rubble (X)**: also carries neither colour. Unlike a Park, a
   fresh card *can* be played on top of rubble in a later turn.
 
@@ -78,50 +82,158 @@ Every tile, connector or not, occupies exactly one board space at a time;
 there is no concept of a tile carrying both a Straight and a Bend
 simultaneously.
 
+"Straight A/B" and "Bend A/B/C/D" are the exact labels now used in the
+in-game rules page's card-composition diagram (Β§5), generated directly from
+the same `DECK_COMPOSITION` list described there -- not a separate naming
+scheme invented for this document.
+
 
 ## 4. The setup deck (initial board)
 
-At the start of every game (`buildSetupDeck()`, lines 402-420), the entire
-board is filled in one pass, before any player has taken a turn:
+At the start of every game (`initFreshBoard()`), the entire board is filled
+in one pass, before any player has taken a turn. This now has three distinct
+pieces, each a deliberate design choice, not simply "shuffle everything
+together":
 
-- The number of Park spaces is fixed by board size: **6x6 -> 6 Parks, 7x7 ->
-  8 Parks, 8x8 -> 10 Parks** (`parksConfig = {6:6, 7:8, 8:10}`). Verified
-  directly: a 6x6 setup deck contains exactly 6 Parks out of 36 tiles, 7x7
-  contains 8 out of 49, 8x8 contains 10 out of 64.
-- The remaining `N*N - numParks` spaces are each independently filled with a
-  uniformly random choice among exactly 6 connector orientations: Straight
-  rot 0, Straight rot 1, Bend rot 0, Bend rot 1, Bend rot 2, Bend rot 3.
-- All `N*N` tiles (the random connectors plus the Parks) are then combined
-  into one list and Fisher-Yates shuffled, then placed onto the board
-  row-major (row 0 left-to-right, then row 1, etc.).
-- Immediately after the board is filled, connectivity is computed once, and
-  **any space that already happens to be doubly-connected becomes a house
-  immediately**, with no owner (owner stays `null`, rendered with a neutral
-  roof colour). This is the only way an unowned house can exist; Roadworks
-  never creates one directly (see Β§10).
+**4.1 Park count.** The number of Park spaces is fixed by board size: **6x6
+-> 6 Parks, 7x7 -> 8 Parks, 8x8 -> 10 Parks** (`parksConfig = {6:6, 7:8,
+8:10}`). Verified directly: a 6x6 setup deck contains exactly 6 Parks out of
+36 tiles, 7x7 contains 8 out of 49, 8x8 contains 10 out of 64.
+
+**4.2 Park placement rule** (`pickParkPositions()`, `isBadParkOffset()`).
+Parks are *not* placed by uniform-random shuffle. Instead, positions are
+chosen so that **no single board space is edge-adjacent to more than one
+Park**.
+
+The reasoning behind this rule, which motivated the whole feature: classify
+every non-Park space by how many of its edge-adjacent neighbours (board
+edges themselves always count as open, never as a blocking neighbour) are
+Parks:
+
+| Closed (Park) neighbours | What that space can do |
+|---|---|
+| 0 | Can host a house *and* channel both colours through |
+| 1 | Can host a house *and* channel one colour through |
+| 2 | Can host a house *or* channel one colour -- never both, whichever the placed card's orientation is chosen for |
+| 3 or 4 | Genuinely useless for either purpose |
+
+This is an exact classification (verified by brute-force enumeration over
+every possible closed-side-count and every card orientation), and it depends
+only on the *count* of Park-neighbours, never on which specific sides they
+occupy. A space acquires a second closed side specifically when two Parks
+are positioned such that they share a common neighbour -- which happens for
+exactly three relative offsets between a pair of Parks: two apart in a
+straight line, or diagonally adjacent. Every other spacing between two
+Parks, including the two being directly *adjacent* to each other, is
+completely safe and creates no degraded space at all.
+
+`isBadParkOffset(p1, p2)` checks precisely this:
+
+```
+dr = abs(p1.row - p2.row), dc = abs(p1.col - p2.col)
+bad if (dr==0 and dc==2) or (dr==2 and dc==0) or (dr==1 and dc==1)
+```
+
+`pickParkPositions(N, numParks)` places parks one at a time: shuffle every
+board square, then for each Park in turn scan the shuffled list for the
+first square that has no bad-offset relationship with any Park already
+placed. If this process ever fails to place all `numParks` Parks (no valid
+square remains for one of them), the entire attempt is discarded and
+restarted from a fresh shuffle, up to 50 times; a final fallback (greedily
+take whatever safe squares can be found, then fill any still-unplaced Parks
+on the first available squares regardless of safety) exists purely as a
+safety net and is not expected to trigger at the park counts this game
+actually uses.
+
+This is not a cosmetic distinction -- the true combinatorial ceiling (the
+largest number of Parks that can *ever* satisfy this constraint on a given
+board, found via extensive randomised search, not derived analytically) is
+**12 for 6x6, 15 for 7x7, 19 for 8x8** -- comfortably above the 6/8/10
+actually used, so a valid placement is found on the very first shuffled
+attempt essentially every time in practice (verified: mean ~1.0-1.3 attempts
+needed across 300 independent trials at the live park counts). Pushing park
+counts much higher than today's values would eventually make placement
+slow, then (beyond the ceiling) outright impossible -- see the design notes
+in this section's own git history/chat log for the fuller derivation if this
+is ever revisited. A secondary, deliberately avoided property of pushing
+toward that ceiling: the *set* of valid maximal placements shrinks sharply as
+density rises, and what remains is dominated by two efficient-but-repetitive
+patterns (Parks paired up directly adjacent to each other, and Parks
+clustered along the board's own edge) rather than the varied, spread-out
+arrangements a moderate park count produces -- i.e. board "character" and
+placement density trade off against each other under this specific rule,
+which is part of why the park counts above were deliberately kept well
+below the ceiling rather than pushed toward it.
+
+**4.3 Connector fill.** Every non-Park space is filled independently, drawn
+**with replacement** (i.e. the same orientation can and will recur many
+times across different squares -- this is not a finite, shuffled pool the
+way the play deck in Β§5 is), from a distribution weighted to match the *same
+relative proportions* as the ongoing play deck's own composition (Β§5),
+specifically excluding Roadworks (which is never part of the initial board).
+Concretely, the draw is uniform over a list containing each connector
+orientation repeated according to its `countPerPlayer` value from the shared
+`DECK_COMPOSITION` list (Straight A x4, Straight B x2, each of the four Bends
+x3 -- 18 entries total, so e.g. Straight A is drawn with probability 4/18).
+Because this list is derived from the exact same `DECK_COMPOSITION` the play
+deck itself is built from, a future change to that one list automatically,
+correctly changes both the initial board's bias and the ongoing deck's
+composition together -- there is no separate, second place that needs
+updating to keep them in sync.
+
+**4.4 Setup-house cutoff.** Immediately after the board is filled,
+connectivity is computed once, and any space that already happens to be
+doubly-connected becomes a house immediately, with no owner (owner stays
+`null`, rendered with a neutral roof colour) -- this is the only way an
+unowned house can exist; Roadworks never creates one directly (see Β§11). If
+this produces **more than 4** such houses, the entire board (Park placement
+and connector fill both) is discarded and regenerated from scratch, repeating
+until a board with 4 or fewer setup houses is found, capped at 100 attempts
+(a defensive limit only -- the underlying rejection rate is roughly 5-15%
+depending on board size, so this virtually always resolves within one or two
+attempts). This exists specifically to remove the thin tail of occasional
+boards that would otherwise start with 5-11 houses already formed before a
+single move is played.
 
 
 ## 5. The play deck
 
-Once the board is set up, a **separate** deck of cards to be drawn and played
-is built and shuffled (`buildAndShuffleDeck()`, lines 1030-1045). Its
-composition scales with `effectiveN` (the number of players actually seated
-at the table -- see Β§12 for exactly how this is set):
+Once the board is set up, a **separate** deck of cards to be drawn and
+played is built and shuffled (`buildAndShuffleDeck()`). Both this deck and
+the setup fill's own weighting (Β§4.3) are derived from one shared list,
+`DECK_COMPOSITION`, so there is exactly one place in the source that defines
+"how many of each card exist" -- changing a `countPerPlayer` value there
+changes both the live game's actual behaviour and the in-game rules page's
+own displayed card-composition diagram together, since that diagram is
+rendered directly from this same list rather than a separately maintained
+description.
 
-| Card | Count |
+| Card | Count per player |
 |---|---|
-| Straight, rot 0 | 3 x effectiveN |
-| Straight, rot 1 | 3 x effectiveN |
-| Bend, rot 0 | 3 x effectiveN |
-| Bend, rot 1 | 3 x effectiveN |
-| Bend, rot 2 | 3 x effectiveN |
-| Bend, rot 3 | 3 x effectiveN |
+| Straight A (rot 0) | 4 x effectiveN |
+| Straight B (rot 1) | 2 x effectiveN |
+| Bend A (rot 0) | 3 x effectiveN |
+| Bend B (rot 1) | 3 x effectiveN |
+| Bend C (rot 2) | 3 x effectiveN |
+| Bend D (rot 3) | 3 x effectiveN |
 | Roadworks (X) | 2 x effectiveN |
 | **Total** | **20 x effectiveN** |
 
+(`effectiveN`, the number of players actually seated at the table, is set
+per Β§13.) The Straight A/B split is deliberately uneven -- 4:2 rather than an
+even 3:3 -- because "Straight A" is the orientation whose two connectors
+align with each colour's actual supply direction (power runs top-to-bottom
+through it, water runs left-to-right), while "Straight B" runs directly
+against both colours' natural direction and was found, in play, to be
+disproportionately awkward for genuinely extending either colour's reach
+compared to how often it showed up. The four Bends are left untouched at an
+even 3-each, since they don't show this same asymmetry between each other.
+
 This whole list is Fisher-Yates shuffled once, at the start of play, and
 never reshuffled mid-game. Verified directly: effectiveN=2 produces a deck of
-exactly 40 cards, effectiveN=3 produces 60, effectiveN=4 produces 80.
+exactly 40 cards, effectiveN=3 produces 60, effectiveN=4 produces 80 -- the
+total size formula itself (20 x effectiveN) is unchanged by the 4:2 split,
+since it only redistributes cards within the two Straight rows.
 
 Every round consists of exactly one card played by each of the `effectiveN`
 players in turn, for `TOTAL_ROUNDS = 20` rounds -- i.e. exactly `20 x
@@ -131,14 +243,25 @@ run out at the exact moment the 20th round's last card is played** -- the
 game's fixed round limit and the deck's exhaustion are two ways of describing
 the same underlying fact, not two independent constraints.
 
-**Visible queue**: at any moment, the UI shows the next `VISIBLE_TILES = 8`
-cards from the deck as a row of icons. The active/playable card is always the
-one at the *end* of this row (`upcomingTiles[upcomingTiles.length-1]`).
-Playing the active card pops it off the end and draws one new card onto the
-front of the queue (`advanceTileQueue()`, lines 1062-1067) -- visually, this
-reads as the whole row shifting over by one. In the last few turns of the
-game, once the deck itself runs dry, the visible row simply shrinks below 8
-cards rather than being padded with anything.
+**Visible queue.** At any moment, the UI shows the next `VISIBLE_TILES = 8`
+cards from the deck as a row of icons, each overlapping the next (left 2/3
+of each card visible, right 1/3 covered by the card to its right) so the row
+reads as a physical stack rather than 8 separate boxes. The active/playable
+card is always the one at the *end* of this row
+(`upcomingTiles[upcomingTiles.length-1]`). Playing the active card pops it
+off the end and draws one new card onto the front of the queue
+(`advanceTileQueue()`) -- visually, this reads as the whole row shifting over
+by one.
+
+The underlying `upcomingTiles` array does genuinely shrink once the deck
+itself runs dry near the end of the game (nothing new gets unshifted onto
+the front once `nextDeckCard()` starts returning null) -- but the on-screen
+row never visually shrinks below its full 8-slot width and position:
+`renderDrawArea()` always reserves the full 8-slot span, filling in from the
+*left* with plain, blank placeholder cards for however many real cards are
+currently missing (`numBlanks = VISIBLE_TILES - upcomingTiles.length`), so
+the deck's location and width on screen stay constant throughout the whole
+game, right up to the final card.
 
 
 ## 6. Turn structure and placement rules
@@ -153,29 +276,107 @@ A player may place the active card on any board space except:
 Any other space -- including a space that already holds an existing
 connector card, or an existing house -- can be played on. Overwriting an
 existing house's underlying tile is precisely the mechanism that can
-disconnect it and potentially trigger a steal (Β§9).
+disconnect it and potentially trigger a steal (Β§10).
 
 **Two-step confirmation (human turns)**: clicking a valid space places the
 card there as a *preview* (this already mutates the actual board state, so
 connectivity/house-formation calculations immediately reflect it) and
 highlights that space with a dashed border. Clicking the same space again
-commits the move. Clicking a different valid space instead cancels the first
-preview (restoring whatever was there) and previews the new space instead.
+commits the move -- this always takes priority over every other check in the
+click handler (e.g. it is checked before the "out of tries" condition below,
+so confirming an already-previewed move never itself costs a try). Clicking
+a different valid space instead cancels the first preview (restoring
+whatever was there) and previews the new space instead, at the cost of one
+try (see Β§7).
 
 **Roadworks is not chosen by the player at all.** As soon as a Roadworks card
 becomes the active card, the game already picks its target space and
-executes the destruction (see Β§10) before the player does anything; the
+executes the destruction (see Β§11) before the player does anything; the
 player's only action is to tap the already-fixed, already-highlighted space
-once to acknowledge it and move the turn along.
+once to acknowledge it and move the turn along. Roadworks turns are entirely
+outside the tries/hint system in Β§7 -- there is nothing to spend a try or a
+hint on when the space isn't a choice at all.
 
 
-## 7. Houses: formation and ownership
+## 7. Tries, hints, and Practice mode
 
-Every single time any card is placed (`applyHouseAndRevenue()`, lines
-974-1007, called immediately after every committed move, human or AI):
+None of this existed in earlier versions of the game; all three are closely
+related, sharing much of the same state and guard logic.
+
+**7.1 Tries.** Each turn (reset to 5 in `beginTurn()`), a player has 5 tries
+-- previewing a *new*, different space (Β§6) costs one try; re-clicking the
+already-previewed space to commit never costs a try, regardless of how many
+tries remain, since the commit-check runs first, before the tries check, in
+the click handler. Once tries reach 0, clicking any space other than the
+currently-previewed one is blocked (`"You've run out of tries."`), but the
+player can still commit whatever is currently previewed. Five dot indicators
+next to the round counter show remaining tries directly (`triesDots`); a
+dot is shown in its "used" state once its index is `>= triesRemaining`.
+Tries have no bearing on Roadworks turns at all, since there is no space to
+choose there in the first place (Β§6).
+
+**7.2 Hints.** A "Hint" button, when clicked, calls the exact same AI
+move-selection function real opponents use, `aiChooseSquare(turn,
+currentDraw, Math.random)`, and previews whatever square it returns, via the
+same preview mechanism a manual click would use. This deliberately uses
+`Math.random` specifically, **never** the shared `rng()`/seeded stream --
+even in Today's-game mode -- so that using a hint can never perturb the
+position of the seeded stream the live AI opponent and Today's-game fairness
+guarantee (Β§15) depend on; a hint is the human player's own action, and (like
+excuse selection, Β§11) is deliberately kept outside the RNG stream that must
+stay position-independent of human choices.
+
+Using a hint (outside Practice mode) immediately spends the turn's one
+allowed hint (`hintUsedThisTurn = true`, reset each turn by `beginTurn()`)
+**and** sets `triesRemaining = 0` -- meaning outside Practice mode, taking a
+hint is effectively a commitment to that square: with zero tries left, the
+only legal action remaining that turn is to click the same, now-previewed
+square again to confirm it. A running count of hints used this entire game,
+`hintsUsedThisGame` (reset to 0 by `freshGame()`), is tracked purely for the
+share message (Β§18): if greater than 0 when a Today's-game session ends, the
+share text appends `(with N hint/hints)` after the rank.
+
+The button's own guard conditions, checked in this order, each with its own
+distinct message: game already over (silently does nothing); it's currently
+the AI's turn (`"Please wait for Player 2."`); a popup is showing or a move
+is still resolving (`"Give it a moment."`); the active card is Roadworks,
+whose space is already fixed and not a choice at all
+(`"Tap the highlighted roadworks card."`); a hint was already used this turn
+and Practice mode is off (`"You've used up your hint."`). The button is also
+visually greyed (a CSS class only, never the native `disabled` attribute --
+every one of the above cases must remain clickable so its explanatory
+message can still show) whenever any of these conditions currently holds.
+
+**7.3 Practice mode.** A separate toggle button, `"Practice: on/off"`,
+orthogonal to (but mutually exclusive with) Today's-game mode: turning
+Practice on always forces Random-game mode (`enterRandomGameMode()`); launching
+Today's game via either launch button explicitly turns Practice back off
+first. Toggling Practice on while already in a Random game reuses the
+existing board/deck seed (`freshGame(true)`, same "Reset board" mechanism as
+Β§14); toggling it on from Today's-game mode instead generates a genuinely new
+random board, since there is no sensible "existing Random-game seed" to
+reuse in that case.
+
+While Practice mode is on: tries never deplete and are never checked
+(`!practiceMode` guards every place `triesRemaining` would otherwise matter,
+Β§7.1) and hints have no per-turn limit (`practiceMode || !hintUsedThisTurn`
+in every relevant check, Β§7.2) -- a player can take as many hints per turn as
+they like, and can still freely preview a different square afterward, unlike
+outside Practice mode. The five tries-dots are deliberately still rendered,
+but always fully in their "used" (grey) visual state regardless of the
+actual, functionally-irrelevant value of `triesRemaining` underneath --
+showing a "5 of 5 remaining" state that would then never actually deplete
+was considered more misleading than simply never suggesting a limit exists
+in the first place.
+
+
+## 8. Houses: formation and ownership
+
+Every single time any card is placed (`applyHouseAndRevenue()`, called
+immediately after every committed move, human or AI):
 
 1. Connectivity is recomputed for the whole board.
-2. **Steal check** (see Β§9) is evaluated first, but only at the exact space
+2. **Steal check** (see Β§10) is evaluated first, but only at the exact space
    that was just played on.
 3. **New-house formation**: the entire board is scanned. Every space that is
    now doubly-connected (power **and** water) and was not already a house
@@ -183,7 +384,7 @@ Every single time any card is placed (`applyHouseAndRevenue()`, lines
    single move can create more than one new house at once, if it happens to
    be the piece that completes several separate connections simultaneously
    -- all such houses are credited to the same mover.
-4. **Scoring** (see Β§8) is then applied for the current player's entire set
+4. **Scoring** (see Β§9) is then applied for the current player's entire set
    of connected, owned houses -- not just the one just played on or formed.
 
 A house's roof colour is the visual indicator of its owner; a house formed
@@ -195,15 +396,25 @@ new-house-formation branch above only fires for spaces that were *not*
 already a house.
 
 
-## 8. Scoring
+## 9. Scoring
 
 On a player's own turn, immediately after their move resolves, they earn
-**exactly one point for every house that is simultaneously (a) owned by
-them and (b) connected to both power and water at that exact moment** --
-regardless of whether that particular house was involved in this turn's
-move at all. This is a full re-scan of the whole board every turn
-(`applyHouseAndRevenue()`'s final loop), not an incremental "+1 for what
-just happened."
+points for every house that is simultaneously (a) owned by them and (b)
+connected to both power and water at that exact moment -- regardless of
+whether that particular house was involved in this turn's move at all. This
+is a full re-scan of the whole board every turn (`applyHouseAndRevenue()`'s
+final loop), not an incremental "+X for what just happened."
+
+**Each qualifying house's own point value is its board-distance to the
+nearest edge, plus 1**: `points = min(row, N-1-row, col, N-1-col) + 1`. A
+house directly on the border (row 0, row N-1, column 0, or column N-1)
+scores 1; each step further from every edge adds 1. The maximum possible
+value is 3 on a 6x6 board and 4 on both 7x7 and 8x8 (a 7x7 board's single,
+true centre space and an 8x8 board's four centre-most spaces both sit
+exactly 3 steps from their nearest edge). This was originally a flat 1
+point per house regardless of position; the change was deliberate, to
+reward building toward the harder-to-reach centre rather than treating
+every connected house as equally valuable.
 
 Consequences that follow directly from this:
 
@@ -213,15 +424,20 @@ Consequences that follow directly from this:
   their own houses may remain fully connected throughout that turn. Score is
   evaluated once per round, only on the scoring player's own turn.
 - There is no cap on how many points a single turn can award; if a player
-  owns ten connected houses, their turn awards ten points.
+  owns ten connected houses, their turn awards the sum of all ten houses'
+  own point values.
+- The turn-end "+X" flash shown on the board (and the scorebox's own,
+  matching "+X" for that player) now reflects each individual scoring
+  square's own point value -- different squares scoring in the same turn
+  can show different amounts, rather than every square always showing "+1."
 
 
-## 9. Stealing
+## 10. Stealing
 
-The steal check (lines 983-994) runs immediately before the new-house/scoring
-logic described above, and only ever examines the **exact space that was
-just played on** -- never any other space on the board, regardless of what
-else may have become disconnected as a side-effect of this move.
+The steal check runs immediately before the new-house/scoring logic
+described above, and only ever examines the **exact space that was just
+played on** -- never any other space on the board, regardless of what else
+may have become disconnected as a side-effect of this move.
 
 The condition, precisely:
 
@@ -241,22 +457,21 @@ If all three conditions hold, the house's owner is reassigned to the current
 mover, regardless of who owned it before. If the mover already owned it, this
 is a no-op with no visible feedback. If ownership actually changed hands, a
 "Good steal!" popup is shown (unless a background simulation is running --
-see Β§16 -- in which case this feedback is deliberately suppressed).
+see Β§17 -- in which case this feedback is deliberately suppressed).
 
 Because ownership only changes when there is at least one same-owner
 neighbour, an isolated disconnected house with no matching neighbours simply
 sits there, unowned by anyone able to score from it (it earns nothing per
-Β§8), until either play reconnects it or Roadworks destroys it outright.
+Β§9), until either play reconnects it or Roadworks destroys it outright.
 
 
-## 10. Roadworks
+## 11. Roadworks
 
-When a Roadworks card becomes the active card (`beginTurn()`, lines
-1075-1089), the following happens immediately and automatically, before any
-player acts:
+When a Roadworks card becomes the active card (`beginTurn()`), the following
+happens immediately and automatically, before any player acts:
 
 1. A target space `(r, c)` is chosen uniformly at random over the whole
-   board, via `rng()` (see Β§13 for exactly what source this draws from).
+   board, via `boardRNG()` (see Β§14 for exactly what source this draws from).
 2. If that space is not already rubble, it is overwritten to rubble
    (`{kind:'X', rot:0}`), and if it held a house, that house and its
    ownership are cleared outright (`house[r][c] = false; owner[r][c] =
@@ -267,45 +482,44 @@ player acts:
    player had clicked to preview a move there.
 4. A popup is shown with two lines: a randomly-drawn excuse (see below) on
    the first line, and the fixed phrase "Swalpa adjust maadi!" on the
-   second. This popup auto-hides after exactly **2200 ms**.
+   second. This popup auto-hides after `LONG_DELAY_MS` (see Β§19).
 5. The acting player (human or AI) then only needs to tap/confirm the
    already-highlighted space to move the turn along; no location choice is
-   involved.
+   involved, and (Β§7) no try or hint interaction applies to this turn at all.
 
 A destroyed Park or house's space is not permanently blocked -- a later card
 can be played on top of the rubble like any other non-Park space, and if
 that new placement happens to newly connect both supplies there, a fresh
-house can form and be claimed there, per Β§7.
+house can form and be claimed there, per Β§8.
 
 **Excuse selection** is deliberately decoupled from the main game-affecting
-RNG. At the start of every game (`freshGame()`, lines 433-438), all 20
-entries of `ROADWORKS_EXCUSES` (line 815) are Fisher-Yates shuffled using
-plain `Math.random()` directly -- never the seeded stream -- and then drawn
-through sequentially (`shuffledExcuses[excuseDrawIndex++]`), guaranteeing no
-excuse repeats within a single game (verified: the maximum possible number of
-Roadworks draws in any game, 8, for a 4-player game, is comfortably under the
-20 available excuses, so the pool never needs to reshuffle mid-game). Because
-this shuffle is never seeded, replaying the identical Today's-game board on
-the same day produces a different excuse sequence each time, even though
-every other aspect of the board is identical -- a deliberate choice, since
-this has no bearing on scoring or AI behaviour and keeps repeated play from
-feeling identical in every last detail.
+RNG. At the start of every game (`freshGame()`), all entries of
+`ROADWORKS_EXCUSES` are Fisher-Yates shuffled using plain `Math.random()`
+directly -- never the seeded stream -- and then drawn through sequentially,
+guaranteeing no excuse repeats within a single game (the pool is comfortably
+larger than the maximum possible number of Roadworks draws in any one game,
+so it never needs to reshuffle mid-game). Because this shuffle is never
+seeded, replaying the identical Today's-game board on the same day produces
+a different excuse sequence each time, even though every other aspect of the
+board is identical -- a deliberate choice, since this has no bearing on
+scoring or AI behaviour and keeps repeated play from feeling identical in
+every last detail.
 
 
-## 11. Winning
+## 12. Winning
 
 The game ends the instant the deck's cards run out at the end of round 20
 (the two are the same event, per Β§5). Winner determination
-(`finishGame()`, lines 1246-1263): whichever player(s) have the strictly
-highest final score win; if more than one player ties for the highest score,
-it is declared a tie. A popup announces "Player X WINS" (or "It's a tie!"),
-paired with the fixed second line "Residents LOSE" -- this popup also
-auto-hides after 2200 ms. If the game that just ended was Today's game
-specifically, a second popup (the share-score popup, Β§17) is queued to
+(`finishGame()`): whichever player(s) have the strictly highest final score
+win; if more than one player ties for the highest score, it is declared a
+tie. A popup announces "Player X WINS" (or "It's a tie!"), paired with the
+fixed second line "Residents LOSE" -- this popup also auto-hides after
+`LONG_DELAY_MS` (Β§19). If the game that just ended was Today's game
+specifically, a second popup (the share-score popup, Β§18) is queued to
 appear automatically the moment the first one finishes hiding.
 
 
-## 12. Game modes, player counts, board sizes
+## 13. Game modes, player counts, board sizes
 
 Every launch button sets a specific combination of `numPlayers`,
 `vsComputerOn`, `effectiveN`, and `N` (board size), and always calls
@@ -313,7 +527,7 @@ Every launch button sets a specific combination of `numPlayers`,
 
 | Button | Mode | numPlayers | vsComputerOn | effectiveN | N |
 |---|---|---|---|---|---|
-| Today's game / Dig up | Today's game | 1 | true | 2 | 6 (forced) |
+| Today's game / Dig up | Today's game | 1 | true | 2 | 7 (forced) |
 | 1 player | Random | 1 | true | 2 | unchanged |
 | 2 player | Random | 2 | false | 2 | unchanged |
 | 3 player | Random | 3 | false | 3 | unchanged |
@@ -325,74 +539,100 @@ Every launch button sets a specific combination of `numPlayers`,
 mode this is 2 (the human plus the single AI opponent occupying "Player 2"),
 otherwise it equals `numPlayers` directly, since 2/3/4-player modes are all
 humans taking turns on the same device with no AI seat at all. Today's game
-always forces exactly 1-player, 6x6 -- there is no Today's-game variant at
-other player counts or board sizes.
+always forces exactly 1-player, 7x7 -- there is no Today's-game variant at
+other player counts or board sizes. (7x7 was chosen over the originally-used
+6x6 after direct comparison found it noticeably less prone to the small
+board's edges and corners getting boxed in by Parks, without yet being so
+large that a full game's fixed 20-round budget leaves much of the board
+never touched by a player at all -- 8x8 was judged too big for that budget
+and deliberately kept as a Random-game-only, more free-form "practice size"
+rather than adopted for Today's game.)
+
+Both Today's-game launch buttons also explicitly force Practice mode (Β§7.3)
+off, since Practice and Today's-game are mutually exclusive.
 
 In any mode with more than one human player (2/3/4-player), there is no AI
 opponent; every seat is a human clicking on the same device in sequence.
 
 
-## 13. The RNG architecture
+## 14. The RNG architecture
 
 Two random-number sources exist side by side:
 
 - **`Math.random()`**: the browser's own, genuinely non-deterministic
   source. Used directly whenever a value should differ every single time,
   with no way to reproduce it (Fisher-Yates shuffling the excuse order at
-  the start of every game, per Β§10).
-- **`mulberry32(seed)`** (lines 783-791): a small, fast, deterministic
-  pseudorandom generator. Given the same integer seed, it produces the
-  identical sequence of floating-point values in `[0, 1)` every time it is
-  freshly instantiated -- not cryptographically secure, and not intended to
-  be; it only needs a reasonable distribution for shuffling a deck and
-  picking Roadworks targets.
+  the start of every game, per Β§11; and, in Random-game mode, AI move
+  choice -- see below).
+- **`mulberry32(seed)`**: a small, fast, deterministic pseudorandom
+  generator. Given the same integer seed, it produces the identical sequence
+  of floating-point values in `[0, 1)` every time it is freshly instantiated
+  -- not cryptographically secure, and not intended to be; it only needs a
+  reasonable distribution for shuffling a deck and picking Roadworks targets.
 
 The seed used throughout Today's-game mode is derived from the calendar date
 alone: `seedFromDateString(todaysIndiaDateString())`
-(`todaysIndiaDateString()`, lines 793-797, reads today's date specifically in
-the `Asia/Kolkata` timezone, independent of the player's own device
-timezone, so every player worldwide sees the same seed on what India
-considers "today"; `seedFromDateString()`, lines 799-805, is a simple
-rolling-hash of that YYYY-MM-DD string into a 32-bit integer).
+(`todaysIndiaDateString()` reads today's date specifically in the
+`Asia/Kolkata` timezone, independent of the player's own device timezone, so
+every player worldwide sees the same seed on what India considers "today";
+`seedFromDateString()` is a simple rolling-hash of that YYYY-MM-DD string
+into a 32-bit integer).
 
-**The `rng()` dispatcher** (lines 810-812) is what almost all gameplay code
-actually calls, rather than reaching for either source directly:
+**Two separate dispatchers**, not one, exist over these sources -- this is a
+deliberate split, not an accident of two similarly-named functions:
 
 ```
 function rng(){
   return isTodaysGame && seededRandomFn ? seededRandomFn() : Math.random();
 }
+function boardRNG(){
+  return isTodaysGame && seededRandomFn ? seededRandomFn() : randomBoardRandomFn();
+}
 ```
 
-This single function is why the exact same setup-deck-building code, the
-exact same Roadworks-targeting code, and (as of the AI-fairness change
-described in Β§14) the exact same AI-move-selection code can be shared,
-unmodified, between Today's-game mode (where they must be reproducible) and
-Random-game mode (where they must not be) -- the *only* thing that differs
-between the two modes is which global flag `rng()` is currently checking, not
-any duplicated logic.
+`rng()` is what AI move-choice uses by default (`aiChooseSquare()`'s own
+`randFn` parameter defaults to `rng`). `boardRNG()` is used everywhere else
+gameplay-affecting randomness is needed: board setup (Β§4), deck shuffling
+(Β§5), and Roadworks-target selection (Β§11).
+
+In Today's-game mode the two are functionally identical, since both check
+`isTodaysGame && seededRandomFn` first and Today's game only ever has the
+one, date-derived seed active. They diverge specifically in Random-game
+mode: `rng()` falls through to plain, unseeded `Math.random()` (so AI
+behaviour in a Random game is never reproducible), while `boardRNG()` falls
+through to `randomBoardRandomFn` -- a *separate* `mulberry32` instance, seeded
+from a freshly-drawn random integer (`randomBoardSeed`) each time a genuinely
+new Random game starts, but deliberately **not** re-drawn when
+`freshGame(reuseSeed=true)` is called instead. This is exactly what "Reset
+board" (`resetBoardBtn`, calling `freshGame(true)`) relies on: since
+`randomBoardSeed` itself is remembered from the game currently in progress
+and only a *fresh* `mulberry32` instance (not a fresh *seed*) is created,
+reconstructing the identical board and deck order for a Random game while
+leaving Roadworks' own excuse order and (per the divergence above) AI
+behaviour genuinely different each time it's replayed. Practice mode's own
+seed-reuse logic (Β§7.3) works via this exact same mechanism.
 
 `seededRandomFn` itself is a single, module-level mutable slot holding
-whichever `mulberry32` instance is "live" at the moment -- switching modes,
-starting Today's game, or (temporarily, and very deliberately) running the
-background rank-simulation batch (Β§16) all work by swapping out what this
-slot currently points to.
+whichever `mulberry32` instance is "live" at the moment for Today's-game
+purposes -- switching modes, starting Today's game, or (temporarily, and
+very deliberately) running the background rank-simulation batch (Β§17) all
+work by swapping out what this slot currently points to.
 
 
-## 14. Today's-game determinism and fairness
+## 15. Today's-game determinism and fairness
 
 Today's game's core guarantee is: every player who launches it on the same
 India calendar date sees the identical starting board and deck order,
-because `enterTodaysGameMode()` (lines 1448-1451) always constructs a fresh
-`mulberry32` instance from the same, date-derived seed, and `freshGame()`
-then consumes that instance's sequence via `rng()` in exactly the same order
-every time (setup deck, then play deck).
+because `enterTodaysGameMode()` always constructs a fresh `mulberry32`
+instance from the same, date-derived seed, and `freshGame()` then consumes
+that instance's sequence via `boardRNG()` in exactly the same order every
+time (setup deck, then play deck).
 
-**AI fairness**, a deliberate later design decision: the live AI opponent
-(Player 2, in Today's-game mode) also draws its move-selection randomness
-(Β§15) through `rng()`, the same shared, seeded stream -- it is not given its
-own, separately-seeded source. Since the human player's own move choices
-never consume any RNG call at all (clicking a space is not a random act), the
+**AI fairness**, a deliberate design decision: the live AI opponent (Player
+2, in Today's-game mode) also draws its move-selection randomness (Β§16)
+through `rng()`, the same shared, seeded stream -- it is not given its own,
+separately-seeded source. Since the human player's own move choices never
+consume any RNG call at all (clicking a space is not a random act), the
 *position* of the shared stream at the start of any given AI turn depends
 only on how many prior RNG-consuming events have occurred (setup, and any
 Roadworks/AI-turns so far) -- which is identical for any two players who have
@@ -403,20 +643,24 @@ of human moves: the AI's responses at every single turn come out
 byte-for-byte identical between the two playthroughs. This is what makes
 comparing scores across different players on the same Today's-game board
 meaningful -- the opponent is not "luckier" for one player than another,
-given identical play.
+given identical play. (Using a hint, Β§7.2, deliberately draws from
+`Math.random` rather than `rng()` specifically to preserve this guarantee --
+a human choosing to consult a hint must never itself shift the AI's later
+behaviour.)
 
-Switching to Random-game mode (`enterRandomGameMode()`, lines 1452-1455)
-simply sets `isTodaysGame = false` and nulls out `seededRandomFn`; every one
-of the same code paths above then falls through `rng()` to `Math.random()`
-instead, with no special-casing required anywhere else in the codebase.
+Switching to Random-game mode (`enterRandomGameMode()`) simply sets
+`isTodaysGame = false`; every one of the same code paths above then falls
+through `rng()`/`boardRNG()` to `Math.random()`/`randomBoardRandomFn`
+respectively (Β§14), with no special-casing required anywhere else in the
+codebase.
 
 
-## 15. The AI
+## 16. The AI
 
-A single function, `aiChooseSquare(color, drawTile, randFn)` (lines
-1127-1179), governs every AI-controlled move in the game -- there is no
-separate logic for "the Today's-game opponent" versus "an AI used in a
-background simulation" versus any hypothetical future AI seat; only the
+A single function, `aiChooseSquare(color, drawTile, randFn)`, governs every
+AI-controlled move in the game -- there is no separate logic for "the
+Today's-game opponent" versus "an AI used in a background simulation" versus
+a hint-suggestion (Β§7.2) versus any hypothetical future AI seat; only the
 `randFn` argument passed in differs by context (defaulting to the global
 `rng()` if omitted).
 
@@ -439,31 +683,37 @@ Each call:
 
    This is always exactly N *distinct* spaces when at least N exist, never a
    repeat, since the shuffle operates on a list with no duplicate entries to
-   begin with. (The 6x6 value was briefly changed to 12 during calibration,
-   on the reasoning that a lower value would let novice players see a
-   higher/better rank more easily; that made the AI too easy to beat, and 18
-   was restored and is now frozen for 6x6. The per-board-size table itself
-   was added after an initial oversight: a single fixed value of 18 had been
-   applied uniformly to all three board sizes, which is a much smaller
+   begin with. This per-board-size table exists because a single fixed
+   value applied uniformly to all three sizes would be a much smaller
    *fraction* of the board on 7x7/8x8 than on 6x6, disproportionately
-   weakening the AI on larger boards with no such effect intended. Only
-   6x6's own value, used by Today's game, needed to stay unchanged for
-   consistency with the already-frozen calibration and the existing
-   `todaysScoreDiffs` comparison batch, which is always built at N=6.)
+   weakening the AI on larger boards with no such effect intended. Today's
+   game uses N=7 (Β§13), so it is the **25** row of this table that governs
+   both the live Today's-game opponent and the 99-game reference batch
+   (Β§17) -- not 18, which was the relevant row back when Today's game was
+   itself played at 6x6.
 
 **Scoring each candidate.** For each of the (up to N) candidate spaces, the
 AI hypothetically places the current card there, recomputes connectivity,
 and computes:
 
-- `diff` = (number of doubly-connected houses this player would own) minus
-  (number the opponent owns), counting a newly-completed, currently-unowned
-  house as belonging to this player.
+- `diff` = (sum of the point values, per Β§9's same distance formula, of every
+  doubly-connected house this player would own) minus (the same sum for the
+  opponent), counting a newly-completed, currently-unowned house as
+  belonging to this player. This was originally a plain house *count*
+  difference (each house worth exactly 1 regardless of position); when
+  Β§9's scoring became distance-weighted, this term was deliberately updated
+  to match it, so the AI's own objective values a space the same way the
+  game actually scores it. This was a narrow, single-line change on
+  purpose -- `completesHouse`, `isSteal`, `myTerr`, and the `val` formula
+  and its weights below were all deliberately left untouched, rather than
+  retuned at the same time, so the effect of this one change could be
+  observed in isolation first.
 - `myTerr` = total count of spaces connected to *either* colour (not
   necessarily both) -- a rough measure of board presence/territory.
 - `completesHouse` = 1 if this exact placement newly completes a house that
   did not already exist, else 0.
 - `isSteal` = 1 if this exact placement would trigger a legal steal at that
-  space per the Β§9 rule (checked with the same matching-neighbour logic)
+  space per the Β§10 rule (checked with the same matching-neighbour logic)
   **and** the pre-existing owner at that space is not this player already
   (i.e. re-confirming a house the AI already owns never counts as a "steal"
   bonus, even if the matching-neighbour condition happens to hold), else 0.
@@ -481,13 +731,42 @@ no random tie-break). The board is restored to its actual state after each
 hypothetical placement is scored, so this evaluation has no side-effects
 until the real move is finally committed.
 
+**Verified effect of the points-based `diff` change.** On a controlled,
+single-decision comparison (a shared board where an edge-adjacent
+1-point completion and a genuinely-connected, true-centre 4-point
+completion, on a 7x7 board, are both simultaneously available candidates
+with identical `myTerr`/`completesHouse` on both sides), the AI now
+reliably, consistently chose the centre over the edge across repeated
+independent trials with different random subset-orderings every time --
+confirming the `diff` change does what it is meant to on an isolated
+decision. Across full, 100-game AI-vs-AI batches at 7x7, though, the
+aggregate shift is present but modest (roughly a 4-6 percentage-point
+increase in the share of houses landing outside the outermost zone,
+compared to the original, count-based `diff`) -- since centre-completing
+opportunities simply arise far less often over a full game than
+edge-completing ones do, so a strong per-decision preference for the
+centre has comparatively few turns on which to actually express itself.
 
-## 16. The 99-simulation rank-comparison system
+
+## 17. The 99-simulation rank-comparison system
 
 Today's-game mode additionally computes, once per calendar date, a fixed
 reference distribution of 99 fully-simulated AI-vs-AI game outcomes, so that
 a real player's own score can be expressed as a percentile-style rank rather
 than a bare number.
+
+Both `applyHouseAndRevenue()` (Β§9's scoring) and `aiChooseSquare()` (Β§16's
+AI, including its points-based `diff`) are the exact same, single functions
+used everywhere else in the game -- `runOneRankSimulation()` calls each by
+name, not via some separately-maintained copy. This was verified directly,
+not just assumed from the shared-architecture pattern: at the moment the
+batch had just finished (before the player could click anything), the live
+`applyHouseAndRevenue`/`aiChooseSquare` functions' own source was inspected
+and confirmed to already contain the Β§9/Β§16 distance-based formula. So the
+99-game reference batch, the pre-game target popup below, and the player's
+own actual game have always used identical scoring and AI logic since these
+were introduced -- there is no separate code path that could drift out of
+sync.
 
 **When this runs**: automatically at page load, before the player can click
 anything (not on every launch of Today's game -- see below). The "Let's
@@ -499,17 +778,16 @@ load, since the result is seeded from the date and would only ever come out
 identical anyway.
 
 **Two independent RNG roles**, deliberately kept as two separate `mulberry32`
-instances (`runTodaysRankSimulations()`, lines 1423-1446, and
-`runOneRankSimulation()`, lines 1381-1415):
+instances (`runTodaysRankSimulations()` and `runOneRankSimulation()`):
 
 1. **Per-game board/deck/Roadworks/Player-2 stream**: a fresh `mulberry32`
    instance, re-seeded from the identical date-derived seed, created anew
    before *each* of the 99 games individually. This drives that game's setup
    deck, play deck, Roadworks targeting, and Player 2's own subset choice
-   (18, the 6x6 lookup value from Β§15's table, since Today's game is always
-   6x6), via the ordinary `rng()` dispatcher -- meaning every one of the 99
-   games plays out on the literal, identical board a real human would face
-   that day, against the identical-strength opponent.
+   (25, the 7x7 lookup value from Β§16's table, since Today's game is always
+   7x7), via the ordinary `rng()`/`boardRNG()` dispatchers -- meaning every
+   one of the 99 games plays out on the literal, identical board a real
+   human would face that day, against the identical-strength opponent.
 2. **Continuous cross-batch stream for Player 1**: a single `mulberry32`
    instance, seeded once at the very start of the whole 99-game batch, then
    left running -- never re-seeded -- across all 99 games in sequence. This
@@ -536,17 +814,15 @@ exact same shared game functions the live, visible game uses (rather than a
 separate, parallel implementation), a global flag `simulationModeActive` is
 set for the duration of the batch specifically to suppress the one visual
 side-effect those shared functions would otherwise trigger -- the "Good
-steal!" popup (Β§9) -- since a background simulation the player never sees
-should never surface UI. (This was also an actual, caught-in-testing bug:
-the first working version of this batch let that popup leak onto the
-pre-launch screen.) All of the live game's actual board/score/deck state is
-saved before the batch begins and restored byte-for-byte afterward, and a
-fresh, entirely unconsumed seeded stream is created for the player's own
-upcoming game once the batch finishes -- the batch's own RNG consumption
+steal!" popup (Β§10) -- since a background simulation the player never sees
+should never surface UI. All of the live game's actual board/score/deck
+state is saved before the batch begins and restored byte-for-byte afterward,
+and a fresh, entirely unconsumed seeded stream is created for the player's
+own upcoming game once the batch finishes -- the batch's own RNG consumption
 never bleeds into what the player subsequently plays.
 
-**Rank formula** (`computeTodaysRank()`, lines 894-898): let `myDiff` be the
-player's own final `revenue[1] - revenue[2]`. The rank is
+**Rank formula** (`computeTodaysRank()`): let `myDiff` be the player's own
+final `revenue[1] - revenue[2]`. The rank is
 
 ```
 rank = (number of the 99 simulated score-differences strictly greater than myDiff) + 1
@@ -559,54 +835,82 @@ player's favour: a simulated value *equal to* the player's own score does
 who ties with every single one of the 99 simulations receives rank 1, not
 100.
 
+**Pre-game target popup.** A feature layered on top of the same
+`todaysScoreDiffs` array, entirely separate from the rank calculation above:
+once per Today's-game launch, immediately after the board is rendered but
+before the player's first turn actually begins (`showTodaysTargetPopup()`,
+input blocked via `awaitingAdvance` for this entire window), a popup reads
+"Target for today's game: Win by N point(s)", where N is the **median** of
+the 99 simulated score-differences, floored at 1 (a median at or below zero
+is never shown as a target, since "win by 0 or fewer points" isn't a
+meaningful goal to hand the player). This popup auto-hides after
+`LONG_DELAY_MS` (Β§19), after which the first turn begins as normal.
 
-## 17. Share message
 
-Built by `buildShareText()` (lines 905-916), only ever shown after a
-completed Today's-game session (never after a Random game). Exact template
-(`{...}` marking the only variable parts):
+## 18. Share message
+
+Built by `buildShareText()`, only ever shown after a completed Today's-game
+session (never after a Random game). This entire template was substantially
+reworked since it was first documented; nothing below should be assumed to
+match any earlier description. Exact template (`{...}` marking the only
+variable parts):
 
 ```
-I played 'Swalpa adjust maadi', the game where you dig up Bangalore roads for fun!
+Swalpa Adjust Maadi!
+{share result line}
 
-{woman-worker-emoji} (me) {revenue[1]} vs. {revenue[2]} (rival) {man-worker-emoji}
-{day} {month} rank: {rank text}.
-
-Can you beat my rank in today's game?
-tinyurl.com/adjust-maadi
+{d Mon} rank: {rank text}{hints suffix}
+Your turn! https://tinyurl.com/adjust-maadi
 ```
 
+- `{share result line}` (`buildShareResultLine()`) is one of three fixed
+  strings, each carrying its own trailing emoji, based on
+  `revenue[1] - revenue[2]`: `"I won today's game by N point(s)! \u{1F60A}"`,
+  `"I lost today's game by N point(s)! \u{1F61E}"`, or (a tie)
+  `"Today's game was a draw! \u{1F610}"`. This is a deliberately separate
+  function from the similar, in-app popup wording (`buildResultLine()`,
+  which uses "You won/lost" rather than "I won/lost" and carries no emoji or
+  "today's game" framing, since the player is already looking at the
+  popup) -- not a shared function with a pronoun switch.
 - The date shown omits the year, since it is irrelevant to the message's
   point.
-- `{rank text}` is produced by `formatRank()` (lines 900-903): exactly
-  "First of 100" if rank is 1, otherwise `"{rank}{ordinal suffix} highest of
-  100"` (e.g. "48th highest of 100"). The ordinal suffix
-  (`ordinalSuffix()`, lines 882-890) follows standard English rules,
-  including the 11th/12th/13th exception (these always take "th" regardless
-  of their last digit, unlike 21st/22nd/23rd etc.).
+- `{rank text}` (`formatRank()`) is simply `"#{rank} of 100"` -- e.g. `"#48
+  of 100"`, or `"#1 of 100"` for the best possible result. (This replaced an
+  earlier, ordinal-suffix-based wording along the lines of "48th highest of
+  100"; the dedicated ordinal-suffix logic that wording needed no longer
+  exists in the source at all.)
+- `{hints suffix}` is appended only if `hintsUsedThisGame` (Β§7.2) is greater
+  than zero for this game: `" (with N hint)"` or `" (with N hints)"` as
+  appropriate; otherwise this suffix is omitted entirely, with no trace of
+  it in the message.
 - All emoji in this template are written as explicit Unicode codepoints in
   the source, not typed directly, specifically to avoid a transcription/
   encoding-corruption failure mode that was hit more than once during
   development.
 
 
-## 18. Timing constants (gameplay-relevant, not purely cosmetic)
+## 19. Timing constants (gameplay-relevant, not purely cosmetic)
 
 - `TOTAL_ROUNDS = 20` -- the fixed game length.
-- `STAGE_DELAY_MS = 800` -- used both as the delay before the AI's chosen
-  move is actually placed after being decided (so the human can see which
-  square got highlighted before it commits), and as the pacing delay before
-  the turn advances to the next player after a move resolves.
-- Any popup shown with `autoHide = true` (Roadworks excuse popup, steal
-  popup, game-over popup) hides itself automatically after exactly **2200
-  ms**, during which player input is fully blocked (`popupBlocking`) --
-  gameplay does not silently continue underneath a visible popup.
+- `QUICK_DELAY_MS = 500` and `LONG_DELAY_MS = 1300` replace an earlier,
+  single, unified pacing delay -- these now have distinct roles rather than
+  one value doing double duty. `QUICK_DELAY_MS` paces the shorter,
+  in-between steps of a turn's own resolution (e.g. the brief pause before
+  the AI's chosen move is actually placed after being decided, so the human
+  can see which square got highlighted before it commits, and the shorter
+  gaps between the successive stages of a turn settling). `LONG_DELAY_MS` is
+  used both as the default/actual auto-hide duration for every popup shown
+  in the game (Roadworks excuse, steal, game-over, and the pre-game target
+  popup, Β§17) and as the pause before a committed move's turn-advance
+  actually happens. While any such popup is visible, player input is fully
+  blocked (`popupBlocking`) -- gameplay does not silently continue
+  underneath a visible popup.
 - `NUM_RANK_SIMULATIONS = 99`.
-- `AI_SUBSET_SIZE_CONFIG` -- see Β§15 for the full, per-board-size table (18 /
+- `AI_SUBSET_SIZE_CONFIG` -- see Β§16 for the full, per-board-size table (18 /
   25 / 32 for 6x6 / 7x7 / 8x8 respectively).
 
 
-## 19. File and deployment structure
+## 20. File and deployment structure
 
 The entire game is a single, self-contained HTML file with inline CSS and
 JavaScript -- no build step, no external JS/CSS libraries, no network
@@ -624,7 +928,11 @@ only other files that need to sit alongside it for full functionality are:
   button that opens it in a new tab, with its own "Play" button that opens
   the game fresh in a new tab in turn. This tutorial file is explicitly
   *not* required for the game to function; it exists purely to help new
-  players.
+  players. Its own "Game modes" section states plainly that Today's game is
+  "always one player against the computer," deliberately without
+  committing to a specific board size in the player-facing text, so this
+  file does not need editing again if the board size used for Today's game
+  (Β§13) is ever revisited.
 
 All of these live at the root of the same directory when deployed (currently
 GitHub Pages, with the main game file named `index.html` there).
