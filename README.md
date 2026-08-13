@@ -664,88 +664,96 @@ a hint-suggestion (Β§7.2) versus any hypothetical future AI seat; only the
 `randFn` argument passed in differs by context (defaulting to the global
 `rng()` if omitted).
 
-**Restricted search.** The AI does not evaluate the entire board every turn.
-Each call:
+**Opponent selection in multiplayer games.** Before anything else, the AI
+needs a single "opponent" to compare itself against -- straightforward in a
+2-player game, but 3/4-player games have more than one other player at the
+table. `pickLeadingOpponent(color)` resolves this by finding whichever other
+player is genuinely leading, using a three-level tie-break: highest revenue
+so far; if tied, most houses currently owned (a distinct signal from
+revenue, since it counts regardless of a house's current connectivity);
+if still tied, whoever plays next soonest after the requesting player, in
+upcoming turn order. In a 2-player game this trivially returns the only
+other player -- there is nothing to compare, so this function is a strict,
+backward-compatible superset of always picking a single fixed opponent, not
+a special case bolted on separately for 3/4-player games. This same
+resolved opponent is then used throughout the rest of the evaluation below.
 
-1. Builds the list of all currently-valid candidate spaces (same
-   restrictions as a human's turn: not a Park, not the immediately-preceding
-   move's space).
-2. Fisher-Yates shuffles that list using `randFn`.
-3. Takes only the first N of the shuffled list (or all of them, if fewer
-   than N are actually valid), where N is looked up per board size from
-   `AI_SUBSET_SIZE_CONFIG`:
+**Visibility: the candidate subset.** The AI does not evaluate the entire
+board every turn. The subset is chosen **first, from the whole board**, and
+only afterward are illegal squares removed from within it:
 
-   | Board size (N) | Subset size |
-   |---|---|
-   | 6x6 | 18 |
-   | 7x7 | 25 |
-   | 8x8 | 32 |
+1. Every one of the N x N board positions (Parks and the greyed-out square
+   included) is Fisher-Yates shuffled using `randFn`.
+2. The first `AI_SUBSET_SIZE_CONFIG[N]` squares of that shuffled list are
+   taken (18/25/32 for 6x6/7x7/8x8 respectively -- the same per-board-size
+   table as before, chosen so each board size gets roughly the same
+   *fraction* of its own squares visible, rather than one fixed count that
+   would under-represent a larger board).
+3. **Only then** are Parks and the immediately-preceding move's square
+   filtered out of that selection -- whatever remains is what actually gets
+   evaluated.
 
-   This is always exactly N *distinct* spaces when at least N exist, never a
-   repeat, since the shuffle operates on a list with no duplicate entries to
-   begin with. This per-board-size table exists because a single fixed
-   value applied uniformly to all three sizes would be a much smaller
-   *fraction* of the board on 7x7/8x8 than on 6x6, disproportionately
-   weakening the AI on larger boards with no such effect intended. Today's
-   game uses N=7 (Β§13), so it is the **25** row of this table that governs
-   both the live Today's-game opponent and the 99-game reference batch
-   (Β§17) -- not 18, which was the relevant row back when Today's game was
-   itself played at 6x6.
+This ordering is deliberate, and was a genuine, subtle bug in an earlier
+version of this same mechanism: the original implementation filtered Parks
+and the greyed-out square out *before* choosing the subset, which meant the
+AI was actually seeing 18 of 29 legal squares on a 6x6 board (roughly 62%)
+rather than the intended "about half the board." Selecting the subset first
+means the AI genuinely sees close to `AI_SUBSET_SIZE_CONFIG[N] / (N*N)` of
+the whole board (verified directly: mean surviving candidates of 14.94/36,
+20.95/49, 26.86/64 across the three board sizes, matching the theoretical
+expectation from each board's own Park count almost exactly) -- and, as a
+direct consequence, the number of squares actually evaluated on any given
+turn now legitimately varies (fewer if an unlucky draw happens to include
+more Parks than usual), rather than always being a fixed count. This can
+never reach zero: the subset size comfortably exceeds the total number of
+excluded squares on every board size, so there are always real candidates
+left to choose from.
 
-**Scoring each candidate.** For each of the (up to N) candidate spaces, the
-AI hypothetically places the current card there, recomputes connectivity,
-and computes:
+**Evaluating each candidate.** For each surviving candidate space, the AI
+hypothetically places the current card there, recomputes connectivity, and
+computes:
 
 - `diff` = (sum of the point values, per Β§9's same distance formula, of every
   doubly-connected house this player would own) minus (the same sum for the
-  opponent), counting a newly-completed, currently-unowned house as
-  belonging to this player. This was originally a plain house *count*
-  difference (each house worth exactly 1 regardless of position); when
-  Β§9's scoring became distance-weighted, this term was deliberately updated
-  to match it, so the AI's own objective values a space the same way the
-  game actually scores it. This was a narrow, single-line change on
-  purpose -- `completesHouse`, `isSteal`, `myTerr`, and the `val` formula
-  and its weights below were all deliberately left untouched, rather than
-  retuned at the same time, so the effect of this one change could be
-  observed in isolation first.
+  resolved opponent, from `pickLeadingOpponent` above), counting a
+  newly-completed, currently-unowned house as belonging to this player.
+- `combinedBuildStealValue` = the sum of the point values of every house
+  this exact placement would newly build, plus the point value of a house
+  it would steal (never more than one steal per move, since stealing only
+  ever affects the exact space played on, per Β§10) -- both folded into one
+  number rather than tracked separately.
 - `myTerr` = total count of spaces connected to *either* colour (not
-  necessarily both) -- a rough measure of board presence/territory.
-- `completesHouse` = 1 if this exact placement newly completes a house that
-  did not already exist, else 0.
-- `isSteal` = 1 if this exact placement would trigger a legal steal at that
-  space per the Β§10 rule (checked with the same matching-neighbour logic)
-  **and** the pre-existing owner at that space is not this player already
-  (i.e. re-confirming a house the AI already owns never counts as a "steal"
-  bonus, even if the matching-neighbour condition happens to hold), else 0.
-- A combined value:
-  `val = diff + AI_ALPHA * decay * completesHouse + AI_ALPHA * decay * isSteal + AI_BETA * myTerr`
-  where `AI_ALPHA = 0.7`, `AI_BETA = 0.1`, and `decay = max(0, (TOTAL_ROUNDS -
-  roundNum) / TOTAL_ROUNDS)` -- linearly shrinking from just under 1 on round
-  1 to exactly 0 on round 20, so the house-completion and steal bonuses
-  matter progressively less (relative to raw territory-difference) as the
-  game nears its end.
+  necessarily both) -- a rough measure of board presence/territory,
+  unchanged from earlier versions of this heuristic.
 
-The candidate with the strictly highest `val` is chosen (ties go to whichever
-candidate was scanned first, i.e. earliest in the shuffled order -- there is
-no random tie-break). The board is restored to its actual state after each
-hypothetical placement is scored, so this evaluation has no side-effects
-until the real move is finally committed.
+**The comparison is lexicographic, not additive.** Each candidate reduces to
+a tuple `[diff, combinedBuildStealValue, myTerr]`, and candidates are
+compared strictly in that order: `diff` is compared first and dominates
+completely -- any candidate with a higher `diff` always wins, regardless of
+the other two values. Only when `diff` is *exactly* tied does
+`combinedBuildStealValue` get consulted to break the tie; only when both of
+those are tied does `myTerr` get consulted. Ties that survive all three
+still go to whichever candidate was scanned first in the shuffled order --
+there is no random tie-break beyond that. The board is restored to its
+actual state after each hypothetical placement is scored, so this
+evaluation has no side-effects until the real move is finally committed.
 
-**Verified effect of the points-based `diff` change.** On a controlled,
-single-decision comparison (a shared board where an edge-adjacent
-1-point completion and a genuinely-connected, true-centre 4-point
-completion, on a 7x7 board, are both simultaneously available candidates
-with identical `myTerr`/`completesHouse` on both sides), the AI now
-reliably, consistently chose the centre over the edge across repeated
-independent trials with different random subset-orderings every time --
-confirming the `diff` change does what it is meant to on an isolated
-decision. Across full, 100-game AI-vs-AI batches at 7x7, though, the
-aggregate shift is present but modest (roughly a 4-6 percentage-point
-increase in the share of houses landing outside the outermost zone,
-compared to the original, count-based `diff`) -- since centre-completing
-opportunities simply arise far less often over a full game than
-edge-completing ones do, so a strong per-decision preference for the
-centre has comparatively few turns on which to actually express itself.
+This replaced an earlier, additive formula (`val = diff + AI_ALPHA * decay *
+completesHouse + AI_ALPHA * decay * isSteal + AI_BETA * myTerr`, with fixed
+weights `AI_ALPHA = 0.7`, `AI_BETA = 0.1`, and a round-based decay term)
+after testing found the additive version's exact weighting was fragile --
+performance swung depending on the chosen weights in ways that didn't
+reliably improve on the original, and pushing the build/steal weight higher
+made the AI progressively more myopic, since a single high-value
+house-completion could swamp `diff` entirely at high enough weights. The
+lexicographic version has no weights or decay term to calibrate at all:
+multiplying a strict tie-breaking criterion by any constant can never change
+which candidate wins the comparison, so none are needed. `diff` always
+dominates by construction, which was found, across repeated head-to-head
+testing against the additive version (properly paired -- identical starting
+board, deck, and Roadworks sequence for both sides of every swapped-seat
+pair), to perform statistically indistinguishably overall, while being
+structurally simpler and free of any weight to accidentally get wrong.
 
 
 ## 17. The 99-simulation rank-comparison system

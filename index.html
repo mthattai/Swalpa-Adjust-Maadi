@@ -65,6 +65,7 @@
   #eventPopup.visible { opacity:1; }
   #eventPopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
                       padding:16px 14px; text-align:center; }
+  #eventPopupInner.park-event { background:#CFE8C4; }
   #eventPopupInner .line1, #eventPopupInner .line2 { font-size:17px; font-weight:normal; color:black; }
   #eventPopupInner .line2 { margin-top:6px; }
 
@@ -964,7 +965,7 @@ function showTodaysTargetPopup(){
     showEventPopup(
       "Target for today's game:",
       `Win by ${target} point${target===1?'':'s'}`,
-      true, LONG_DELAY_MS
+      true, EXTRA_LONG_DELAY_MS
     );
     scheduleAfterPopupOrDelay(beginTurn, 0);
   }, QUICK_DELAY_MS);
@@ -1482,9 +1483,10 @@ function escapeHtml(s){
   return div.innerHTML;
 }
 
-function showEventPopup(line1, line2, autoHide, duration){
+function showEventPopup(line1, line2, autoHide, duration, isParkEvent){
   const popup = document.getElementById('eventPopup');
   const inner = document.getElementById('eventPopupInner');
+  inner.classList.toggle('park-event', !!isParkEvent);
   inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
   inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
   if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
@@ -1752,6 +1754,10 @@ function advanceToNextTurn(){
 // called from advanceToNextTurn() right after advanceTileQueue()).
 const QUICK_DELAY_MS = 500;
 const LONG_DELAY_MS = 1300;
+// Specifically for the launch/target, Roadworks, and results popups (never
+// the steal popup, which keeps LONG_DELAY_MS) - these carry noticeably more
+// text than a steal notification, and needed longer to actually be read.
+const EXTRA_LONG_DELAY_MS = 2500;
 
 const VISIBLE_TILES = 8;
 
@@ -1809,12 +1815,13 @@ function advanceTileQueue(){
 function pickRoadworksTarget(){
   const r = Math.floor(boardRNG()*N);
   const c = Math.floor(boardRNG()*N);
+  const wasPark = board[r][c].kind === 'P';
   if (board[r][c].kind !== 'X'){
     board[r][c] = {kind:'X', rot:0};
     house[r][c] = false;
     owner[r][c] = null;
   }
-  return [r,c];
+  return [r,c,wasPark];
 }
 
 function beginTurn(){
@@ -1835,11 +1842,15 @@ function beginTurn(){
     // whether it's the human's or the AI's turn; only what happens once
     // the tile has landed differs below.
     scheduleIfCurrent(() => {
-      const excuse = shuffledExcuses[excuseDrawIndex++];
-      showEventPopup(excuse, 'Swalpa adjust maadi!', true, LONG_DELAY_MS);
+      const [r,c,wasPark] = pickRoadworksTarget();
+      if (wasPark){
+        showEventPopup('\u{1FAB5} Another park bites the dust \u{1FAB5}', '\u{1F622}', true, EXTRA_LONG_DELAY_MS, true);
+      } else {
+        const excuse = shuffledExcuses[excuseDrawIndex++];
+        showEventPopup(excuse, 'Swalpa adjust maadi!', true, EXTRA_LONG_DELAY_MS);
+      }
       sounds.roadworks();
       scheduleAfterPopupOrDelay(() => scheduleIfCurrent(() => {
-        const [r,c] = pickRoadworksTarget();
         pendingSquare = [r,c];
         render();
         sounds.previewTap();
@@ -2131,9 +2142,9 @@ function finishGame(){
     else if (revenue[p] === maxRev){ winners.push(p); }
   }
   if (winners.length === 1){
-    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', true, LONG_DELAY_MS);
+    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', true, EXTRA_LONG_DELAY_MS);
   } else {
-    showEventPopup("It's a draw!", 'Residents LOSE', true, LONG_DELAY_MS);
+    showEventPopup("It's a draw!", 'Residents LOSE', true, EXTRA_LONG_DELAY_MS);
   }
   sounds.results();
   if (isTodaysGame){
