@@ -2524,8 +2524,8 @@ function aiPlayTurn(){
 
 canvas.addEventListener('click', (e)=>{
   if (gameOver) return;
-  if (vsComputerOn && turn === 2){ showMsg("Please wait for Player 2."); return; }
-  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment."); return; }
+  if (vsComputerOn && turn === 2){ showMsg("Please wait for Player 2"); return; }
+  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment"); return; }
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
   const x = (e.clientX-rect.left)*scaleX - BAND, y = (e.clientY-rect.top)*scaleY - BAND;
@@ -2540,7 +2540,7 @@ canvas.addEventListener('click', (e)=>{
       sounds.confirmTap();
     } else {
       sounds.invalidTap();
-      showMsg("Tap the highlighted roadworks card.");
+      showMsg("Tap the highlighted roadworks card");
     }
     return;
   }
@@ -2553,19 +2553,19 @@ canvas.addEventListener('click', (e)=>{
 
   if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c){
     sounds.invalidTap();
-    showMsg("The space just played is off limits.");
+    showMsg("The space just played is off limits");
     return;
   }
 
   if (board[r][c].kind === 'P'){
     sounds.invalidTap();
-    showMsg("You can't dig up a park.");
+    showMsg("You can't dig up a park");
     return;
   }
 
   if (!practiceMode && triesRemaining <= 0){
     sounds.invalidTap();
-    showMsg("You've run out of tries.");
+    showMsg("You've run out of tries");
     return;
   }
 
@@ -2811,18 +2811,18 @@ document.getElementById('randomGameBtn').onclick = () => { enterRandomGameMode()
 document.getElementById('resetBoardBtn').onclick = () => { freshGame(true); };
 document.getElementById('hintBtn').onclick = () => {
   if (gameOver) return;
-  if (vsComputerOn && turn === 2){ showMsg("Please wait for Player 2."); return; }
-  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment."); return; }
+  if (vsComputerOn && turn === 2){ showMsg("Please wait for Player 2"); return; }
+  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment"); return; }
 
   if (currentDraw.kind === 'X'){
     sounds.invalidTap();
-    showMsg("Tap the highlighted roadworks card.");
+    showMsg("Tap the highlighted roadworks card");
     return;
   }
 
   if (!practiceMode && hintUsedThisTurn){
     sounds.invalidTap();
-    showMsg("You've used up your hint.");
+    showMsg("You've used up your hint");
     return;
   }
 
