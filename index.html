@@ -38,11 +38,11 @@
          display:flex; flex-direction:column; align-items:center; overflow-x:hidden; }
   #gameTitle { margin:4px 0 14px; width:100%; text-align:center; }
   #titleRow { display:flex; align-items:center; justify-content:center; width:100%;
-              border-bottom:6px solid var(--stamp); padding-bottom:6px; box-sizing:border-box; }
+              box-sizing:border-box; }
   #titleRow h1 { margin:0; font-family: 'Teko', Arial, Helvetica, sans-serif;
                  font-weight:600; color:var(--ink); letter-spacing:1.5px; white-space:nowrap;
-                 text-transform:uppercase; }
-  #tagline { display:inline-block; color:var(--ink-soft); font-style:italic; margin:8px 0 0; white-space:nowrap; }
+                 line-height:0.85; text-transform:uppercase; }
+  #tagline { display:inline-block; color:var(--ink-soft); font-style:italic; line-height:1.05; margin:6px 0 0; white-space:nowrap; }
   #motivation { font-size:12px; color:var(--ink-soft); text-align:center; line-height:1.4; margin:14px 0 0; }
   #rulesAnimWrap { position:relative; width:133px; height:133px; margin:16px auto 0; }
   #rulesAnimWrap canvas {
@@ -63,7 +63,7 @@
                          background:var(--panel); color:var(--ink-soft); cursor:pointer; }
   #infoPopup { font-size:12px; color:var(--ink); line-height:1.4; text-align:left; background:var(--panel);
                border:1px solid var(--stamp); border-radius:6px; padding:10px 12px; margin-top:10px; white-space:pre-line; }
-  #tileRow { position:relative; margin:8px auto 0; }
+  #tileRow { position:relative; margin:8px auto 0; overflow:hidden; }
   #tileRow canvas { position:absolute; top:0; border:1px solid var(--rule); border-radius:4px; cursor:default;
                      box-shadow: -3px 0 5px rgba(0,0,0,0.18); }
   #legendRow { display:flex; justify-content:space-between; margin-top:10px; }
@@ -173,7 +173,8 @@
     <div id="titleRow">
       <h1>Swalpa adjust maadi</h1>
     </div>
-    <p id="tagline">Bengalurina prema kathe</p>
+    <canvas id="titleTileRow" style="display:block; margin:6px auto 0;"></canvas>
+    <p id="tagline">ಬೆಂಗಳೂರಿನ ಪ್ರೇಮ ಕಥೆ</p>
     <p id="motivation">Competing contractors operate in a Bangalore neighbourhood.
     Each is trying to supply power and water to as many houses as possible,
     without much concern for how their actions affect the others. Meanwhile,
@@ -804,9 +805,44 @@ function computeLayout(){
   try {
     const fitWidth = CANVAS_SIZE * 0.96;
     fitTextToWidth(document.querySelector('#titleRow h1'), fitWidth, 70, 16);
-    fitTextToWidth(document.getElementById('tagline'), fitWidth, 22, 10);
+    fitTextToWidth(document.getElementById('tagline'), fitWidth, 28, 10);
   } catch (e) {
     console.error('fitTextToWidth failed, continuing without it:', e);
+  }
+  // Deferred to the next tick, not called directly here: computeLayout()
+  // is itself called at the very top of the script (before later consts
+  // like CORNER_KEY, which drawTileOn()'s bend-rendering depends on, have
+  // initialized) - setTimeout lets the rest of the script finish first.
+  setTimeout(() => { try { renderTitleTileRow(); } catch (e) { console.error('renderTitleTileRow failed:', e); } }, 0);
+}
+
+// A row of rendered game tiles in place of a plain decorative line -
+// mixing bends in a repeating wave (alternating rotations, so the colour
+// that reads as "flowing" alternates tile to tile), both colours genuinely
+// connected, with a park bookending each end.
+function renderTitleTileRow(){
+  const cnv = document.getElementById('titleTileRow');
+  const h1 = document.querySelector('#titleRow h1');
+  const targetWidth = h1.getBoundingClientRect().width || CANVAS_SIZE * 0.7;
+  const sequence = [];
+  const total = 16;
+  const bendRots = [0, 2];
+  let bendIdx = 0;
+  for (let i=0; i<total; i++){
+    if (i===0 || i===total-1){
+      sequence.push({kind:'P', rot:0});
+    } else {
+      sequence.push({kind:'B', rot: bendRots[bendIdx % 2]});
+      bendIdx++;
+    }
+  }
+  const tsize = Math.max(20, Math.floor(targetWidth / sequence.length));
+  const totalW = tsize * sequence.length;
+  cnv.width = totalW; cnv.height = tsize;
+  cnv.style.width = totalW + 'px'; cnv.style.height = tsize + 'px';
+  const ctx = cnv.getContext('2d');
+  for (let i=0; i<sequence.length; i++){
+    drawTileOn(ctx, i*tsize, 0, tsize, sequence[i], true, true);
   }
 }
 computeLayout();
@@ -1464,8 +1500,8 @@ function render(){
     ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.strokeRect(px,py,SIZE,SIZE);
 
     if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
-      ctx.strokeStyle='#F1A208'; ctx.lineWidth=4; ctx.setLineDash([6,4]);
-      ctx.strokeRect(px+3,py+3,SIZE-6,SIZE-6); ctx.setLineDash([]);
+      const inset = SIZE*0.10;
+      drawHazardTapeBorder(ctx, px+inset, py+inset, SIZE-2*inset, SIZE-2*inset, px, py, SIZE, SIZE);
     }
 
     const scoringSquare = scoreHighlightActive && lastScoringSquares.find(([sr,sc]) => sr===r && sc===c);
@@ -1569,18 +1605,100 @@ function render(){
   if (needsMoreFrames) requestAnimationFrame(render);
 }
 
-function renderDrawArea(){
-  const area = document.getElementById('tileRow');
-  area.innerHTML = '';
-  // Same sizing basis as before (fitting 8 cards, non-overlapping) - keeps
-  // the card size itself unchanged; only their arrangement (overlapping)
-  // changes here.
+let _deckAnimationInProgress = false;
+
+function computeDeckGeometry(){
   const gapTotal = 7 * 5;
   const borderTotal = VISIBLE_TILES * 2;
   const psize = Math.max(20, Math.min(42, Math.floor((CANVAS_SIZE - gapTotal - borderTotal - 8) / VISIBLE_TILES)));
   // Left 2/3 of each card visible, right 1/3 covered by the next card.
   const overlapOffset = (2/3) * psize;
+  return {psize, overlapOffset};
+}
 
+// cardState one of: 'blank', 'active' (dashed outline, awaiting a move),
+// 'committed' (just played, greyed out), 'normal'.
+function buildDeckCardCanvas(psize, tile, cardState){
+  const cnv = document.createElement('canvas');
+  cnv.width = psize; cnv.height = psize;
+  const c = cnv.getContext('2d');
+  if (cardState === 'blank'){
+    c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
+    c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
+    c.strokeStyle='#A8A088'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
+  } else {
+    c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
+    c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
+    drawTileOn(c, 2, 2, psize-4, tile, true, true);
+    if (cardState === 'active'){
+      const inset = SIZE*0.10;
+      drawHazardTapeBorder(c, inset, inset, psize-2*inset, psize-2*inset, 0, 0, psize, psize);
+    } else if (cardState === 'committed'){
+      // A real grey overlay painted on top of the tile, not just reduced
+      // element opacity (which barely read as "greyed out" against this
+      // card's own previous, brightly highlighted state a moment before).
+      c.fillStyle = 'rgba(120,120,120,0.65)'; c.fillRect(0,0,psize,psize);
+      c.strokeStyle='#999'; c.lineWidth=2; c.strokeRect(1,1,psize-2,psize-2);
+    } else {
+      c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
+    }
+  }
+  return cnv;
+}
+
+// Hazard-tape diagonal stripe pattern for the active card's border, same
+// orange hue as the game's own established accent.
+let _hazardTapePattern = null;
+function getHazardTapePattern(targetCtx){
+  if (_hazardTapePattern) return _hazardTapePattern;
+  const size = 6;
+  const pCanvas = document.createElement('canvas');
+  pCanvas.width = size; pCanvas.height = size;
+  const pCtx = pCanvas.getContext('2d');
+  pCtx.fillStyle = '#1A1A1A';
+  pCtx.fillRect(0, 0, size, size);
+  pCtx.fillStyle = '#F1A208';
+  pCtx.save();
+  pCtx.translate(size/2, size/2);
+  pCtx.rotate(Math.PI/4);
+  pCtx.fillRect(-size, -size/4, size*2, size/2);
+  pCtx.restore();
+  _hazardTapePattern = targetCtx.createPattern(pCanvas, 'repeat');
+  return _hazardTapePattern;
+}
+
+// Draws the hazard-tape border as a true fill clipped to a ring-shaped
+// region (outer rect minus an inward-offset inner rect), rather than as a
+// stroke - canvas patterns tile in fixed screen-space, not aligned to a
+// path, so a thin stroke tracing a rounded-rect border only ever samples
+// small, inconsistent slices of the pattern as it curves through corners
+// and changes direction; used as a fill over the whole ring area instead,
+// the pattern tiles cleanly and consistently all the way around.
+// innerX/Y/W/H is the boundary that was already correct (matches the
+// previous behaviour exactly); outerX/Y/W/H is the tile's own full bounds,
+// so the tape's outer edge genuinely reaches the tile edge rather than
+// being derived from thickness (which only coincidentally landed close to
+// the tile edge before, since the caller's own inset and this function's
+// thickness weren't tied together at all).
+function drawHazardTapeBorder(ctx, innerX, innerY, innerW, innerH, outerX, outerY, outerW, outerH){
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(outerX, outerY, outerW, outerH);
+  ctx.rect(innerX, innerY, innerW, innerH);
+  ctx.clip('evenodd');
+  ctx.fillStyle = getHazardTapePattern(ctx);
+  ctx.fillRect(outerX, outerY, outerW, outerH);
+  ctx.restore();
+}
+
+function renderDrawArea(){
+  // A deck-slide animation is already, actively managing #tileRow's own DOM
+  // right now - skip this render entirely rather than stomping over its
+  // transitional state (it calls renderDrawArea() itself once it settles).
+  if (_deckAnimationInProgress) return;
+  const area = document.getElementById('tileRow');
+  area.innerHTML = '';
+  const {psize, overlapOffset} = computeDeckGeometry();
   // Always the full, 8-slot width/position, regardless of how many real
   // tiles remain - blank slots at the start (same convention as before)
   // keep the deck's location and width constant as the queue runs down,
@@ -1590,44 +1708,93 @@ function renderDrawArea(){
 
   const numBlanks = VISIBLE_TILES - upcomingTiles.length;
   for (let slot=0; slot<VISIBLE_TILES; slot++){
-    const cnv = document.createElement('canvas');
-    cnv.width = psize; cnv.height = psize;
-    cnv.style.left = `${slot * overlapOffset}px`;
-    const c = cnv.getContext('2d');
+    let cnv;
     if (slot < numBlanks){
-      c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
-      c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
-      c.strokeStyle='#A8A088'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
+      cnv = buildDeckCardCanvas(psize, null, 'blank');
     } else {
       const idx = slot - numBlanks;
       const tile = upcomingTiles[idx];
       const isActive = (idx === upcomingTiles.length - 1);
-      c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
-      c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
-      drawTileOn(c, 2, 2, psize-4, tile, true, true);
-      if (isActive && !awaitingAdvance){
-        c.strokeStyle='#F1A208'; c.lineWidth=4; c.setLineDash([6,4]);
-        c.strokeRect(3,3,psize-6,psize-6); c.setLineDash([]);
-      } else if (isActive && awaitingAdvance){
-        // Just committed, still in this same rightmost slot since the deck
-        // hasn't shifted yet - a real grey overlay painted on top of the
-        // tile, not just reduced element opacity (which barely read as
-        // "greyed out" against this card's own previous, brightly
-        // highlighted state a moment before).
-        c.fillStyle = 'rgba(120,120,120,0.65)'; c.fillRect(0,0,psize,psize);
-        c.strokeStyle='#999'; c.lineWidth=2; c.strokeRect(1,1,psize-2,psize-2);
-      } else {
-        c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
-      }
+      const state = isActive ? (awaitingAdvance ? 'committed' : 'active') : 'normal';
+      cnv = buildDeckCardCanvas(psize, tile, state);
     }
+    cnv.style.left = `${slot * overlapOffset}px`;
     area.appendChild(cnv);
   }
+}
+
+const DECK_SLIDE_DURATION_MS = 240;
+// Animates the transition from oldTiles (the deck's state just before this
+// turn's card was consumed) to whatever upcomingTiles already is by the
+// time this runs (advanceTileQueue() has already mutated it) - the old
+// active card fades out while sliding, a new card (if the deck still had
+// one left) enters from off-screen-left, and everything else slides right
+// by one slot to close the gap. onComplete runs once the transition (and
+// the final, settled re-render) is done.
+function animateDeckAdvance(oldTiles, onComplete){
+  const area = document.getElementById('tileRow');
+  const {psize, overlapOffset} = computeDeckGeometry();
+  _deckAnimationInProgress = true;
+  area.innerHTML = '';
+  area.style.height = `${psize}px`;
+  area.style.width = `${(VISIBLE_TILES - 1) * overlapOffset + psize}px`;
+
+  // advanceTileQueue() always pops exactly one card; it unshifts a new one
+  // only if the deck itself still had a card left to draw - net-unchanged
+  // length means a new card was added, one shorter means the deck is
+  // exhausted and nothing entered.
+  const hadNewCard = upcomingTiles.length === oldTiles.length;
+
+  const numBlanksOld = VISIBLE_TILES - oldTiles.length;
+  const oldActiveEls = [];
+  for (let slot=0; slot<VISIBLE_TILES; slot++){
+    let cnv;
+    if (slot < numBlanksOld){
+      cnv = buildDeckCardCanvas(psize, null, 'blank');
+    } else {
+      const idx = slot - numBlanksOld;
+      const tile = oldTiles[idx];
+      const isActive = (idx === oldTiles.length - 1);
+      // The old active card is always shown 'committed' (grey) here - this
+      // animation only ever runs after a move has already been committed.
+      cnv = buildDeckCardCanvas(psize, tile, isActive ? 'committed' : 'normal');
+      if (isActive) oldActiveEls.push(cnv);
+    }
+    cnv.style.left = `${slot * overlapOffset}px`;
+    cnv.style.transition = `transform ${DECK_SLIDE_DURATION_MS}ms ease, opacity ${DECK_SLIDE_DURATION_MS}ms ease`;
+    area.appendChild(cnv);
+  }
+
+  if (hadNewCard){
+    const incomingCnv = buildDeckCardCanvas(psize, upcomingTiles[0], 'normal');
+    incomingCnv.style.left = `${-overlapOffset}px`;
+    incomingCnv.style.transition = `transform ${DECK_SLIDE_DURATION_MS}ms ease`;
+    area.appendChild(incomingCnv);
+  }
+
+  // Force a reflow so the browser genuinely paints this "before" state
+  // first, rather than jumping straight to the post-transition one.
+  void area.offsetWidth;
+
+  for (const child of area.children){
+    child.style.transform = `translateX(${overlapOffset}px)`;
+  }
+  for (const el of oldActiveEls){
+    el.style.opacity = '0';
+  }
+
+  setTimeout(() => {
+    _deckAnimationInProgress = false;
+    renderDrawArea();
+    onComplete();
+  }, DECK_SLIDE_DURATION_MS + 20);
 }
 
 let msgHideTimeout = null;
 function showMsg(t){
   const el = document.getElementById('msg');
-  el.textContent = t;
+  el.textContent = '';
+  el.innerHTML = '\u{1F6A6} ' + escapeHtml(t) + ' \u{1F6A6}';
   el.style.display = 'flex';
   clearTimeout(msgHideTimeout);
   msgHideTimeout = setTimeout(() => { el.style.display = 'none'; el.textContent = ''; }, 1800);
@@ -2008,8 +2175,9 @@ function advanceToNextTurn(){
   // visible (greyed out, per renderDrawArea()) throughout the scoring
   // reveal for the player who just moved, rather than the deck already
   // having moved on while that reveal is still playing out.
+  const oldTiles = [...upcomingTiles];
   advanceTileQueue();
-  beginTurn();
+  animateDeckAdvance(oldTiles, beginTurn);
 }
 
 // Exactly two timing values exist in the whole game, on purpose: QUICK for
@@ -2843,6 +3011,12 @@ renderTitleAndLegend();
 enterTodaysGameMode();
 numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 7;
 computeLayout();
+// Directly (not deferred) so the tile row actually paints alongside the
+// rest of the launch screen before the blocking simulation batch below
+// runs, rather than waiting behind it - safe to call directly here since
+// the whole script has already parsed past every later const declaration
+// drawTileOn() depends on by this point in the file.
+renderTitleTileRow();
 requestAnimationFrame(() => {
   requestAnimationFrame(() => {
     runTodaysRankSimulations(() => {
