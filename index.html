@@ -17,131 +17,154 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <style>
+  @font-face {
+    font-family: 'Teko';
+    src: url(data:font/woff2;base64,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) format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  :root {
+    --paper: #EEEADD;
+    --ink: #2B2620;
+    --stamp: #F1921E;
+    --panel: #F7F3E8;
+    --rule: #A8A088;
+    --gold: #F6CF5A;
+    --ink-soft: #6B6357;
+  }
   * { box-sizing:border-box; }
-  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background:#f4f4f2; margin:0; padding:12px;
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background:var(--paper); margin:0; padding:12px;
          display:flex; flex-direction:column; align-items:center; overflow-x:hidden; }
   #gameTitle { margin:4px 0 14px; width:100%; text-align:center; }
   #titleRow { display:flex; align-items:center; justify-content:center; width:100%;
-              border-bottom:6px solid #F5C400; padding-bottom:6px; box-sizing:border-box; }
-  #titleRow h1 { margin:0; font-family: Arial, Helvetica, sans-serif;
-                 font-weight:900; color:#2C2C2C; letter-spacing:0.5px; white-space:nowrap; }
-  #tagline { display:inline-block; color:#666; margin:8px 0 0; white-space:nowrap; }
-  #motivation { font-size:12px; color:#555; text-align:center; line-height:1.4; margin:14px 0 0; }
+              border-bottom:6px solid var(--stamp); padding-bottom:6px; box-sizing:border-box; }
+  #titleRow h1 { margin:0; font-family: 'Teko', Arial, Helvetica, sans-serif;
+                 font-weight:600; color:var(--ink); letter-spacing:1.5px; white-space:nowrap;
+                 text-transform:uppercase; }
+  #tagline { display:inline-block; color:var(--ink-soft); font-style:italic; margin:8px 0 0; white-space:nowrap; }
+  #motivation { font-size:12px; color:var(--ink-soft); text-align:center; line-height:1.4; margin:14px 0 0; }
   #rulesAnimWrap { position:relative; width:133px; height:133px; margin:16px auto 0; }
   #rulesAnimWrap canvas {
     position:absolute; top:0; left:0;
-    background:#fafafa; border:1px solid #eee; border-radius:6px;
+    background:var(--panel); border:1px solid var(--rule); border-radius:6px;
     transition: opacity 0.8s ease;
   }
   #rulesAnimCaptionWrap { position:relative; max-width:310px; margin:8px auto 0; min-height:18px; }
   #rulesAnimCaptionWrap div {
     position:absolute; top:0; left:0; width:100%; white-space:nowrap;
-    font-size:12px; color:#555; text-align:center; line-height:1.4;
+    font-size:12px; color:var(--ink-soft); text-align:center; line-height:1.4;
     transition: opacity 0.8s ease;
   }
   #infoBtnGrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;
                  max-width:340px; margin-left:auto; margin-right:auto; }
   #infoBtnGrid button { display:inline-flex; align-items:center; justify-content:center; gap:5px;
-                         font-size:11px; padding:6px 10px; border-radius:5px; border:1px solid #999;
-                         background:white; color:#555; cursor:pointer; }
-  #infoPopup { font-size:12px; color:#333; line-height:1.4; text-align:left; background:#fff8e6;
-               border:1px solid #F1A208; border-radius:6px; padding:10px 12px; margin-top:10px; white-space:pre-line; }
+                         font-size:11px; padding:6px 10px; border-radius:5px; border:1px solid var(--rule);
+                         background:var(--panel); color:var(--ink-soft); cursor:pointer; }
+  #infoPopup { font-size:12px; color:var(--ink); line-height:1.4; text-align:left; background:var(--panel);
+               border:1px solid var(--stamp); border-radius:6px; padding:10px 12px; margin-top:10px; white-space:pre-line; }
   #tileRow { position:relative; margin:8px auto 0; }
-  #tileRow canvas { position:absolute; top:0; border:1px solid #ddd; border-radius:4px; cursor:default;
+  #tileRow canvas { position:absolute; top:0; border:1px solid var(--rule); border-radius:4px; cursor:default;
                      box-shadow: -3px 0 5px rgba(0,0,0,0.18); }
   #legendRow { display:flex; justify-content:space-between; margin-top:10px; }
   .legendItem { display:flex; flex-direction:column; align-items:center; gap:3px; width:25%; }
-  .legendItem .label { font-size:10px; color:#666; text-align:center; }
-  .copyright { font-size:10px; color:#aaa; text-align:center; margin-top:14px; }
-  .social { font-size:10px; color:#aaa; text-align:center; }
+  .legendItem .label { font-size:10px; color:var(--ink-soft); text-align:center; }
+  .copyright { font-size:10px; color:var(--rule); text-align:center; margin-top:14px; }
+  .social { font-size:10px; color:var(--rule); text-align:center; }
   #app .social { margin-top:-6px; }
   #rulesPage .social { margin-top:4px; }
   #app { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
   canvas#board { display:block; cursor:pointer; max-width:100%; outline:none; }
   #eventPopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                background:white; border-radius:16px; padding:12px; box-sizing:border-box;
+                background:var(--panel); border-radius:16px; padding:12px; box-sizing:border-box;
                 pointer-events:none; opacity:0; transition:opacity 0.2s;
                 z-index:5; width:78%; max-width:78%; }
   #eventPopup.visible { opacity:1; }
-  #eventPopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
+  #eventPopupInner { background:var(--gold); border:3px solid var(--ink); border-radius:13px;
                       padding:16px 14px; text-align:center; }
   #eventPopupInner.park-event { background:#CFE8C4; }
-  #eventPopupInner .line1, #eventPopupInner .line2 { font-size:17px; font-weight:normal; color:black; }
+  #eventPopupInner.stamp-in { animation: stampDown 0.4s cubic-bezier(0.2,0.8,0.3,1) both; }
+  @keyframes stampDown {
+    0%   { transform: scale(1.4) rotate(-10deg); opacity: 0; }
+    55%  { transform: scale(0.95) rotate(-1deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+  }
+  #eventPopupInner .line1, #eventPopupInner .line2 { font-size:17px; font-weight:normal; color:var(--ink); }
   #eventPopupInner .line2 { margin-top:6px; }
 
   #shareScorePopup { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-                      background:white; border-radius:16px; padding:12px; box-sizing:border-box;
+                      background:var(--panel); border-radius:16px; padding:12px; box-sizing:border-box;
                       z-index:6; width:78%; max-width:78%; }
-  #shareScorePopupInner { background:#FFD400; border:3px solid black; border-radius:13px;
+  #shareScorePopupInner { background:var(--gold); border:3px solid var(--ink); border-radius:13px;
                            padding:18px 22px; text-align:center; }
   .shareBtnGroup { display:flex; gap:6px; justify-content:center; margin-top:10px; }
-  #resultLine { font-size:18px; font-weight:bold; color:black; margin-bottom:8px; }
-  #rankLabel { font-size:13px; color:#333; margin-bottom:6px; }
-  #rankBarOuter { width:100%; height:18px; border:2px solid black; border-radius:9px;
-                   background:white; overflow:hidden; box-sizing:border-box; }
-  #rankBarFill { height:100%; width:0%; background:#f9bf1f; }
-  #rankNumber { font-size:26px; font-weight:bold; color:#222; margin-top:8px; }
+  #resultLine { font-size:18px; font-weight:bold; color:var(--ink); margin-bottom:8px; }
+  #rankLabel { font-size:13px; color:var(--ink); margin-bottom:6px; }
+  #rankBarOuter { width:100%; height:18px; border:2px solid var(--ink); border-radius:9px;
+                   background:var(--panel); overflow:hidden; box-sizing:border-box; }
+  #rankBarFill { height:100%; width:0%; background:#E58C06; }
+  #rankNumber { font-size:26px; font-weight:bold; color:var(--ink); margin-top:8px; }
   #shareScoreText { width:100%; box-sizing:border-box; font-size:11px; font-family:inherit;
-                     color:black; background:white; border:1px solid #999; border-radius:6px;
+                     color:var(--ink); background:var(--panel); border:1px solid var(--rule); border-radius:6px;
                      padding:8px; resize:none; overflow-x:auto; margin-top:14px; }
-  #shareScoreCopyBtn, #shareScoreCloseBtn { font-size:13px; padding:5px 14px; border-radius:6px; border:1px solid #333;
-                         background:white; color:#222; cursor:pointer; }
-  .pieceCell { border:2px solid #ccc; border-radius:8px; background:white; cursor:pointer;
+  #shareScoreCopyBtn, #shareScoreCloseBtn { font-size:13px; padding:5px 14px; border-radius:6px; border:1px solid var(--ink);
+                         background:var(--panel); color:var(--ink); cursor:pointer; }
+  .pieceCell { border:2px solid var(--rule); border-radius:8px; background:var(--panel); cursor:pointer;
                display:flex; align-items:center; justify-content:center; padding:2px; }
-  .pieceCell.armed { border-color:#222; }
+  .pieceCell.armed { border-color:var(--ink); }
   .pieceCell.disabled { opacity:0.25; cursor:not-allowed; }
   .pieceCell canvas { pointer-events:none; display:block; }
-  #scoreRow { display:flex; gap:8px; margin-top:10px; flex-wrap:nowrap; justify-content:center; }
-  .scoreBox { width:76px; height:58px; border-radius:8px; display:flex; flex-direction:column;
-              align-items:center; justify-content:center; color:white; border:3px solid transparent;
-              opacity:0.35; filter:grayscale(60%); transition:opacity 0.15s, filter 0.15s, transform 0.15s; }
+  #scoreRow { display:flex; gap:16px; margin-top:10px; flex-wrap:nowrap; justify-content:center; }
+  .scoreBox { width:64px; height:48px; border-radius:7px; display:flex; flex-direction:column;
+              align-items:center; justify-content:center; color:white; border:2px solid transparent;
+              opacity:0.5; filter:grayscale(35%); transition:opacity 0.15s, filter 0.15s, box-shadow 0.15s, border-color 0.15s; }
   .scoreP1 { background:#f9bf1f; }
   .scoreP2 { background:#7570b3; }
   .scoreP3 { background:#e7298a; }
   .scoreP4 { background:#1b9e77; }
-  .active { opacity:1; filter:none; border-color:#222;
-            box-shadow:0 0 0 3px white, 0 0 0 6px #222; }
-  .winner { border-color:#F1C40F !important;
-            box-shadow:0 0 0 3px white, 0 0 0 6px #F1C40F !important; }
-  .scoreBox .num { font-size:22px; font-weight:bold; }
-  .scoreBox .lbl { font-size:10px; opacity:0.85; }
-  #roundRow { display:none; position:relative; min-height:30px; margin:10px 0 14px; }
-  #roundNum { font-size:22px; font-weight:bold; color:#333; text-align:left;
-              max-width:min(30%, 145px); box-sizing:border-box; padding-right:6px; }
+  .active { opacity:1; filter:none; border-color:var(--ink);
+            box-shadow:0 2px 5px rgba(43,38,32,0.3); }
+  .winner { border-color:var(--stamp) !important;
+            box-shadow:0 0 0 2px var(--stamp), 0 2px 8px rgba(241,146,30,0.45) !important; }
+  .scoreBox .num { font-size:19px; font-weight:bold; }
+  .scoreBox .lbl { font-size:9px; opacity:0.85; }
+  #roundRow { display:none; position:relative; min-height:30px; margin:10px 0 14px; align-items:center; }
+  #roundNum { font-size:22px; font-weight:bold; font-family:'Teko',Arial,sans-serif; letter-spacing:0.5px; color:var(--ink); text-align:left;
+              line-height:0.95; max-width:min(30%, 145px); box-sizing:border-box; padding-right:6px; }
   #hintMiddleZone { position:absolute; left:min(30%, 145px); right:130px; top:0; bottom:0;
                     display:flex; align-items:center; justify-content:center; }
   #hintBtn { font-size:12px; padding:6px 12px; border-radius:6px; white-space:nowrap;
-             border:1px solid #999; background:white; color:#222; cursor:pointer; }
-  #hintBtn.used { background:#e8e8e8; color:#888; border-color:#ccc; }
+             border:1px solid var(--rule); background:var(--panel); color:var(--ink); cursor:pointer; }
+  #hintBtn.used { background:var(--paper); color:var(--ink-soft); border-color:var(--rule); }
   #triesArea { position:absolute; right:0; top:50%; transform:translateY(-50%);
-               display:flex; align-items:center; gap:6px; font-size:16px; color:#333; white-space:nowrap; }
+               display:flex; align-items:center; gap:6px; font-size:16px; color:var(--ink); white-space:nowrap; }
   #triesDots { display:flex; gap:6px; }
-  .tryDot { width:11px; height:11px; border-radius:50%; background:#333; display:inline-block; flex-shrink:0; }
-  .tryDot.used { background:#ddd; }
-  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #muteBtn, #resetBoardBtn, #practiceBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid #999;
-                background:white; color:#666; cursor:pointer; }
-  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive, #practiceBtn.modeActive, #muteBtn.modeActive { background:#333; color:white; border-color:#333; }
+  .tryDot { width:11px; height:11px; border-radius:50%; background:var(--ink); display:inline-block; flex-shrink:0; }
+  .tryDot.used { background:var(--rule); }
+  #p1Btn, #p2Btn, #p3Btn, #p4Btn, #rulesBtn, #tutorialBtn, #muteBtn, #resetBoardBtn, #practiceBtn, #size6Btn, #size7Btn, #size8Btn, #todaysGameBtn, #randomGameBtn { font-size:11px; padding:5px 10px; border-radius:5px; border:1px solid var(--rule);
+                background:var(--panel); color:var(--ink-soft); cursor:pointer; }
+  #p1Btn.modeActive, #p2Btn.modeActive, #p3Btn.modeActive, #p4Btn.modeActive, #size6Btn.modeActive, #size7Btn.modeActive, #size8Btn.modeActive, #todaysGameBtn.modeActive, #randomGameBtn.modeActive, #practiceBtn.modeActive, #muteBtn.modeActive { background:var(--ink); color:var(--panel); border-color:var(--ink); }
   .btnRow { display:flex; gap:8px; }
   #gameModeBtnRow { margin-top:26px; }
   #digUpRow { margin-top:18px; }
   #digUpBtn { font-size:15px; font-weight:bold; padding:10px 20px; border-radius:8px;
-              border:3px solid black; background:#FFD400; color:black; cursor:pointer; }
-  #digUpBtn:disabled { background:#e8e8e8; color:#888; cursor:default; }
+              border:3px solid var(--ink); background:var(--gold); color:var(--ink); cursor:pointer; }
+  #digUpBtn:disabled { background:var(--paper); color:var(--ink-soft); cursor:default; }
   #msg { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-         background:white; color:black; border:1px solid #999; border-radius:5px;
+         background:var(--panel); color:var(--ink); border:1px solid var(--rule); border-radius:5px;
          font-size:12px; text-align:center; padding:5px 10px;
          pointer-events:none; }
   #rulesPage { display:none; max-width:560px; margin:0 auto; padding:8px 4px 40px; text-align:left; }
   #rulesPage h1 { font-size:22px; margin:8px 0 2px; }
-  #rulesPage .ruleSub { font-size:12px; color:#888; margin:0 0 16px; }
-  #rulesPage h2 { font-size:15px; margin:22px 0 6px; color:#222; }
-  #rulesPage p { font-size:13px; line-height:1.5; color:#333; margin:0 0 10px; }
-  #rulesPage ul { font-size:13px; line-height:1.5; color:#333; margin:0 0 10px; padding-left:20px; }
+  #rulesPage .ruleSub { font-size:12px; color:var(--ink-soft); font-style:italic; margin:0 0 16px; }
+  #rulesPage h2 { font-size:15px; margin:22px 0 6px; color:var(--ink); font-family:'Teko',Arial,sans-serif; letter-spacing:0.5px; text-transform:uppercase; }
+  #rulesPage p { font-size:13px; line-height:1.5; color:var(--ink); margin:0 0 10px; }
+  #rulesPage ul { font-size:13px; line-height:1.5; color:var(--ink); margin:0 0 10px; padding-left:20px; }
   #rulesPage li { margin-bottom:6px; }
-  #rulesPage button { font-size:12px; padding:6px 12px; border-radius:5px; border:1px solid #999;
-                       background:white; color:#444; cursor:pointer; margin:8px 0; }
+  #rulesPage button { font-size:12px; padding:6px 12px; border-radius:5px; border:1px solid var(--rule);
+                       background:var(--panel); color:var(--ink); cursor:pointer; margin:8px 0; }
   .ruleDiagramRow { display:flex; gap:10px; justify-content:center; margin:10px 0 14px; flex-wrap:wrap; }
-  .ruleDiagramRow canvas { border:1px solid #ccc; border-radius:4px; }
+  .ruleDiagramRow canvas { border:1px solid var(--rule); border-radius:4px; }
 </style>
 </head>
 <body>
@@ -182,7 +205,7 @@
   </div>
   <div id="infoPopup" style="display:none;"></div>
   <div id="roundRow" style="display:none;">
-    <div id="roundNum">Round 1/20</div>
+    <div id="roundNum">Round<br>1/20</div>
     <div id="hintMiddleZone"><button id="hintBtn">Hint</button></div>
     <div id="triesArea">
       Tries:
@@ -247,7 +270,7 @@
     <button id="muteBtn">Sound: on</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 12 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 14 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -365,7 +388,7 @@
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 12 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 14 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -399,10 +422,72 @@ const DECK_COMPOSITION = [
   {tile:{kind:'X', rot:0}, countPerPlayer:2, label:'Roadworks'},
 ];
 let SIZE, BAND, INSET, CANVAS_SIZE;
-const RED_DARK = '#C0392B', RED_LIGHT = '#E8B4AC';
-const BLUE_DARK = '#2E86C1', BLUE_LIGHT = '#AED0EA';
+const RED_DARK = '#DA1916', RED_LIGHT = '#F8BBAA';
+const BLUE_DARK = '#1779E8', BLUE_LIGHT = '#AFD9F8';
 const P1_COLOR = '#f9bf1f', P2_COLOR = '#7570b3', P3_COLOR = '#e7298a', P4_COLOR = '#1b9e77';
 const PLAYER_COLORS = [P1_COLOR, P2_COLOR, P3_COLOR, P4_COLOR];
+
+// Shifts a hex colour's lightness by `amt` (-1..1, negative = darker,
+// positive = lighter), used to derive a pipe's shadow-edge and
+// highlight-centre tints from its own base colour, rather than hand-picking
+// separate hex values that could drift out of sync with it.
+function shadeColor(hex, amt){
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n>>16)&255, g = (n>>8)&255, b = n&255;
+  const mix = amt > 0 ? 255 : 0;
+  const p = Math.abs(amt);
+  r = Math.round(r + (mix-r)*p); g = Math.round(g + (mix-g)*p); b = Math.round(b + (mix-b)*p);
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+// A small, once-built, reused noise pattern giving the board a faint
+// concrete/paper grain - built lazily on first use (not at load, in case
+// canvas sizing isn't ready yet) and cached, rather than regenerated on
+// every render() call, which would be wasteful and visibly flicker since
+// the noise would differ frame to frame.
+let _boardTexturePattern = null;
+function getBoardTexturePattern(targetCtx){
+  if (_boardTexturePattern) return _boardTexturePattern;
+  const tSize = 96;
+  const tCanvas = document.createElement('canvas');
+  tCanvas.width = tSize; tCanvas.height = tSize;
+  const tCtx = tCanvas.getContext('2d');
+  tCtx.fillStyle = '#FBF9F3';
+  tCtx.fillRect(0, 0, tSize, tSize);
+  const rng = mulberry32(42); // fixed seed - the texture itself should never change between renders
+  for (let i=0;i<420;i++){
+    const x = rng()*tSize, y = rng()*tSize;
+    const isDark = rng() < 0.55;
+    tCtx.fillStyle = isDark ? `rgba(43,38,32,${0.03+rng()*0.05})` : `rgba(255,255,255,${0.05+rng()*0.06})`;
+    const r = 0.4 + rng()*0.9;
+    tCtx.beginPath(); tCtx.arc(x, y, r, 0, 2*Math.PI); tCtx.fill();
+  }
+  _boardTexturePattern = targetCtx.createPattern(tCanvas, 'repeat');
+  return _boardTexturePattern;
+}
+
+// Same idea as getBoardTexturePattern, but tuned for the dark red/blue
+// border strips rather than the pale board surface - light and dark
+// speckles both need to sit close to white/black at low opacity to read as
+// texture against a saturated, dark background rather than washing out.
+let _borderTexturePattern = null;
+function getBorderTexturePattern(targetCtx){
+  if (_borderTexturePattern) return _borderTexturePattern;
+  const tSize = 64;
+  const tCanvas = document.createElement('canvas');
+  tCanvas.width = tSize; tCanvas.height = tSize;
+  const tCtx = tCanvas.getContext('2d');
+  const rng = mulberry32(97); // fixed seed - texture stays constant across renders
+  for (let i=0;i<260;i++){
+    const x = rng()*tSize, y = rng()*tSize;
+    const isLight = rng() < 0.5;
+    tCtx.fillStyle = isLight ? `rgba(255,255,255,${0.04+rng()*0.06})` : `rgba(0,0,0,${0.06+rng()*0.08})`;
+    const r = 0.4 + rng()*0.9;
+    tCtx.beginPath(); tCtx.arc(x, y, r, 0, 2*Math.PI); tCtx.fill();
+  }
+  _borderTexturePattern = targetCtx.createPattern(tCanvas, 'repeat');
+  return _borderTexturePattern;
+}
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -719,12 +804,15 @@ function computeLayout(){
   try {
     const fitWidth = CANVAS_SIZE * 0.96;
     fitTextToWidth(document.querySelector('#titleRow h1'), fitWidth, 70, 16);
-    fitTextToWidth(document.getElementById('tagline'), fitWidth, 34, 10);
+    fitTextToWidth(document.getElementById('tagline'), fitWidth, 22, 10);
   } catch (e) {
     console.error('fitTextToWidth failed, continuing without it:', e);
   }
 }
 computeLayout();
+if (document.fonts && document.fonts.ready){
+  document.fonts.ready.then(() => { try { computeLayout(); } catch(e) {} });
+}
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
@@ -1028,6 +1116,63 @@ function arcAngles(corner, p1, p2){
   return [a1, a2, true];
 }
 
+// Gives a pipe segment a rounded, dimensional cross-section: a wider, darker
+// base stroke establishes the shadowed edge, the tile's own established
+// colour sits at a middle width (preserving exactly the same colour meaning
+// as before), and a slim, lighter stroke down the centre reads as a
+// highlight catching the light - same technique for straight lines and
+// arcs, since it's just three stroke() calls on the same path at different
+// widths, not an actual perpendicular offset.
+function strokePipeSegment(ctx, x0, y0, x1, y1, color, s){
+  const dark = shadeColor(color, -0.30), light = shadeColor(color, 0.38);
+  ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+  for (const [tint, wRatio] of [[dark,1], [color,0.62], [light,0.28]]){
+    ctx.strokeStyle = tint; ctx.lineWidth = s*0.15*wRatio;
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+  }
+}
+function strokePipeArc(ctx, cx, cy, radius, a1, a2, ccw, color, s){
+  const dark = shadeColor(color, -0.30), light = shadeColor(color, 0.38);
+  ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+  for (const [tint, wRatio] of [[dark,1], [color,0.62], [light,0.28]]){
+    ctx.strokeStyle = tint; ctx.lineWidth = s*0.15*wRatio;
+    ctx.beginPath(); ctx.arc(cx,cy,radius,a1,a2,ccw); ctx.stroke();
+  }
+}
+
+// Same dimensional idea as strokePipeSegment/strokePipeArc, but for a wide,
+// rectangular band rather than a thin stroked line: a gradient running
+// perpendicular to the band's own length, dark at both edges with the same
+// light centre-highlight tint the pipes use, giving the border strips the
+// same rounded, "filled pipe" cross-section as the pipes themselves.
+function fillPipeBand(ctx, x, y, w, h, color, isHorizontalBand){
+  const dark = shadeColor(color, -0.30), light = shadeColor(color, 0.38);
+  const grad = isHorizontalBand
+    ? ctx.createLinearGradient(x, y, x, y+h)
+    : ctx.createLinearGradient(x, y, x+w, y);
+  grad.addColorStop(0, dark);
+  grad.addColorStop(0.22, color);
+  grad.addColorStop(0.5, light);
+  grad.addColorStop(0.78, color);
+  grad.addColorStop(1, dark);
+  ctx.strokeStyle = grad;
+  ctx.lineCap = 'round';
+  // A stroked centre-line, rather than a filled rounded-rect: round caps
+  // this way extend beyond the original straight length (by half the
+  // band's own thickness at each end) instead of carving into it.
+  ctx.beginPath();
+  if (isHorizontalBand){
+    ctx.lineWidth = h;
+    ctx.moveTo(x, y+h/2);
+    ctx.lineTo(x+w, y+h/2);
+  } else {
+    ctx.lineWidth = w;
+    ctx.moveTo(x+w/2, y);
+    ctx.lineTo(x+w/2, y+h);
+  }
+  ctx.stroke();
+}
+
 function drawTileOn(targetCtx, px, py, size, tile, redSupplied, blueSupplied){
   const s = size;
   const toPx = (x,y) => [px+x*s, py+y*s];
@@ -1040,26 +1185,24 @@ function drawTileOn(targetCtx, px, py, size, tile, redSupplied, blueSupplied){
     const edges = edgesOf(tile);
     const rEdges = ['N','E','S','W'].filter(e=>edges[e].includes('R'));
     const bEdges = ['N','E','S','W'].filter(e=>edges[e].includes('B'));
-    targetCtx.strokeStyle=rc; targetCtx.beginPath();
-    let [x0,y0]=toPx(...EDGE_MID[rEdges[0]]); targetCtx.moveTo(x0,y0);
-    let [x1,y1]=toPx(...EDGE_MID[rEdges[1]]); targetCtx.lineTo(x1,y1); targetCtx.stroke();
-    targetCtx.strokeStyle=bc; targetCtx.beginPath();
-    [x0,y0]=toPx(...EDGE_MID[bEdges[0]]); targetCtx.moveTo(x0,y0);
-    [x1,y1]=toPx(...EDGE_MID[bEdges[1]]); targetCtx.lineTo(x1,y1); targetCtx.stroke();
+    let [x0,y0]=toPx(...EDGE_MID[bEdges[0]]);
+    let [x1,y1]=toPx(...EDGE_MID[bEdges[1]]);
+    strokePipeSegment(targetCtx, x0,y0,x1,y1, bc, s, false);
+    [x0,y0]=toPx(...EDGE_MID[rEdges[0]]);
+    [x1,y1]=toPx(...EDGE_MID[rEdges[1]]);
+    strokePipeSegment(targetCtx, x0,y0,x1,y1, rc, s, false);
   } else if (tile.kind==='B'){
     const edges = edgesOf(tile);
     const rEdges = ['N','E','S','W'].filter(e=>edges[e].includes('R'));
     const bEdges = ['N','E','S','W'].filter(e=>edges[e].includes('B'));
-    for (const [pair, color] of [[rEdges,rc],[bEdges,bc]]){
+    for (const [pair, color] of [[bEdges,bc],[rEdges,rc]]){
       const key = CORNER_KEY(pair[0],pair[1]);
       const corner = CORNER[key];
       const p1 = EDGE_MID[pair[0]], p2 = EDGE_MID[pair[1]];
       const [a1,a2,ccw] = arcAngles(corner, p1, p2);
       const [cx,cy] = toPx(...corner);
       const radius = s*0.5;
-      targetCtx.strokeStyle = color; targetCtx.beginPath();
-      targetCtx.arc(cx,cy,radius,a1,a2,ccw);
-      targetCtx.stroke();
+      strokePipeArc(targetCtx, cx,cy,radius,a1,a2,ccw, color, s);
     }
   } else if (tile.kind==='X'){
     const cx = px + s*0.5, cy = py + s*0.5;
@@ -1088,11 +1231,32 @@ function drawTileOn(targetCtx, px, py, size, tile, redSupplied, blueSupplied){
     targetCtx.fillStyle = '#CFE8C4';
     targetCtx.fillRect(px, py, s, s);
     const cx = px + s*0.5, cy = py + s*0.5;
-    targetCtx.fillStyle = '#7A5230';
-    targetCtx.fillRect(cx - s*0.035, cy + s*0.04, s*0.07, s*0.20);
-    targetCtx.fillStyle = '#4C8C4A';
+    const canopyR = s*0.24;
+    // Ground shadow, cast away from the top-left light source (toward the
+    // bottom-right), drawn first so the trunk/canopy sit on top of it.
+    targetCtx.save();
     targetCtx.beginPath();
-    targetCtx.arc(cx, cy - s*0.10, s*0.24, 0, 2*Math.PI);
+    targetCtx.ellipse(cx + s*0.05, cy + s*0.20, s*0.19, s*0.065, 0, 0, 2*Math.PI);
+    targetCtx.fillStyle = 'rgba(35,60,30,0.22)';
+    targetCtx.fill();
+    targetCtx.restore();
+    // Trunk, lightly shaded left-to-right to match the same light direction.
+    const trunkGrad = targetCtx.createLinearGradient(cx-s*0.035, 0, cx+s*0.035, 0);
+    trunkGrad.addColorStop(0, shadeColor('#7A5230', 0.18));
+    trunkGrad.addColorStop(1, shadeColor('#7A5230', -0.20));
+    targetCtx.fillStyle = trunkGrad;
+    targetCtx.fillRect(cx - s*0.035, cy + s*0.04, s*0.07, s*0.20);
+    // Canopy: radial highlight offset toward the top-left, giving the tree
+    // a sense of volume under top-left illumination.
+    const canopyGrad = targetCtx.createRadialGradient(
+      cx - canopyR*0.35, cy - s*0.10 - canopyR*0.35, canopyR*0.15,
+      cx, cy - s*0.10, canopyR*1.15
+    );
+    canopyGrad.addColorStop(0, shadeColor('#4C8C4A', 0.32));
+    canopyGrad.addColorStop(1, shadeColor('#4C8C4A', -0.18));
+    targetCtx.fillStyle = canopyGrad;
+    targetCtx.beginPath();
+    targetCtx.arc(cx, cy - s*0.10, canopyR, 0, 2*Math.PI);
     targetCtx.fill();
     targetCtx.strokeStyle = '#2F5E2D';
     targetCtx.lineWidth = s*0.03;
@@ -1105,38 +1269,51 @@ function drawHouseShape(ctx, cx, cy, s, rSup, bSup, ownerColor){
   const baseX = cx - baseW/2, baseY = cy - baseH*0.15;
   const roofOverhang = s*0.06;
   const roofTopY = baseY - s*0.32;
+  // Match the pipe's own centre-highlight tint (the same shadeColor() call
+  // the pipes use for their lighter, "inside" stroke), rather than the
+  // denser, edge-toned RED_DARK/BLUE_DARK - a house-sized solid fill of the
+  // full edge colour read as too dense/saturated.
+  const redInside = shadeColor(RED_DARK, 0.20);
+  const blueInside = shadeColor(BLUE_DARK, 0.20);
 
   if (rSup && bSup){
     ctx.save();
     ctx.beginPath();
     ctx.rect(baseX, baseY, baseW, baseH);
     ctx.clip();
-    ctx.fillStyle = RED_DARK;
+    ctx.fillStyle = redInside;
     ctx.beginPath();
     ctx.moveTo(baseX, baseY);
     ctx.lineTo(baseX+baseW, baseY);
     ctx.lineTo(baseX, baseY+baseH);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = BLUE_DARK;
+    ctx.fillStyle = blueInside;
     ctx.beginPath();
     ctx.moveTo(baseX+baseW, baseY);
     ctx.lineTo(baseX+baseW, baseY+baseH);
     ctx.lineTo(baseX, baseY+baseH);
     ctx.closePath();
     ctx.fill();
+    // Diagonal separator between the two triangles, same thickness as the
+    // house's own outline.
+    ctx.strokeStyle = '#2B2620'; ctx.lineWidth = s*0.045;
+    ctx.beginPath();
+    ctx.moveTo(baseX+baseW, baseY);
+    ctx.lineTo(baseX, baseY+baseH);
+    ctx.stroke();
     ctx.restore();
   } else if (rSup){
-    ctx.fillStyle = RED_DARK;
+    ctx.fillStyle = redInside;
     ctx.fillRect(baseX, baseY, baseW, baseH);
   } else if (bSup){
-    ctx.fillStyle = BLUE_DARK;
+    ctx.fillStyle = blueInside;
     ctx.fillRect(baseX, baseY, baseW, baseH);
   } else {
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#F7F3E8';
     ctx.fillRect(baseX, baseY, baseW, baseH);
   }
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 2.2;
+  ctx.strokeStyle = '#2B2620'; ctx.lineWidth = s*0.045;
   ctx.strokeRect(baseX, baseY, baseW, baseH);
 
   ctx.beginPath();
@@ -1144,9 +1321,9 @@ function drawHouseShape(ctx, cx, cy, s, rSup, bSup, ownerColor){
   ctx.lineTo(cx, roofTopY);
   ctx.lineTo(baseX + baseW + roofOverhang, baseY);
   ctx.closePath();
-  ctx.fillStyle = ownerColor || '#eee';
+  ctx.fillStyle = ownerColor || '#F7F3E8';
   ctx.fill();
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#2B2620'; ctx.lineWidth = s*0.045; ctx.lineJoin = 'round';
   ctx.stroke();
 }
 
@@ -1183,15 +1360,47 @@ function render(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const {redC, blueC} = connectivity();
 
+  // Detect a newly-previewed square (changed since the last render call) to
+  // trigger the tile-settle animation, and the score-highlight just turning
+  // on to trigger the "+X" pop - both purely time-based once triggered, so
+  // they naturally stop after ANIM_DURATION_MS regardless of what else
+  // happens in the meantime.
+  const pendingKey = pendingSquare ? pendingSquare[0]+','+pendingSquare[1] : null;
+  if (pendingKey && pendingKey !== _placeAnimKey){
+    _placeAnimKey = pendingKey;
+    _placeAnimStart = performance.now();
+  } else if (!pendingKey){
+    _placeAnimKey = null;
+  }
+  if (scoreHighlightActive && !_scoreAnimWasActive){
+    _scoreAnimStart = performance.now();
+  }
+  _scoreAnimWasActive = scoreHighlightActive;
+  let needsMoreFrames = false;
+
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     const px = BAND + c*SIZE, py = BAND + r*SIZE;
-    ctx.fillStyle='white'; ctx.fillRect(px,py,SIZE,SIZE);
+    ctx.fillStyle='#FBF9F3'; ctx.fillRect(px,py,SIZE,SIZE);
+    ctx.fillStyle=getBoardTexturePattern(ctx); ctx.fillRect(px,py,SIZE,SIZE);
 
     if (lastPlayedSquare && lastPlayedSquare[0]===r && lastPlayedSquare[1]===c){
       ctx.fillStyle='rgba(120,120,120,0.35)'; ctx.fillRect(px,py,SIZE,SIZE);
     }
 
-    drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
+    const isPlaceAnimating = _placeAnimKey === (r+','+c) && (performance.now()-_placeAnimStart) < ANIM_DURATION_MS;
+    if (isPlaceAnimating){
+      needsMoreFrames = true;
+      const t = (performance.now()-_placeAnimStart) / ANIM_DURATION_MS;
+      const scale = 0.55 + 0.45*easeOutBack(t);
+      ctx.save();
+      ctx.translate(px+SIZE/2, py+SIZE/2);
+      ctx.scale(scale, scale);
+      ctx.translate(-(px+SIZE/2), -(py+SIZE/2));
+      drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
+      ctx.restore();
+    } else {
+      drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
+    }
 
     if (house[r][c] || (redC[r][c] && blueC[r][c])){
       const cx=px+SIZE/2, cy=py+SIZE/2;
@@ -1238,7 +1447,18 @@ function render(){
       let ownerColor = null;
       const effOwner = (projectedSteal || projectedNewHouse) ? turn : owner[r][c];
       if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
-      drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup, ownerColor);
+      if (isPlaceAnimating){
+        const t = (performance.now()-_placeAnimStart) / ANIM_DURATION_MS;
+        const scale = 0.55 + 0.45*easeOutBack(t);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(scale, scale);
+        ctx.translate(-cx, -cy);
+        drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup, ownerColor);
+        ctx.restore();
+      } else {
+        drawHouseShape(ctx, cx, cy, SIZE, rSup, bSup, ownerColor);
+      }
     }
 
     ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.strokeRect(px,py,SIZE,SIZE);
@@ -1261,28 +1481,55 @@ function render(){
       const inset = 2;
       const borderWidth = Math.max(6, SIZE*0.12);
       const radius = SIZE*0.18;
+      const scoreElapsed = performance.now() - _scoreAnimStart;
+      const scoreAnimating = scoreElapsed < ANIM_DURATION_MS;
+      if (scoreAnimating){
+        needsMoreFrames = true;
+        const t = scoreElapsed / ANIM_DURATION_MS;
+        const popScale = 0.3 + 0.7*easeOutBack(t);
+        ctx.save();
+        ctx.translate(px+SIZE/2, py+SIZE/2);
+        ctx.scale(popScale, popScale);
+        ctx.translate(-(px+SIZE/2), -(py+SIZE/2));
+      }
       ctx.beginPath();
       ctx.roundRect(px+inset, py+inset, SIZE-2*inset, SIZE-2*inset, radius);
       ctx.fillStyle = PLAYER_COLORS[lastScoringPlayer-1];
       ctx.fill();
       ctx.lineWidth = borderWidth;
-      ctx.strokeStyle = 'white';
+      ctx.strokeStyle = '#F7F3E8';
       ctx.stroke();
       ctx.fillStyle = 'white';
       ctx.font = `bold ${Math.round(SIZE*0.4)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('+' + points, px+SIZE/2, py+SIZE/2);
+      if (scoreAnimating) ctx.restore();
     }
   }
 
+// Same dimensional idea as strokePipeSegment/strokePipeArc, but for a wide,
+// rectangular band rather than a thin stroked line: a gradient running
+// perpendicular to the band's own length, dark at both edges with the same
+// light centre-highlight tint the pipes use, giving the border strips the
+// same rounded, "filled pipe" cross-section as the pipes themselves.
   const boardEdge0 = BAND, boardEdgeN = BAND + N*SIZE;
-  ctx.fillStyle = RED_DARK;
-  ctx.fillRect(boardEdge0+INSET, 0, N*SIZE-2*INSET, BAND);
-  ctx.fillRect(boardEdge0+INSET, boardEdgeN, N*SIZE-2*INSET, BAND);
-  ctx.fillStyle = BLUE_DARK;
-  ctx.fillRect(0, boardEdge0+INSET, BAND, N*SIZE-2*INSET);
-  ctx.fillRect(boardEdgeN, boardEdge0+INSET, BAND, N*SIZE-2*INSET);
+  fillPipeBand(ctx, boardEdge0+INSET, 0, N*SIZE-2*INSET, BAND, RED_DARK, true);
+  fillPipeBand(ctx, boardEdge0+INSET, boardEdgeN, N*SIZE-2*INSET, BAND, RED_DARK, true);
+  fillPipeBand(ctx, 0, boardEdge0+INSET, BAND, N*SIZE-2*INSET, BLUE_DARK, false);
+  fillPipeBand(ctx, boardEdgeN, boardEdge0+INSET, BAND, N*SIZE-2*INSET, BLUE_DARK, false);
+  const fillRoundedBand = (x,y,w,h,isHorizontal) => {
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (isHorizontal){ ctx.lineWidth = h; ctx.moveTo(x, y+h/2); ctx.lineTo(x+w, y+h/2); }
+    else { ctx.lineWidth = w; ctx.moveTo(x+w/2, y); ctx.lineTo(x+w/2, y+h); }
+    ctx.strokeStyle = getBorderTexturePattern(ctx);
+    ctx.stroke();
+  };
+  fillRoundedBand(boardEdge0+INSET, 0, N*SIZE-2*INSET, BAND, true);
+  fillRoundedBand(boardEdge0+INSET, boardEdgeN, N*SIZE-2*INSET, BAND, true);
+  fillRoundedBand(0, boardEdge0+INSET, BAND, N*SIZE-2*INSET, false);
+  fillRoundedBand(boardEdgeN, boardEdge0+INSET, BAND, N*SIZE-2*INSET, false);
 
   const maxRevenue = Math.max(...Array.from({length:effectiveN}, (_,i) => revenue[i+1]));
   for (let p=1; p<=4; p++){
@@ -1301,7 +1548,7 @@ function render(){
     box.classList.toggle('active', gameOver || turn===p);
     box.classList.toggle('winner', gameOver && p<=effectiveN && revenue[p] === maxRevenue);
   }
-  document.getElementById('roundNum').textContent = `Round ${roundNum}/${TOTAL_ROUNDS}`;
+  document.getElementById('roundNum').innerHTML = `Round<br>${roundNum}/${TOTAL_ROUNDS}`;
   document.querySelectorAll('#triesDots .tryDot').forEach((dot, i) => {
     dot.classList.toggle('used', practiceMode || i >= triesRemaining);
   });
@@ -1318,6 +1565,8 @@ function render(){
   document.getElementById('hintBtn').classList.toggle('used', !hintCanBeUsedNow);
 
   renderDrawArea();
+
+  if (needsMoreFrames) requestAnimationFrame(render);
 }
 
 function renderDrawArea(){
@@ -1346,13 +1595,15 @@ function renderDrawArea(){
     cnv.style.left = `${slot * overlapOffset}px`;
     const c = cnv.getContext('2d');
     if (slot < numBlanks){
-      c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
-      c.strokeStyle='#ddd'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
+      c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
+      c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
+      c.strokeStyle='#A8A088'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
     } else {
       const idx = slot - numBlanks;
       const tile = upcomingTiles[idx];
       const isActive = (idx === upcomingTiles.length - 1);
-      c.fillStyle = 'white'; c.fillRect(0,0,psize,psize);
+      c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
+      c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
       drawTileOn(c, 2, 2, psize-4, tile, true, true);
       if (isActive && !awaitingAdvance){
         c.strokeStyle='#F1A208'; c.lineWidth=4; c.setLineDash([6,4]);
@@ -1483,10 +1734,13 @@ function escapeHtml(s){
   return div.innerHTML;
 }
 
-function showEventPopup(line1, line2, autoHide, duration, isParkEvent){
+function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped){
   const popup = document.getElementById('eventPopup');
   const inner = document.getElementById('eventPopupInner');
   inner.classList.toggle('park-event', !!isParkEvent);
+  inner.classList.remove('stamp-in');
+  void inner.offsetWidth; // force reflow so the animation restarts if triggered twice in a row
+  inner.classList.toggle('stamp-in', !!isStamped);
   inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
   inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
   if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
@@ -1671,6 +1925,20 @@ let lastScoringPlayer = null;
 let lastScoringAmount = 0;
 let scoreHighlightActive = false;
 
+// Small, shared motion-touch infrastructure: a placed tile settles with a
+// touch of weight/overshoot rather than snapping in instantly, and a
+// scoring square's "+X" pops rather than just appearing - both driven by
+// the same easing curve and the same "only keep re-rendering while an
+// animation is actually still running" pattern, so neither costs anything
+// once settled.
+const ANIM_DURATION_MS = 240;
+function easeOutBack(t){
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2);
+}
+let _placeAnimKey = null, _placeAnimStart = 0;
+let _scoreAnimWasActive = false, _scoreAnimStart = 0;
+
 function countMatchingNeighbors(r, c, ownerValue){
   const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
   let count = 0;
@@ -1844,10 +2112,10 @@ function beginTurn(){
     scheduleIfCurrent(() => {
       const [r,c,wasPark] = pickRoadworksTarget();
       if (wasPark){
-        showEventPopup('\u{1FAB5} Another park bites the dust \u{1FAB5}', '\u{1F622}', true, EXTRA_LONG_DELAY_MS, true);
+        showEventPopup('\u{1FAB5} Another park bites the dust \u{1FAB5}', '\u{1F622}', true, EXTRA_LONG_DELAY_MS, true, true);
       } else {
         const excuse = shuffledExcuses[excuseDrawIndex++];
-        showEventPopup(excuse, 'Swalpa adjust maadi!', true, EXTRA_LONG_DELAY_MS);
+        showEventPopup(excuse, 'Swalpa adjust maadi!', true, EXTRA_LONG_DELAY_MS, false, true);
       }
       sounds.roadworks();
       scheduleAfterPopupOrDelay(() => scheduleIfCurrent(() => {
@@ -2169,7 +2437,7 @@ function exitPreLaunch(){
   document.getElementById('preLaunchBox').style.display = 'none';
   document.getElementById('legendRow').style.display = 'flex';
   document.getElementById('infoBtnGrid').style.display = 'grid';
-  document.getElementById('roundRow').style.display = 'block';
+  document.getElementById('roundRow').style.display = 'flex';
   document.getElementById('tileRow').style.display = 'flex';
   document.getElementById('board').style.display = 'block';
   document.getElementById('scoreRow').style.display = 'flex';
@@ -2202,13 +2470,14 @@ function smallTileCanvas(container, tile, labelText){
   const psize = 78;
   cnv.width = psize; cnv.height = psize;
   const pctx = cnv.getContext('2d');
-  pctx.fillStyle = 'white'; pctx.fillRect(0,0,psize,psize);
+  pctx.fillStyle = '#FBF9F3'; pctx.fillRect(0,0,psize,psize);
+  pctx.fillStyle = getBoardTexturePattern(pctx); pctx.fillRect(0,0,psize,psize);
   drawTileOn(pctx, 2, 2, psize-4, tile, true, true);
-  pctx.strokeStyle = '#999'; pctx.lineWidth = 1; pctx.strokeRect(1,1,psize-2,psize-2);
+  pctx.strokeStyle = '#A8A088'; pctx.lineWidth = 1; pctx.strokeRect(1,1,psize-2,psize-2);
   wrap.appendChild(cnv);
   const lbl = document.createElement('div');
   lbl.textContent = labelText;
-  lbl.style.fontSize = '11px'; lbl.style.color = '#555'; lbl.style.marginTop = '4px';
+  lbl.style.fontSize = '11px'; lbl.style.color = '#6B6357'; lbl.style.marginTop = '4px';
   wrap.appendChild(lbl);
   container.appendChild(wrap);
 }
@@ -2235,18 +2504,19 @@ function renderRuleDiagrams(){
     const tsize = 78;
     cnv.width = tsize*3; cnv.height = tsize;
     const pctx = cnv.getContext('2d');
-    pctx.fillStyle = 'white'; pctx.fillRect(0,0,cnv.width,cnv.height);
+    pctx.fillStyle = '#FBF9F3'; pctx.fillRect(0,0,cnv.width,cnv.height);
+    pctx.fillStyle = getBoardTexturePattern(pctx); pctx.fillRect(0,0,cnv.width,cnv.height);
     // Tile A: straight, red N-S, blue E-W (east=blue)
     drawTileOn(pctx, 0, 0, tsize, {kind:'S', rot:0}, true, true);
     // Tile B: bend, red S-E, blue W-N -> west=blue (matches A), east=red
     drawTileOn(pctx, tsize, 0, tsize, {kind:'B', rot:1}, true, true);
     // Tile C: bend rot=1 (west=blue), correctly mismatches B's east=red
     drawTileOn(pctx, tsize*2, 0, tsize, {kind:'B', rot:1}, true, true);
-    pctx.strokeStyle = '#999'; pctx.lineWidth = 1;
+    pctx.strokeStyle = '#A8A088'; pctx.lineWidth = 1;
     for (let i=0;i<3;i++) pctx.strokeRect(i*tsize+1, 1, tsize-2, tsize-2);
     wrap.appendChild(cnv);
     const lbl = document.createElement('div');
-    lbl.style.fontSize = '11px'; lbl.style.color = '#555'; lbl.style.marginTop = '4px';
+    lbl.style.fontSize = '11px'; lbl.style.color = '#6B6357'; lbl.style.marginTop = '4px';
     lbl.innerHTML = 'blue meets blue: connected<br>red meets blue: not connected';
     wrap.appendChild(lbl);
     juncArea.appendChild(wrap);
@@ -2471,34 +2741,10 @@ function drawWaterDropLegend(ctx, s, color, strokeRatio){
   ctx.stroke();
 }
 function drawHouseShapeLegend(ctx, cx, cy, s, strokeRatio){
-  const baseW = s*0.5, baseH = s*0.4;
-  const baseX = cx - baseW/2, baseY = cy - baseH*0.15;
-  const roofOverhang = s*0.06;
-  const roofTopY = baseY - s*0.32;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(baseX, baseY, baseW, baseH);
-  ctx.clip();
-  ctx.fillStyle = RED_DARK;
-  ctx.beginPath();
-  ctx.moveTo(baseX, baseY); ctx.lineTo(baseX+baseW, baseY); ctx.lineTo(baseX, baseY+baseH);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = BLUE_DARK;
-  ctx.beginPath();
-  ctx.moveTo(baseX+baseW, baseY); ctx.lineTo(baseX+baseW, baseY+baseH); ctx.lineTo(baseX, baseY+baseH);
-  ctx.closePath(); ctx.fill();
-  ctx.restore();
-  ctx.strokeStyle = '#333'; ctx.lineWidth = s*strokeRatio;
-  ctx.strokeRect(baseX, baseY, baseW, baseH);
-  ctx.beginPath();
-  ctx.moveTo(baseX - roofOverhang, baseY);
-  ctx.lineTo(cx, roofTopY);
-  ctx.lineTo(baseX + baseW + roofOverhang, baseY);
-  ctx.closePath();
-  ctx.fillStyle = '#eee';
-  ctx.fill();
-  ctx.strokeStyle = '#333'; ctx.lineWidth = s*strokeRatio; ctx.lineJoin = 'round';
-  ctx.stroke();
+  // Matches the board's own house exactly (same shared function) - always
+  // both-supplied, no specific owner colour, since the legend represents a
+  // generic house rather than any particular player's.
+  drawHouseShape(ctx, cx, cy, s, true, true, null);
 }
 
 function renderTitleAndLegend(){
@@ -2619,14 +2865,18 @@ requestAnimationFrame(() => {
   function drawCornerCrop(ctx, spec, houseAt, ownerColor, changedAt){
     ctx.clearRect(0,0,CANVAS_SIZE,CANVAS_SIZE);
     const originX = BAND, originY = BAND;
-    ctx.fillStyle = RED_DARK;
-    ctx.fillRect(originX, 0, TILE*2, BAND);
-    ctx.fillStyle = BLUE_DARK;
-    ctx.fillRect(0, originY, BAND, TILE*2);
+    const edgeInset = TILE * 0.4; // proportionally identical to the main board's own INSET (SIZE*0.4)
+    fillPipeBand(ctx, originX+edgeInset, 0, TILE*2-2*edgeInset, BAND, RED_DARK, true);
+    fillPipeBand(ctx, 0, originY+edgeInset, BAND, TILE*2-2*edgeInset, BLUE_DARK, false);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = getBorderTexturePattern(ctx);
+    ctx.beginPath(); ctx.lineWidth = BAND; ctx.moveTo(originX+edgeInset, BAND/2); ctx.lineTo(originX+TILE*2-edgeInset, BAND/2); ctx.stroke();
+    ctx.beginPath(); ctx.lineWidth = BAND; ctx.moveTo(BAND/2, originY+edgeInset); ctx.lineTo(BAND/2, originY+TILE*2-edgeInset); ctx.stroke();
     for (let r=0;r<2;r++){
       for (let c=0;c<2;c++){
         const px = originX + c*TILE, py = originY + r*TILE;
-        ctx.fillStyle = 'white'; ctx.fillRect(px, py, TILE, TILE);
+        ctx.fillStyle = '#FBF9F3'; ctx.fillRect(px, py, TILE, TILE);
+        ctx.fillStyle = getBoardTexturePattern(ctx); ctx.fillRect(px, py, TILE, TILE);
         if (changedAt && changedAt[0]===r && changedAt[1]===c){
           ctx.fillStyle = 'rgba(120,120,120,0.35)';
           ctx.fillRect(px, py, TILE, TILE);
@@ -2636,7 +2886,7 @@ requestAnimationFrame(() => {
         if (houseAt && houseAt[0]===r && houseAt[1]===c){
           drawHouseShape(ctx, px+TILE/2, py+TILE/2, TILE*0.85, cell.r, cell.b, ownerColor);
         }
-        ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#A8A088'; ctx.lineWidth = 1;
         ctx.strokeRect(px, py, TILE, TILE);
       }
     }
