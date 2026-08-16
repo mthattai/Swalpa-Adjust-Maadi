@@ -46,6 +46,11 @@
                  line-height:0.85; text-transform:uppercase; }
   #tagline { display:inline-block; color:var(--ink-soft); font-style:italic; line-height:1.05; margin:6px 0 0; white-space:nowrap; }
   #motivation { font-size:12px; color:var(--ink-soft); text-align:center; line-height:1.4; margin:14px 0 0; }
+  #rulesAnimCardWrap { width:55px; height:55px; margin:16px auto 0; }
+  #rulesAnimCardWrap canvas {
+    background:var(--panel); border:1px solid var(--rule); border-radius:6px;
+  }
+  #rulesAnimCardWrap.hidden { visibility:hidden; }
   #rulesAnimWrap { position:relative; width:133px; height:133px; margin:16px auto 0; }
   #rulesAnimWrap canvas {
     position:absolute; top:0; left:0;
@@ -184,6 +189,9 @@
     roads are constantly dug up for Metro work, VIP visits, and floods,
     wreaking havoc on the infrastructure. The city's residents are left to
     deal with unpredictable power and water, and must suffer in silence.</p>
+    <div id="rulesAnimCardWrap">
+      <canvas id="rulesAnimCardCanvas" width="55" height="55"></canvas>
+    </div>
     <div id="rulesAnimWrap">
       <canvas id="rulesAnimCanvasA" width="133" height="133"></canvas>
       <canvas id="rulesAnimCanvasB" width="133" height="133"></canvas>
@@ -516,6 +524,19 @@ function getAudioCtx(){
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
+// Additional, proactive resume the moment the page becomes visible again
+// (e.g. the instant the screen is unlocked) - rather than only reacting
+// once some later game action happens to call getAudioCtx(). Tying the
+// resume directly to this event, rather than to whatever deeper call
+// happens to trigger it next, is the more reliable of the two on iOS.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+});
+window.addEventListener('focus', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+});
 
 // Tracks the currently-live one-shot sound so a new one can cut it off
 // immediately, rather than sounds stacking/overlapping on rapid taps.
@@ -3090,7 +3111,73 @@ if (document.fonts && document.fonts.ready){
     }
   }
 
+  // Draws the standalone active-card canvas shown above the board during
+  // the first three intro frames (the active-card/tap-to-try mechanic).
+  const CARD_SIZE = 55;
+  const activeCardTile = {kind:'B', rot:2}; // top-right tile of the final board
+  function drawActiveCardStandalone(ctx, tile, greyed){
+    const size = CARD_SIZE;
+    ctx.clearRect(0,0,size,size);
+    ctx.fillStyle = '#FBF9F3'; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = getBoardTexturePattern(ctx); ctx.fillRect(0,0,size,size);
+    drawTileOn(ctx, 2, 2, size-4, tile, true, true);
+    if (greyed){
+      ctx.fillStyle = 'rgba(120,120,120,0.65)'; ctx.fillRect(0,0,size,size);
+      ctx.strokeStyle='#999'; ctx.lineWidth=2; ctx.strokeRect(1,1,size-2,size-2);
+    } else {
+      const inset = size*0.10;
+      drawHazardTapeBorder(ctx, inset, inset, size-2*inset, size-2*inset, 0, 0, size, size);
+    }
+  }
+
+  // Draws a finger-tap icon over a given board square (used by the intro
+  // frames to indicate where the active card is being tried/confirmed).
+  function drawFingerAt(ctx, r, c){
+    const px = BAND + c*TILE, py = BAND + r*TILE;
+    ctx.font = (TILE*0.55) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F446}', px+TILE*0.72, py+TILE*0.72);
+  }
+
+  // Draws the hazard-tape (or greyed) highlight over a given board square -
+  // used by the intro frames to show the active card "tried" or "confirmed"
+  // at a specific square, on top of drawCornerCrop's own board rendering.
+  function drawSquareHighlight(ctx, r, c, greyed){
+    const px = BAND + c*TILE, py = BAND + r*TILE;
+    if (greyed){
+      ctx.fillStyle = 'rgba(120,120,120,0.65)'; ctx.fillRect(px,py,TILE,TILE);
+      ctx.strokeStyle='#999'; ctx.lineWidth=2; ctx.strokeRect(px+1,py+1,TILE-2,TILE-2);
+    } else {
+      const inset = TILE*0.10;
+      drawHazardTapeBorder(ctx, px+inset, py+inset, TILE-2*inset, TILE-2*inset, px, py, TILE, TILE);
+    }
+  }
+
+  // Intro-frame board specs (active-card/tap-to-try/tap-again-to-confirm
+  // mechanic) - all tiles unsupplied throughout, no flows shown. Frames 5-7
+  // below are the pre-existing power/water frames, now shifted to make room.
+  const otherTopLeft = {tile:{kind:'B',rot:2}, r:false, b:false};
+  const bottomLeft = {tile:{kind:'S',rot:1}, r:false, b:false};
+  const bottomRightFinal = {tile:{kind:'S',rot:0}, r:false, b:false}; // unchanged throughout
+  const placeholderTile = {kind:'S', rot:1}; // "unnatural straight" - same kind as bottom-left
+  const topRightPlaceholder = {tile:placeholderTile, r:false, b:false};
+  const topRightActive = {tile:activeCardTile, r:false, b:false};
+  const bottomRightAsActive = {tile:activeCardTile, r:false, b:false}; // tried-out preview only
+
+  const introBoard1 = [ [otherTopLeft, topRightPlaceholder], [bottomLeft, bottomRightFinal] ];
+  const introBoard2 = [ [otherTopLeft, topRightPlaceholder], [bottomLeft, bottomRightAsActive] ];
+  const introBoard3 = [ [otherTopLeft, topRightActive],      [bottomLeft, bottomRightFinal] ];
+  const introBoard4 = introBoard3; // confirmed - already matches the final FRAMES[0] board
+
   const FRAMES = [
+    // Frame 1: active card standalone above board, placeholder at top-right.
+    (ctx) => drawCornerCrop(ctx, introBoard1, null, null, null),
+    // Frame 2: tried at bottom-right (finger + hazard tape there).
+    (ctx) => { drawCornerCrop(ctx, introBoard2, null, null, null); drawSquareHighlight(ctx, 1, 1, false); drawFingerAt(ctx, 1, 1); },
+    // Frame 3: moved to top-right (finger + hazard tape there).
+    (ctx) => { drawCornerCrop(ctx, introBoard3, null, null, null); drawSquareHighlight(ctx, 0, 1, false); drawFingerAt(ctx, 0, 1); },
+    // Frame 4: confirmed at top-right (greyed + finger) - matches final board.
+    (ctx) => { drawCornerCrop(ctx, introBoard4, null, null, null); drawSquareHighlight(ctx, 0, 1, true); drawFingerAt(ctx, 0, 1); },
     (ctx) => drawCornerCrop(ctx, [
       [ {tile:{kind:'B',rot:2}, r:false, b:false}, {tile:{kind:'B',rot:2}, r:false, b:false} ],
       [ {tile:{kind:'S',rot:1}, r:false, b:false}, {tile:{kind:'S',rot:0}, r:false, b:false} ],
@@ -3110,11 +3197,43 @@ if (document.fonts && document.fonts.ready){
   ];
 
   const CAPTIONS = [
-    'Red pipes carry power, blue pipes carry water.',
+    'The active card is outlined',
+    'Tap a square to try your card there',
+    'You can try out multiple squares',
+    'Tap the selected square again to confirm',
+    'Red pipes carry power and blue pipes carry water from the board edges.',
     'Dark colours show power or water actually flowing.',
     'Houses form when a space gets both power and water.',
     'Houses lacking power or water do not earn points.',
   ];
+
+  // Per-frame spec for the standalone active-card canvas above the board:
+  // intro frames (0-3) show the explicit active card with its own greyed
+  // state; later frames (4-7) show whichever tile is greyed on the board
+  // via drawCornerCrop's own changedAt highlight, so the card above always
+  // matches what's highlighted below. null means no changed tile that
+  // frame, so the space stays blank (reserved, not collapsed).
+  const CARD_SPEC = [
+    {tile: activeCardTile, greyed: false},
+    {tile: activeCardTile, greyed: false},
+    {tile: activeCardTile, greyed: false},
+    {tile: activeCardTile, greyed: true},
+    null,
+    {tile: {kind:'B', rot:0}, greyed: true}, // matches FRAMES[5]'s changedAt [0,0]
+    {tile: {kind:'B', rot:2}, greyed: true}, // matches FRAMES[6]'s changedAt [1,0]
+    {tile: {kind:'B', rot:1}, greyed: true}, // matches FRAMES[7]'s changedAt [0,1]
+  ];
+  const cardWrap = document.getElementById('rulesAnimCardWrap');
+  const cardCanvas = document.getElementById('rulesAnimCardCanvas');
+  function applyCardSpec(idx){
+    const spec = CARD_SPEC[idx];
+    if (spec === null){
+      cardWrap.classList.add('hidden');
+    } else {
+      cardWrap.classList.remove('hidden');
+      drawActiveCardStandalone(cardCanvas.getContext('2d'), spec.tile, spec.greyed);
+    }
+  }
 
   const PERSIST_MS = 2000, FADE_MS = 800;
   const canvasA = document.getElementById('rulesAnimCanvasA');
@@ -3129,6 +3248,7 @@ if (document.fonts && document.fonts.ready){
     frameIndex = (frameIndex + 1) % FRAMES.length;
     FRAMES[frameIndex](inactiveCanvas.getContext('2d'));
     inactiveCaption.textContent = CAPTIONS[frameIndex];
+    applyCardSpec(frameIndex);
     inactiveCanvas.style.opacity = 1; activeCanvas.style.opacity = 0;
     inactiveCaption.style.opacity = 1; activeCaption.style.opacity = 0;
     [activeCanvas, inactiveCanvas] = [inactiveCanvas, activeCanvas];
@@ -3141,6 +3261,7 @@ if (document.fonts && document.fonts.ready){
   window.startRulesAnim = function(){
     FRAMES[0](activeCanvas.getContext('2d'));
     activeCaption.textContent = CAPTIONS[0];
+    applyCardSpec(0);
     activeCanvas.style.transition = 'none'; activeCanvas.style.opacity = 1;
     inactiveCanvas.style.transition = 'none'; inactiveCanvas.style.opacity = 0;
     activeCaption.style.transition = 'none'; activeCaption.style.opacity = 1;
