@@ -44,8 +44,9 @@
   #titleRow h1 { margin:0; font-family: 'Teko', Arial, Helvetica, sans-serif;
                  font-weight:600; color:var(--ink); letter-spacing:1.5px; white-space:nowrap;
                  line-height:0.85; text-transform:uppercase; }
-  #tagline { display:inline-block; color:var(--ink-soft); font-style:italic; line-height:1.05; margin:6px 0 0; white-space:nowrap; }
-  #motivation { font-size:12px; color:var(--ink-soft); text-align:center; line-height:1.4; margin:14px 0 0; }
+  #titleDivider { width:70px; height:0; border:none; border-top:1px solid var(--rule); margin:8px auto; }
+  #tagline { display:inline-block; color:var(--ink); font-style:normal; line-height:1.05; margin:0; white-space:nowrap; }
+  #motivation { font-size:12px; color:var(--ink-soft); text-align:center; line-height:1.4; margin:20px 0 0; }
   #rulesAnimCardWrap { width:55px; height:55px; margin:16px auto 0; }
   #rulesAnimCardWrap canvas {
     background:var(--panel); border:1px solid var(--rule); border-radius:6px;
@@ -181,7 +182,7 @@
     <div id="titleRow">
       <h1>Swalpa adjust maadi</h1>
     </div>
-    <canvas id="titleTileRow" style="display:block; margin:6px auto 0;"></canvas>
+    <hr id="titleDivider">
     <p id="tagline">ಬೆಂಗಳೂರಿನ ಪ್ರೇಮ ಕಥೆ</p>
     <p id="motivation">Competing contractors operate in a Bangalore neighbourhood.
     Each is trying to supply power and water to as many houses as possible,
@@ -348,14 +349,13 @@
   like any other.</p>
 
   <h2>Houses and control</h2>
-  <p>Houses are built when an empty space first connects to both red and
-  blue supply. The player on whose turn this happens can henceforth earn
-  points from that house, indicated by the roof of the house being in
-  their colour. You only earn points for houses that are simultaneously
+  <p>Houses are built when an empty space on which a player places their
+  card connects to both red and blue supply. The player can henceforth
+  earn points from that house, indicated by the roof of the house being
+  in their colour. You only earn points for houses that are simultaneously
   connected to both red and blue supply, with houses closer to the
-  centre earning more points. Houses built at setup are not allocated to any player.
-  If Roadworks destroys a Park or house, a new house can be built and
-  claimed on that space.</p>
+  centre earning more points. If Roadworks destroys a Park or house,
+  a new house can be built and claimed on that space.</p>
   <p>Stealing: On your turn, place your card on a space. If this space
   has a house disconnected from both red and blue, and if at least one
   of the four edgewise neighbours also contains a house of the same
@@ -833,42 +833,8 @@ function computeLayout(){
   } catch (e) {
     console.error('fitTextToWidth failed, continuing without it:', e);
   }
-  // Deferred to the next tick, not called directly here: computeLayout()
-  // is itself called at the very top of the script (before later consts
-  // like CORNER_KEY, which drawTileOn()'s bend-rendering depends on, have
-  // initialized) - setTimeout lets the rest of the script finish first.
-  setTimeout(() => { try { renderTitleTileRow(); } catch (e) { console.error('renderTitleTileRow failed:', e); } }, 0);
 }
 
-// A row of rendered game tiles in place of a plain decorative line -
-// mixing bends in a repeating wave (alternating rotations, so the colour
-// that reads as "flowing" alternates tile to tile), both colours genuinely
-// connected, with a park bookending each end.
-function renderTitleTileRow(){
-  const cnv = document.getElementById('titleTileRow');
-  const h1 = document.querySelector('#titleRow h1');
-  const targetWidth = h1.getBoundingClientRect().width || CANVAS_SIZE * 0.7;
-  const sequence = [];
-  const total = 16;
-  const bendRots = [0, 2];
-  let bendIdx = 0;
-  for (let i=0; i<total; i++){
-    if (i===0 || i===total-1){
-      sequence.push({kind:'P', rot:0});
-    } else {
-      sequence.push({kind:'B', rot: bendRots[bendIdx % 2]});
-      bendIdx++;
-    }
-  }
-  const tsize = Math.max(20, Math.floor(targetWidth / sequence.length));
-  const totalW = tsize * sequence.length;
-  cnv.width = totalW; cnv.height = tsize;
-  cnv.style.width = totalW + 'px'; cnv.style.height = tsize + 'px';
-  const ctx = cnv.getContext('2d');
-  for (let i=0; i<sequence.length; i++){
-    drawTileOn(ctx, i*tsize, 0, tsize, sequence[i], true, true);
-  }
-}
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
@@ -997,31 +963,21 @@ function buildSetupDeck(){
 // way they did before (the simulation had hand-duplicated this setup
 // separately and simply omitted the house-marking step).
 function initFreshBoard(){
-  // Setup-time houses beyond a handful are rare but create an unwelcome
-  // thin tail (occasional boards with 5-11 houses already formed before a
-  // single move is played) - reject and regenerate the whole board until
-  // it comes in at <=4, rather than allowing that tail through. Rejection
-  // rate is modest in practice (roughly 5-15% depending on board size), so
-  // this resolves in only one or two attempts almost every time; the cap
-  // and fallback exist purely as a safety net.
-  const MAX_SETUP_HOUSES = 4;
-  let houseCount = Infinity;
-  for (let attempt=0; attempt<100 && houseCount > MAX_SETUP_HOUSES; attempt++){
-    const setupDeck = buildSetupDeck();
-    board = [];
-    let setupIdx = 0;
-    for (let r=0;r<N;r++){
-      const row=[];
-      for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
-      board.push(row);
-    }
-    house = Array.from({length:N},()=>Array(N).fill(false));
-    const {redC, blueC} = connectivity();
-    houseCount = 0;
-    for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-      if (redC[r][c] && blueC[r][c]){ house[r][c] = true; houseCount++; }
-    }
+  // No setup-time houses at all any more, and so no reroll-to-limit-them
+  // logic either - house[][] starts fully false, owner[][] fully null, and
+  // stays that way until the first square genuinely becomes connected
+  // during play (applyHouseAndRevenue() always assigns a real owner when
+  // that happens, never null - see its own creation loop). There is now no
+  // path anywhere in the game that can ever produce a house with no owner.
+  const setupDeck = buildSetupDeck();
+  board = [];
+  let setupIdx = 0;
+  for (let r=0;r<N;r++){
+    const row=[];
+    for (let c=0;c<N;c++){ row.push(setupDeck[setupIdx++]); }
+    board.push(row);
   }
+  house = Array.from({length:N},()=>Array(N).fill(false));
   owner = Array.from({length:N},()=>Array(N).fill(null));
   revenue = {1:0, 2:0, 3:0, 4:0};
   turn = 1;
@@ -1101,6 +1057,7 @@ function freshGame(reuseSeed=false){
 // clears awaitingAdvance itself) only runs once the popup has fully closed.
 function showTodaysTargetPopup(){
   awaitingAdvance = true;
+  resetForNewTurn();
   render();
   const sorted = [...todaysScoreDiffs].sort((a,b) => a-b);
   const median = sorted[Math.floor(sorted.length/2)]; // 99 values - always a real element, always an integer
@@ -1458,37 +1415,30 @@ function render(){
       drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
     }
 
-    if (house[r][c] || (redC[r][c] && blueC[r][c])){
+    const rSup = redC[r][c], bSup = blueC[r][c];
+    // The square this move is actually relevant to right now - either the
+    // one currently being previewed (pendingSquare), or, in the brief gap
+    // between commit and the real data landing, the one just committed
+    // (lastPlayedSquare, gated by awaitingStealReveal so it doesn't keep
+    // mattering for the rest of that turn or into the next player's turn -
+    // see the note on awaitingStealReveal's own declaration for why the
+    // gate is needed at all). Both the new-house and the steal projections
+    // below share this same scoping, since a house can now only ever form
+    // on the exact square played this turn - never anywhere else on the
+    // board, however connected it happens to be.
+    const isRelevantSquare = (pendingSquare && r === pendingSquare[0] && c === pendingSquare[1])
+      || (awaitingStealReveal && lastPlayedSquare && r === lastPlayedSquare[0] && c === lastPlayedSquare[1]);
+    const projectedNewHouse = isRelevantSquare && !house[r][c] && rSup && bSup;
+    // If this space already has a house, is now fully disconnected given
+    // the current (possibly still-being-previewed) board, isn't already
+    // the mover's own, and has a matching-owner neighbour - this is a
+    // projected steal - show the mover's colour immediately, same
+    // principle as projectedNewHouse above.
+    const projectedSteal = isRelevantSquare && house[r][c] && !rSup && !bSup && owner[r][c] !== turn
+      && countMatchingNeighbors(r, c, owner[r][c]) >= 1;
+
+    if (house[r][c] || projectedNewHouse){
       const cx=px+SIZE/2, cy=py+SIZE/2;
-      const rSup = redC[r][c], bSup = blueC[r][c];
-      const projectedNewHouse = !house[r][c] && rSup && bSup;
-      // If this space already has a house, is now fully disconnected given
-      // the current (possibly still-being-previewed) board, isn't already
-      // the mover's own, has a matching-owner neighbour, AND is either the
-      // square currently being previewed (pendingSquare) or the square
-      // that was just committed, but only while still waiting for the
-      // real steal to land (lastPlayedSquare, gated by
-      // awaitingStealReveal) - this is a projected steal - show the
-      // mover's colour immediately, same principle as projectedNewHouse
-      // above. All three parts matter:
-      //   - Without the position check entirely, this would fire for any
-      //     *already* disconnected, previously-stolen house anywhere on
-      //     the board on every subsequent turn whose player differs from
-      //     its current owner, even though nothing this turn touches it.
-      //   - pendingSquare alone isn't enough either: commitTurn() clears
-      //     pendingSquare immediately, but the *real* steal (via
-      //     applyHouseAndRevenue()) only happens ~500ms later - without
-      //     also checking lastPlayedSquare during that gap, the colour
-      //     would visibly, incorrectly flash back to the old owner.
-      //   - lastPlayedSquare alone, without the awaitingStealReveal gate,
-      //     is NOT safe: it keeps pointing at the same square for the
-      //     rest of that turn AND the entirety of the next player's turn
-      //     (commitTurn() only reassigns it on the *following* commit) -
-      //     so an already, genuinely-stolen house would incorrectly show
-      //     as the next player's own colour just because it's now their
-      //     turn, even though they haven't touched that square at all.
-      //     awaitingStealReveal narrows this to only the brief window
-      //     where the real data hasn't caught up yet.
       // Purely visual: the actual owner[][] reassignment still only
       // happens on commit, via applyHouseAndRevenue(). Naturally reverts
       // if the player instead previews a different space, since this is
@@ -1496,10 +1446,6 @@ function render(){
       // the real steal actually lands in owner[][], this condition simply
       // stops mattering (owner[r][c] already equals turn by then), so
       // there's no visible change at that moment either - fully seamless.
-      const isRelevantSquare = (pendingSquare && r === pendingSquare[0] && c === pendingSquare[1])
-        || (awaitingStealReveal && lastPlayedSquare && r === lastPlayedSquare[0] && c === lastPlayedSquare[1]);
-      const projectedSteal = isRelevantSquare && house[r][c] && !rSup && !bSup && owner[r][c] !== turn
-        && countMatchingNeighbors(r, c, owner[r][c]) >= 1;
       let ownerColor = null;
       const effOwner = (projectedSteal || projectedNewHouse) ? turn : owner[r][c];
       if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
@@ -2156,9 +2102,11 @@ function applyHouseAndRevenue(){
   // Playing a card on some square: if, after the move (whether or not this
   // move itself caused it), the house there is fully disconnected (neither
   // red nor blue), check its N/S/E/W neighbours. If 1 or more share that
-  // house's own owner (grey counts as its own category), the current player
-  // steals it. Already the mover's own house: no-op. Any house that still
-  // has at least one connection is protected from stealing.
+  // house's own owner, the current player steals it. Already the mover's
+  // own house: no-op. Any house that still has at least one connection is
+  // protected from stealing. (owner is always a real player here - there
+  // is no grey/unowned house any more, so no separate category to worry
+  // about; this logic needed no change when grey houses were removed.)
   if (lastPlayedSquare){
     const [lr, lc] = lastPlayedSquare;
     if (house[lr][lc] && !redC[lr][lc] && !blueC[lr][lc]){
@@ -2173,10 +2121,19 @@ function applyHouseAndRevenue(){
     }
   }
 
-  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (redC[r][c] && blueC[r][c] && !house[r][c]){
-      house[r][c] = true;
-      owner[r][c] = turn;
+  // A new house can form ONLY on the exact square this turn's card was
+  // played on, and only if that square is red+blue connected after the
+  // placement - regardless of any other connected-but-houseless square
+  // that might exist elsewhere on the board right now. No whole-board scan
+  // any more: this is the one and only place a house can ever be newly
+  // created, scoped to lastPlayedSquare specifically, mirroring exactly
+  // how render()'s own preview is scoped to pendingSquare (see there for
+  // the matching logic on the preview side).
+  if (lastPlayedSquare){
+    const [lr, lc] = lastPlayedSquare;
+    if (redC[lr][lc] && blueC[lr][lc] && !house[lr][lc]){
+      house[lr][lc] = true;
+      owner[lr][lc] = turn;
     }
   }
   lastScoringSquares = [];
@@ -2294,12 +2251,25 @@ function pickRoadworksTarget(){
   return [r,c,wasPark];
 }
 
-function beginTurn(){
-  awaitingAdvance = false;
+// Single source of truth for everything that must be reset at the start of
+// a turn - used by beginTurn() itself and by showTodaysTargetPopup() (whose
+// own render() happens before beginTurn() gets to run, since it's shown
+// first). Deliberately does NOT touch awaitingAdvance: the two callers
+// need genuinely different values for it (false to let the new turn begin
+// immediately; true to keep blocking input until the Target popup closes),
+// so that stays each caller's own responsibility. Anything added here in
+// future automatically applies to both launch paths with no risk of one
+// being updated and the other forgotten.
+function resetForNewTurn(){
   pendingSquare = null;
   previewSavedTile = null;
   triesRemaining = 5;
   hintUsedThisTurn = false;
+}
+
+function beginTurn(){
+  awaitingAdvance = false;
+  resetForNewTurn();
   render();
 
   if (currentDraw.kind === 'X'){
@@ -2463,42 +2433,80 @@ function aiChooseSquare(color, drawTile, randFn){
   // when both are tied does myTerr get consulted. No weights, no decay -
   // multiplying a strict tie-breaking criterion by any constant can never
   // change which candidate wins, so none are needed.
+  //
+  // Housekeeping: each candidate is evaluated by actually calling
+  // applyHouseAndRevenue() - the same function a real commit uses - rather
+  // than a separate, hand-written reimplementation of house creation and
+  // stealing. This guarantees the AI's notion of ownership can never drift
+  // out of sync with the game's own rules: any future change to how houses
+  // form or change hands only has to be made once, in that one function,
+  // and both real play and the AI's evaluation pick it up automatically.
+  // Everything the real function touches (house, owner, revenue, the
+  // lastScoring* fields, lastPlayedSquare, turn) is saved before each
+  // candidate and fully restored after, so evaluating a hypothetical move
+  // never actually affects the real game state. simulationModeActive is
+  // set for the whole loop so the function's own "Good steal!" popup/sound
+  // side-effects - meant only for a real, committed move - don't fire
+  // while the AI is just considering options (the same mechanism Today's
+  // Game's own ranking simulations already rely on for exactly this).
+  const wasSimulationModeActive = simulationModeActive;
+  simulationModeActive = true;
   let best = null, bestTuple = null;
   for (const [r,c] of subset){
-    const saved = board[r][c];
-    const wasHouseHere = house[r][c];
-    const ownerHere = owner[r][c];
+    const savedTile = board[r][c];
+    const savedHouse = house.map(row => row.slice());
+    const savedOwner = owner.map(row => row.slice());
+    const savedRevenue = Object.assign({}, revenue);
+    const savedLastPlayedSquare = lastPlayedSquare;
+    const savedTurn = turn;
+    const savedLastScoringSquares = lastScoringSquares;
+    const savedLastScoringAmount = lastScoringAmount;
+    const savedLastScoringPlayer = lastScoringPlayer;
+
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
+    lastPlayedSquare = [r,c];
+    turn = color;
+    applyHouseAndRevenue();
+    const myScore = lastScoringAmount;
+
     const {redC, blueC} = connectivity();
-    let myScore = 0, oppScore = 0, myTerr = 0;
-    let sumBuiltHouseValues = 0;
+    let oppScore = 0, myTerr = 0;
     for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
       const full = redC[rr][cc] && blueC[rr][cc];
-      const wasHouse = house[rr][cc];
-      let effOwner = owner[rr][cc];
-      if (full && !wasHouse && effOwner === null){
-        effOwner = color; // this placement would newly claim it this turn
-      }
-      const points = Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
-      if (full && effOwner === color){
-        myScore += points;
-        if (!wasHouse) sumBuiltHouseValues += points;
-      } else if (full && effOwner === otherC){
-        oppScore += points;
+      if (full && owner[rr][cc] === otherC){
+        oppScore += Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
       }
       if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
     }
-    const diff = myScore - oppScore;
-    // If the house at the exact space played on ends up fully disconnected
-    // (neither red nor blue - whether or not this move itself caused it),
-    // check its N/S/E/W neighbours. 1 or more sharing its own owner (grey
-    // counts as its own category): this move would be a legal steal.
-    const isSteal = (wasHouseHere && !redC[r][c] && !blueC[r][c] && ownerHere !== color &&
-      countMatchingNeighbors(r, c, ownerHere) >= 1);
-    const stolenHouseValue = isSteal ? (Math.min(r, N-1-r, c, N-1-c) + 1) : 0;
+    // Build/steal value: comparing the resulting house[][]/owner[][] (just
+    // set by the real function above) against what they were before this
+    // candidate was tried - a square that's now color's and wasn't a house
+    // before is a build; one that's now color's and WAS already someone
+    // else's house is a steal. Reading the outcome this way, rather than
+    // re-deriving the rule itself, is what keeps this in step with
+    // applyHouseAndRevenue() regardless of how its rules change.
+    let sumBuiltHouseValues = 0, stolenHouseValue = 0;
+    for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
+      if (house[rr][cc] && owner[rr][cc] === color){
+        const points = Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
+        if (!savedHouse[rr][cc]) sumBuiltHouseValues += points;
+        else if (savedOwner[rr][cc] !== color) stolenHouseValue += points;
+      }
+    }
     const combinedBuildStealValue = sumBuiltHouseValues + stolenHouseValue;
+    const diff = myScore - oppScore;
     const tuple = [diff, combinedBuildStealValue, myTerr];
-    board[r][c] = saved;
+
+    board[r][c] = savedTile;
+    house = savedHouse;
+    owner = savedOwner;
+    revenue = savedRevenue;
+    lastPlayedSquare = savedLastPlayedSquare;
+    turn = savedTurn;
+    lastScoringSquares = savedLastScoringSquares;
+    lastScoringAmount = savedLastScoringAmount;
+    lastScoringPlayer = savedLastScoringPlayer;
+
     if (bestTuple === null){
       bestTuple = tuple; best = [r,c];
     } else {
@@ -2508,6 +2516,7 @@ function aiChooseSquare(color, drawTile, randFn){
       }
     }
   }
+  simulationModeActive = wasSimulationModeActive;
   return best;
 }
 
@@ -2988,14 +2997,13 @@ const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
   "chosen space is always highlighted by an orange border. Click the " +
   "chosen space again to confirm your move and complete your turn.";
 
-const HOUSE_RULES_TEXT = "Houses are built when an empty space first " +
-  "connects to both red and blue supply. The player on whose turn this " +
-  "happens can henceforth earn points from that house, indicated by " +
+const HOUSE_RULES_TEXT = "Houses are built when an empty space on which " +
+  "a player places their card connects to both red and blue supply. " +
+  "The player can henceforth earn points from that house, indicated by " +
   "the roof of the house being in their colour. You only earn points " +
   "for houses that are simultaneously connected to both red and blue " +
   "supply, with houses closer to the centre earning more points. " +
-  "Houses built at setup " +
-  "are not allocated to any player. If Roadworks destroys a Park or " +
+  "If Roadworks destroys a Park or " +
   "house, a new house can be built and claimed on that space.\n\n" +
   "Stealing: On your turn, place your card on a space. If this space " +
   "has a house disconnected from both red and blue, and if at least " +
@@ -3052,7 +3060,6 @@ function bootLaunchScreen(){
   enterTodaysGameMode();
   numPlayers = 1; vsComputerOn = true; effectiveN = 2; N = 7;
   computeLayout();
-  renderTitleTileRow();
   startRulesAnim(); // draws the animation's own first frame synchronously
   document.getElementById('preLaunchBox').classList.add('ready');
   requestAnimationFrame(() => {
@@ -3136,6 +3143,15 @@ if (document.fonts && document.fonts.ready){
     const px = BAND + c*TILE, py = BAND + r*TILE;
     ctx.font = (TILE*0.55) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // Must set its own fillStyle rather than relying on whatever the
+    // previous draw call happened to leave behind - drawSquareHighlight's
+    // hazard-tape path (greyed=false) restores fillStyle via save/restore
+    // back to drawCornerCrop's own leftover board-texture pattern (very
+    // light, near-transparent), which made the finger nearly invisible in
+    // exactly those frames. Only the greyed=true path left a visible solid
+    // colour behind by coincidence, which is why the finger only showed up
+    // in that one frame.
+    ctx.fillStyle = '#2B2620';
     ctx.fillText('\u{1F446}', px+TILE*0.72, py+TILE*0.72);
   }
 
@@ -3180,16 +3196,16 @@ if (document.fonts && document.fonts.ready){
     (ctx) => { drawCornerCrop(ctx, introBoard4, null, null, null); drawSquareHighlight(ctx, 0, 1, true); drawFingerAt(ctx, 0, 1); },
     (ctx) => drawCornerCrop(ctx, [
       [ {tile:{kind:'B',rot:2}, r:false, b:false}, {tile:{kind:'B',rot:2}, r:false, b:false} ],
-      [ {tile:{kind:'S',rot:1}, r:false, b:false}, {tile:{kind:'S',rot:0}, r:false, b:false} ],
+      [ {tile:{kind:'B',rot:2}, r:false, b:false}, {tile:{kind:'S',rot:1}, r:false, b:false} ],
     ], null, null, null),
     (ctx) => drawCornerCrop(ctx, [
       [ {tile:{kind:'B',rot:0}, r:true,  b:true},  {tile:{kind:'B',rot:2}, r:true,  b:false} ],
-      [ {tile:{kind:'S',rot:1}, r:false, b:true},  {tile:{kind:'S',rot:0}, r:true,  b:false} ],
+      [ {tile:{kind:'B',rot:2}, r:false, b:true},  {tile:{kind:'S',rot:1}, r:false, b:false} ],
     ], null, null, [0,0]),
     (ctx) => drawCornerCrop(ctx, [
       [ {tile:{kind:'B',rot:0}, r:true, b:true},  {tile:{kind:'B',rot:2}, r:true,  b:false} ],
       [ {tile:{kind:'B',rot:2}, r:false, b:true}, {tile:{kind:'S',rot:0}, r:true,  b:true} ],
-    ], [1,1], P1_COLOR, [1,0]),
+    ], [1,1], P1_COLOR, [1,1]),
     (ctx) => drawCornerCrop(ctx, [
       [ {tile:{kind:'B',rot:0}, r:true,  b:true},  {tile:{kind:'B',rot:1}, r:false, b:false} ],
       [ {tile:{kind:'B',rot:2}, r:false, b:true},  {tile:{kind:'S',rot:0}, r:false, b:true} ],
@@ -3201,10 +3217,10 @@ if (document.fonts && document.fonts.ready){
     'Tap a square to try your card there',
     'You can try out multiple squares',
     'Tap the selected square again to confirm',
-    'Red pipes carry power, blue pipes carry water.',
-    'Dark colours show power or water actually flowing.',
-    'Houses form when a space gets both power and water.',
-    'Houses lacking power or water do not earn points.',
+    'Red pipes carry power, blue pipes carry water',
+    'Dark colours show power or water actually flowing',
+    'A card that connects power and water forms a house',
+    'Houses lacking power or water do not earn points',
   ];
 
   // Per-frame spec for the standalone active-card canvas above the board:
@@ -3220,7 +3236,7 @@ if (document.fonts && document.fonts.ready){
     {tile: activeCardTile, greyed: true},
     null,
     {tile: {kind:'B', rot:0}, greyed: true}, // matches FRAMES[5]'s changedAt [0,0]
-    {tile: {kind:'B', rot:2}, greyed: true}, // matches FRAMES[6]'s changedAt [1,0]
+    {tile: {kind:'S', rot:0}, greyed: true}, // matches FRAMES[6]'s changedAt [1,1]
     {tile: {kind:'B', rot:1}, greyed: true}, // matches FRAMES[7]'s changedAt [0,1]
   ];
   const cardWrap = document.getElementById('rulesAnimCardWrap');
