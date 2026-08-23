@@ -1080,9 +1080,10 @@ function showTodaysTargetPopup(){
   resetForNewTurn();
   render();
   // Sorted using the full three-tier scale (win < draw < loss), so the
-  // 10th-best genuinely reflects the harder end of the distribution - but
+  // 4th-best genuinely reflects the harder end of the distribution
+  // (4/24 = ~1/6, close to the original 10/99 ratio this replaced) - but
   // the MESSAGE itself only ever distinguishes "win" from "not a win":
-  // if the 10th-best is a draw specifically, or even a loss, either way
+  // if the 4th-best is a draw specifically, or even a loss, either way
   // the target shown is simply to draw the game - a genuinely worthwhile
   // goal on a day the AI is playing this well, not something worth a
   // separate "avoid losing" message.
@@ -1090,7 +1091,7 @@ function showTodaysTargetPopup(){
     .map(r => effectiveRound(r.winner, r.roundWon))
     .sort((a,b) => a-b);
   scheduleIfCurrent(() => {
-    const target = effectiveRounds[9]; // 10th best, 0-indexed
+    const target = effectiveRounds[3]; // 4th best, 0-indexed
     if (target <= KNOCKOUT_ROUNDS){
       showEventPopup(
         "Target for today's game:",
@@ -1830,11 +1831,20 @@ let gameEpoch = 0;
 let awaitingAdvance = false;
 
 let isTodaysGame = false;
-// Each entry: {winner, roundWon} from one of the 99 daily ranking
-// simulations - winner is 1 or 2 (or null for a draw), roundWon is only
-// meaningful when winner is non-null.
+// Each entry: {winner, roundWon} from one of the NUM_RANK_SIMULATIONS daily
+// ranking simulations - winner is 1 or 2 (or null for a draw), roundWon is
+// only meaningful when winner is non-null.
 let todaysSimResults = [];
-const NUM_RANK_SIMULATIONS = 99;
+// Deliberately smaller than a "proper" statistical sample would want -
+// each simulated game can take a while (especially ones that go the full
+// distance to a draw), and this runs synchronously-in-chunks at every
+// Today's-game launch. 24 was chosen as a speed/precision trade-off after
+// measuring the real cost: cuts launch time roughly 3.5x versus a full
+// 99-sim batch, at the cost of the displayed rank only ever landing on a
+// multiple of 4 (see computeTodaysRank()'s own ×4 scaling) - acceptable
+// for a casual bragging-rights number, not intended as a precise
+// leaderboard.
+const NUM_RANK_SIMULATIONS = 24;
 let simulationModeActive = false;
 let shuffledExcuses = [];
 let excuseDrawIndex = 0;
@@ -1963,11 +1973,24 @@ function hideEventPopup(){
 // correctly ranks ahead of every loss, rather than tied with them as
 // before. Ties are counted in the player's favour: only simulated
 // results strictly better than the player's own count against them.
+// Rank 1 = best, 100 = worst. Ranked on the same three-tier effective-
+// round scale as the target popup (win < draw < loss) - a draw ranks
+// ahead of every loss, not tied with them. Ties are counted in the
+// player's favour: only simulated results strictly better than the
+// player's own count against them.
+// The raw rank is only ever 1..(NUM_RANK_SIMULATIONS+1) (25 possible
+// values, given NUM_RANK_SIMULATIONS=24 - see its own declaration for why
+// it's this small), scaled up to land on "out of 100" for display -
+// generically, not a hardcoded x4, so this stays correct automatically if
+// NUM_RANK_SIMULATIONS is ever tuned again. The real, visible cost of this
+// scaling: the displayed rank can only ever land on a multiple of that
+// scale factor (currently 4), never anything in between.
 function computeTodaysRank(){
   const myEffectiveRound = effectiveRound(gameWinner, roundNum - GRACE_PERIOD_ROUNDS);
   const simEffectiveRounds = todaysSimResults.map(r => effectiveRound(r.winner, r.roundWon));
   const countBetter = simEffectiveRounds.filter(r => r < myEffectiveRound).length;
-  return countBetter + 1;
+  const rawRank = countBetter + 1;
+  return Math.round(rawRank * (100 / (NUM_RANK_SIMULATIONS + 1)));
 }
 
 function formatRank(x){
@@ -2917,7 +2940,7 @@ function renderRuleDiagrams(){
   }
 }
 
-// Generates today's fixed set of NUM_RANK_SIMULATIONS score-differences, used
+// Generates today's fixed set of NUM_RANK_SIMULATIONS outcomes, used
 // later to rank the player's own result once their game ends. Runs once, at
 // Today's-game launch, before the player's own board is set up.
 //
@@ -2992,12 +3015,12 @@ function runOneRankSimulation(simDriverRNG){
   return {winner, roundWon}; // roundWon is only meaningful when winner is non-null
 }
 
-// Runs all NUM_RANK_SIMULATIONS as a single synchronous block (no chunking -
-// simpler and more robust). simulationModeActive is set for the whole
-// duration so any visual side-effects the reused game functions normally
-// trigger are suppressed, since these games are never meant to be seen.
-// Calls onComplete() once todaysSimResults is fully populated and all live
-// state has been restored.
+// Runs all NUM_RANK_SIMULATIONS in small yielding chunks, not one blocking
+// loop (see runNextSimulation() below for why). simulationModeActive is set
+// for the whole duration so any visual side-effects the reused game
+// functions normally trigger are suppressed, since these games are never
+// meant to be seen. Calls onComplete() once todaysSimResults is fully
+// populated and all live state has been restored.
 function runTodaysRankSimulations(onComplete){
   const saved = {
     board, house, owner, turn, currentDraw, upcomingTiles, roundNum, gameOver,
