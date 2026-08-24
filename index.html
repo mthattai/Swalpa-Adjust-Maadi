@@ -1093,7 +1093,7 @@ function showGameStartPopup(){
   awaitingAdvance = true;
   resetForNewTurn();
   render();
-  const line1 = `Win by KNOCKING OUT rivals\nOR\nWin by BUILDING ${SHOOT_THE_MOON_THRESHOLD} standing houses`;
+  const line1 = `<i>Win by</i><br>KNOCKING OUT rivals<br><i>OR</i><br>BUILDING ${SHOOT_THE_MOON_THRESHOLD} standing houses`;
   let line2 = null;
   if (isTodaysGame){
     // Sorted using the full three-tier scale (win < draw < loss), so the
@@ -1108,11 +1108,11 @@ function showGameStartPopup(){
       .sort((a,b) => a-b);
     const target = effectiveRounds[9]; // 10th best, 0-indexed
     line2 = (target <= KNOCKOUT_ROUNDS)
-      ? `Today's target: Win in ${target} round${target===1?'':'s'}`
-      : `Today's target: Draw the game`;
+      ? `<b>Target for today's game:</b><br><b>Win in ${target} round${target===1?'':'s'}</b>`
+      : `<b>Target for today's game:</b><br><b>Draw the game</b>`;
   }
   scheduleIfCurrent(() => {
-    showEventPopup(line1, line2, true, GAME_START_POPUP_DURATION_MS);
+    showEventPopup(line1, line2, true, GAME_START_POPUP_DURATION_MS, false, false, true);
     scheduleAfterPopupOrDelay(beginTurn, 0);
   }, QUICK_DELAY_MS);
 }
@@ -1939,7 +1939,7 @@ function escapeHtml(s){
   return div.innerHTML;
 }
 
-function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped){
+function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped, rawHtml){
   const popup = document.getElementById('eventPopup');
   const inner = document.getElementById('eventPopupInner');
   inner.classList.toggle('park-event', !!isParkEvent);
@@ -1947,8 +1947,16 @@ function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped
   void inner.offsetWidth; // force reflow so the animation restarts if triggered twice in a row
   inner.classList.toggle('stamp-in', !!isStamped);
   inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
-  inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
-  if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
+  // rawHtml is only ever set by the game-start popup, which needs italic/
+  // bold markup (<i>/<b>) in its line text; every other caller passes
+  // plain text and keeps going through escapeHtml as before.
+  if (rawHtml){
+    inner.querySelector('.line1').innerHTML = line1;
+    if (line2) inner.querySelector('.line2').innerHTML = line2;
+  } else {
+    inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
+    if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
+  }
   popup.style.display = 'block';
   requestAnimationFrame(() => popup.classList.add('visible'));
   clearTimeout(eventPopupTimer);
