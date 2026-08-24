@@ -140,7 +140,6 @@
   #roundRow { display:none; position:relative; min-height:30px; margin:10px 0 14px; align-items:center; }
   #roundNum { font-size:22px; font-weight:bold; font-family:'Teko',Arial,sans-serif; letter-spacing:0.5px; color:var(--ink); text-align:left;
               line-height:0.95; max-width:min(30%, 145px); box-sizing:border-box; padding-right:6px; }
-  #roundNum.dangerPhase { color:#DA1916; }
   #hintMiddleZone { position:absolute; left:min(30%, 145px); right:130px; top:0; bottom:0;
                     display:flex; align-items:center; justify-content:center; }
   #hintBtn { font-size:12px; padding:6px 12px; border-radius:6px; white-space:nowrap;
@@ -212,12 +211,14 @@
     <div class="legendItem"><canvas id="legHouse" width="52" height="52"></canvas><div class="label">House</div></div>
   </div>
   <div id="infoBtnGrid" style="display:none;">
+    <button id="deckRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> Deck rules</button>
     <button id="howToPlayBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to play</button>
-    <button id="howToWinBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to win</button>
+    <button id="houseRulesBtn"><canvas class="infoIcon" width="15" height="15"></canvas> House rules</button>
+    <button id="howToScoreBtn"><canvas class="infoIcon" width="15" height="15"></canvas> How to score</button>
   </div>
   <div id="infoPopup" style="display:none;"></div>
   <div id="roundRow" style="display:none;">
-    <div id="roundNum">Build:<br>Round 1/10</div>
+    <div id="roundNum">Round<br>1/20</div>
     <div id="hintMiddleZone"><button id="hintBtn">Hint</button></div>
     <div id="triesArea">
       Tries:
@@ -282,7 +283,7 @@
     <button id="muteBtn">Sound: on</button>
   </div>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 24 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 22 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -317,9 +318,9 @@
   <p>The play deck is fixed, and contains the following per player (so a
   2-player game has twice as many of each, and so on):</p>
   <div id="ruleDeckCompositionDiagram" class="ruleDiagramRow"></div>
-  <p>The deck of 20 cards is shuffled for each player independently, and
-  interleaved. This is done after every 20 rounds, to keep the game in
-  play.</p>
+  <p>The deck is shuffled once before play begins, and drawn from without
+  replacement - once a card is drawn, it's gone until the deck is rebuilt
+  for a new game.</p>
 
   <h2>The connection rule</h2>
   <p>When connectors of the same colour meet across an edge separating two
@@ -332,10 +333,14 @@
   <p>The board starts with a fixed number of Parks for its size (6, 8, or
   10 for a 6x6, 7x7, or 8x8 board), placed so that no single space on the
   board is adjacent to more than one Park. Every other space is filled
-  with a Straight or Bend card, drawn at random with replacement, using
-  the same relative proportions as the deck above (so a Straight A is
-  twice as likely to appear as a Straight B, for example, matching their
-  4-to-2 split in the deck).</p>
+  with a Straight or Bend card, drawn at random <i>with</i>
+  replacement, using the same relative proportions as the deck above (so a
+  Straight A is twice as likely to appear as a Straight B, for example,
+  matching their 4-to-2 split in the deck). If this setup would produce
+  more than 4 houses immediately (see below), the board is discarded and a
+  new one is drawn, repeating until it comes in at 4 or fewer. Any space
+  already connected to both supplies at this point becomes a house
+  immediately.</p>
 
   <h2>Parks</h2>
   <p>No player may place a
@@ -343,42 +348,59 @@
   space, destroying it. Once that happens, the space is open for play
   like any other.</p>
 
-  <h2>Play</h2>
-  <p>The row of 8 icons shows the upcoming cards. All players use the same
-  deck. The rightmost card is the current active card. To play your turn,
-  click a space on the board to place the active card there and see what
-  it does. You can try out any space except for Parks, and the space the
-  previous player just played on (which is greyed out). You have up to
-  five tries, indicated by dots (unlimited in Practice mode). The current
-  chosen space is always highlighted by an orange border. Click the chosen
-  space again to confirm your move and complete your turn. Tap the board
-  to place your active card in that space. Once a player plays their
-  card, the entire row moves one step to the right.</p>
-
-  <h2>Houses</h2>
+  <h2>Houses and control</h2>
   <p>Houses are built when an empty space on which a player places their
   card connects to both red and blue supply. The player can henceforth
-  claim that house, indicated by the roof of the house being in their
-  colour. Houses vanish when they become disconnected from both red and
-  blue supply. If the active card is Roadworks, it lands on a random
-  space which you tap to finish your turn. If Roadworks destroys a Park
-  or house, a new house can be built and claimed on that space.</p>
+  earn points from that house, indicated by the roof of the house being
+  in their colour. You only earn points for houses that are simultaneously
+  connected to both red and blue supply, with houses closer to the
+  centre earning more points. If Roadworks destroys a Park or house,
+  a new house can be built and claimed on that space.</p>
+  <p>Stealing: On your turn, place your card on a space. If this space
+  has a house disconnected from both red and blue, and if at least one
+  of the four edgewise neighbours also contains a house of the same
+  colour, you can steal the house. Its roof switches to your colour.</p>
 
-  <h2>How to win</h2>
-  <p>There are two ways to win: by knocking out all your rivals, or by
-  having 7 houses claimed by you on the board on your turn. The first 10
-  rounds are "Build" rounds, where players try to build as many houses as
-  possible. The next 50 rounds are "Knockout" rounds. A player is OUT
-  when their house count (shown in their score box below the board) hits
-  zero during the Knockout rounds. Players who are OUT sit out the rest
-  of the game. A player who builds 7 houses wins instantly. Otherwise,
-  the winner is the last player standing after others are knocked out. A
-  game that runs through 50 Knockout rounds without a single winner is
-  declared a draw.</p>
+  <h2>Play</h2>
+  <p>Player 1 goes first, others follow in turn. In 1-player games the
+  human is Player 1 and the computer is Player 2.</p>
+  <p>The row of 8 icons shows the upcoming cards. All players use the
+  same deck. The rightmost card is the current active card. Once a
+  player plays their card, the entire row moves one step to the right. In
+  the last few rounds, fewer than 8 cards remain in the deck, so this row
+  shrinks; the very last card is used on the final turn of the game.</p>
+  <p>To play your turn, click a space on the board to place the active
+  card there and see what it does. You can try out any space except for
+  Parks, and the space the previous player just played on (which is
+  greyed out). You have up to five tries, indicated by dots (unlimited
+  in Practice mode). If the active card is Roadworks it
+  lands on a random space, you can't choose where. Roadworks destroys
+  any Park or house it lands on (ouch!), leaving the space up for
+  grabs in subsequent turns. The current chosen space is always
+  highlighted by an orange border. Click the chosen space again to
+  confirm your move and complete your turn.</p>
+  <p>Once the card is played, the row of upcoming cards moves one step to
+  the right. The current active card is updated and the next player
+  plays their turn.</p>
+
+  <h2>Scoring</h2>
+  <p>Each round consists of one move by each player in turn. After
+  their turn, a player earns points for every house in their
+  colour that is simultaneously connected to both red and blue supply.
+  The points-per-house depends on location, increasing closer to
+  centre: houses in the outermost zone are worth 1 point each, houses
+  in the next inner zone are worth 2 points each, and so on.
+  A house that's only partly connected does not contribute to the
+  score. Each player's total is checked and updated only once in a
+  round, on their turn.</p>
+
+  <h2>Winning</h2>
+  <p>After 20 rounds, whoever has the higher score wins. Equal score is a
+  draw.</p>
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">Last updated: 24 Aug 2026</div>
+  <div class="lastUpdated social">Last updated: 22 Aug 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -396,16 +418,7 @@ let N = 6;
 let vsComputerOn = true;
 let numPlayers = 1;
 let effectiveN = 2;
-// Rounds 1-10 are the fixed "Build" phase: no player can be eliminated
-// during them, however few connected houses they have, giving everyone
-// time to get established. Elimination checks only begin once round
-// exceeds this.
-const GRACE_PERIOD_ROUNDS = 10;
-// Rounds 11 onward are the "Knockout" phase, up to this many of them -
-// displayed and referred to as its own 1-indexed count (round 11 overall
-// is "Knockout round 1"), not a continuation of the overall round number.
-const KNOCKOUT_ROUNDS = 50;
-const TOTAL_ROUNDS = GRACE_PERIOD_ROUNDS + KNOCKOUT_ROUNDS;
+const TOTAL_ROUNDS = 20;
 // Single source of truth for the play deck's composition - buildAndShuffleDeck()
 // (the ongoing, per-turn deck), buildSetupDeck() (the initial board fill, which
 // draws with replacement from the same connector proportions, Roadworks excluded),
@@ -850,39 +863,7 @@ function edgesOf(tile){
   return blankEdges();
 }
 
-let board, house, owner, turn, currentDraw, upcomingTiles, roundNum, gameOver;
-// No points any more - the board itself is the state. A player is
-// "eliminated" once they have zero houses left with any connection at all
-// (checked only from GRACE_PERIOD_ROUNDS+1 onward - see finishRevealAndAdvance()).
-// eliminated[p] stays true permanently once set - sequential elimination,
-// not a comeback mechanic. gameWinner is set the moment exactly one active
-// player remains, or the moment someone shoots the moon, and stays null
-// for a draw (everyone eliminated at once, or the round cap reached with
-// 2+ players still standing). winType records which of the two ways the
-// game actually ended: 'knockout', 'building', or null for a draw -
-// needed since the message shown differs between them.
-let eliminated = {1:false, 2:false, 3:false, 4:false};
-let gameWinner = null;
-let winType = null;
-// Instant win, checked at every phase of the game (not gated to the
-// Knockout phase the way elimination is) - the moment whoever just moved
-// has this many of their own houses alive at once, they win outright. A
-// second, deliberately very different path to victory alongside knockout -
-// "shoot the moon" - tuned via extensive simulation against the actual AI
-// before being set here (see version history for the numbers behind this
-// specific value).
-const SHOOT_THE_MOON_THRESHOLD = 7;
-// Squares whose house just lost its last connection this move - kept in
-// house[][]/owner[][] (still drawn normally) through the points-animation
-// reveal, specifically so the player can see what they're about to lose,
-// then actually removed once that reveal finishes (see
-// showSettledScoreStage() and the vanish-application it triggers).
-let pendingVanishSquares = [];
-// Net house-count change for each player this move (+1 for a build, -1 per
-// house that just started vanishing) - what the "+1"/"-1" reveal displays
-// in each affected player's score box, independent of whose turn it is,
-// since disconnection (unlike the old scoring) can affect anyone.
-let lastRoundDeltas = {1:0, 2:0, 3:0, 4:0};
+let board, house, owner, revenue, turn, currentDraw, upcomingTiles, roundNum, gameOver;
 
 // Two parks sharing a common neighbour square is exactly what turns that
 // neighbour into a "2-closed" square (can host a house OR channel one
@@ -985,7 +966,7 @@ function initFreshBoard(){
   // No setup-time houses at all any more, and so no reroll-to-limit-them
   // logic either - house[][] starts fully false, owner[][] fully null, and
   // stays that way until the first square genuinely becomes connected
-  // during play (resolveMove() always assigns a real owner when
+  // during play (applyHouseAndRevenue() always assigns a real owner when
   // that happens, never null - see its own creation loop). There is now no
   // path anywhere in the game that can ever produce a house with no owner.
   const setupDeck = buildSetupDeck();
@@ -998,14 +979,10 @@ function initFreshBoard(){
   }
   house = Array.from({length:N},()=>Array(N).fill(false));
   owner = Array.from({length:N},()=>Array(N).fill(null));
+  revenue = {1:0, 2:0, 3:0, 4:0};
   turn = 1;
   roundNum = 1;
   gameOver = false;
-  gameWinner = null;
-  winType = null;
-  eliminated = {1:false, 2:false, 3:false, 4:false};
-  pendingVanishSquares = [];
-  lastRoundDeltas = {1:0, 2:0, 3:0, 4:0};
   lastPlayedSquare = null;
   initTileQueue();
 }
@@ -1052,67 +1029,45 @@ function freshGame(reuseSeed=false){
   initFreshBoard();
   pendingSquare = null;
   previewSavedTile = null;
-  awaitingCommitReveal = false;
-  lastBuiltSquare = null;
+  awaitingStealReveal = false;
+  lastScoringSquares = [];
+  lastScoringPlayer = null;
+  lastScoringAmount = 0;
   scoreHighlightActive = false;
 
-  // Now shown at the start of every fresh game, not just Today's - see
-  // showGameStartPopup() itself for how it adapts its content between the two.
-  showGameStartPopup();
+  if (isTodaysGame){
+    showTodaysTargetPopup();
+  } else {
+    beginTurn();
+  }
   // Plays for every new-game launch, regardless of which button triggered
   // it (initial "Let's start digging", or any mode/size/player-count
-  // button pressed mid-session) - placed after the call above so it
+  // button pressed mid-session) - placed after the branch above so it
   // always comes after the board's own initial render, never before it.
   sounds.gameLaunch();
 }
 
-// Shown once, right at the start of EVERY fresh game (Today's or random,
-// not just Today's the way this used to be), on top of the already-
-// rendered board. Input is blocked for the entire window from render to
-// the popup actually closing - not just while the popup itself is visible
-// - via the same awaitingAdvance flag the click handler already checks
-// everywhere else, set immediately here rather than only once the popup
-// itself shows. beginTurn() (which is what actually lets the first turn
-// start, and which clears awaitingAdvance itself) only runs once the
-// popup has fully closed.
-// Three-tier "effective round" scale, lower is always better: an actual
-// win uses the real round it happened in (1..KNOCKOUT_ROUNDS); a draw is
-// fixed at KNOCKOUT_ROUNDS+1 (worse than any win, better than any loss);
-// a loss is fixed at KNOCKOUT_ROUNDS+2 (worst). Shared by the pre-game
-// target line (ranks the 99 simulations to pick a target) and the
-// post-game rank (computeTodaysRank(), ranks the player's own actual
-// result against those same 99 simulations) - one definition, so the two
-// can never silently drift out of sync with each other.
-function effectiveRound(winner, roundWon){
-  if (winner === 1) return roundWon;
-  if (winner === null) return KNOCKOUT_ROUNDS + 1;
-  return KNOCKOUT_ROUNDS + 2;
-}
-
-function showGameStartPopup(){
+// Shown once, right at the start of every Today's-game launch, on top of
+// the already-rendered board (rather than before the board even appears).
+// Input is blocked for the entire window from render to the popup actually
+// closing - not just while the popup itself is visible - via the same
+// awaitingAdvance flag the click handler already checks everywhere else,
+// set immediately here rather than only once the popup itself shows.
+// beginTurn() (which is what actually lets the first turn start, and which
+// clears awaitingAdvance itself) only runs once the popup has fully closed.
+function showTodaysTargetPopup(){
   awaitingAdvance = true;
   resetForNewTurn();
   render();
-  const line1 = `<i>Win by</i><br>KNOCKING OUT rivals<br><i>OR</i><br>BUILDING ${SHOOT_THE_MOON_THRESHOLD} standing houses`;
-  let line2 = null;
-  if (isTodaysGame){
-    // Sorted using the full three-tier scale (win < draw < loss), so the
-    // 10th-best genuinely reflects the harder end of the distribution -
-    // but the LINE itself only ever distinguishes "win" from "not a win":
-    // if the 10th-best is a draw specifically, or even a loss, either way
-    // the target shown is simply to draw the game - a genuinely
-    // worthwhile goal on a day the AI is playing this well, not something
-    // worth a separate "avoid losing" line.
-    const effectiveRounds = todaysSimResults
-      .map(r => effectiveRound(r.winner, r.roundWon))
-      .sort((a,b) => a-b);
-    const target = effectiveRounds[9]; // 10th best, 0-indexed
-    line2 = (target <= KNOCKOUT_ROUNDS)
-      ? `<b>Target for today's game:</b><br><b>Win in ${target} round${target===1?'':'s'}</b>`
-      : `<b>Target for today's game:</b><br><b>Draw the game</b>`;
-  }
+  const sorted = [...todaysScoreDiffs].sort((a,b) => a-b);
+  const median = sorted[Math.floor(sorted.length/2)]; // 99 values - always a real element, always an integer
+  const target = Math.max(1, median); // "win by 0/negative points" isn't a sensible target to show
   scheduleIfCurrent(() => {
-    showEventPopup(line1, line2, true, GAME_START_POPUP_DURATION_MS, false, false, true);
+    showEventPopup(
+      "Target for today's game:",
+      `Win by ${target} point${target===1?'':'s'}`,
+      true, EXTRA_LONG_DELAY_MS
+    );
     scheduleAfterPopupOrDelay(beginTurn, 0);
   }, QUICK_DELAY_MS);
 }
@@ -1464,22 +1419,35 @@ function render(){
     // The square this move is actually relevant to right now - either the
     // one currently being previewed (pendingSquare), or, in the brief gap
     // between commit and the real data landing, the one just committed
-    // (lastPlayedSquare, gated by awaitingCommitReveal - see its own
-    // declaration for why). A house can only ever form on the exact square
-    // played this turn - never anywhere else on the board, however
-    // connected it happens to be.
+    // (lastPlayedSquare, gated by awaitingStealReveal so it doesn't keep
+    // mattering for the rest of that turn or into the next player's turn -
+    // see the note on awaitingStealReveal's own declaration for why the
+    // gate is needed at all). Both the new-house and the steal projections
+    // below share this same scoping, since a house can now only ever form
+    // on the exact square played this turn - never anywhere else on the
+    // board, however connected it happens to be.
     const isRelevantSquare = (pendingSquare && r === pendingSquare[0] && c === pendingSquare[1])
-      || (awaitingCommitReveal && lastPlayedSquare && r === lastPlayedSquare[0] && c === lastPlayedSquare[1]);
+      || (awaitingStealReveal && lastPlayedSquare && r === lastPlayedSquare[0] && c === lastPlayedSquare[1]);
     const projectedNewHouse = isRelevantSquare && !house[r][c] && rSup && bSup;
+    // If this space already has a house, is now fully disconnected given
+    // the current (possibly still-being-previewed) board, isn't already
+    // the mover's own, and has a matching-owner neighbour - this is a
+    // projected steal - show the mover's colour immediately, same
+    // principle as projectedNewHouse above.
+    const projectedSteal = isRelevantSquare && house[r][c] && !rSup && !bSup && owner[r][c] !== turn
+      && countMatchingNeighbors(r, c, owner[r][c]) >= 1;
 
     if (house[r][c] || projectedNewHouse){
       const cx=px+SIZE/2, cy=py+SIZE/2;
       // Purely visual: the actual owner[][] reassignment still only
-      // happens on commit, via resolveMove(). Naturally reverts
+      // happens on commit, via applyHouseAndRevenue(). Naturally reverts
       // if the player instead previews a different space, since this is
-      // recomputed fresh from the live board on every render() call.
+      // recomputed fresh from the live board on every render() call. Once
+      // the real steal actually lands in owner[][], this condition simply
+      // stops mattering (owner[r][c] already equals turn by then), so
+      // there's no visible change at that moment either - fully seamless.
       let ownerColor = null;
-      const effOwner = projectedNewHouse ? turn : owner[r][c];
+      const effOwner = (projectedSteal || projectedNewHouse) ? turn : owner[r][c];
       if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
       if (isPlaceAnimating){
         const t = (performance.now()-_placeAnimStart) / ANIM_DURATION_MS;
@@ -1502,21 +1470,16 @@ function render(){
       drawHazardTapeBorder(ctx, px+inset, py+inset, SIZE-2*inset, SIZE-2*inset, px, py, SIZE, SIZE);
     }
 
-    // The one square that just became a brand-new house this move (if any -
-    // at most one is ever possible) pops "+1" in the builder's colour; any
-    // square that just lost its last connection pops "-1" in its owner's
-    // colour (owner[][] still holds it - the actual removal only happens
-    // once this whole reveal finishes, at showSettledScoreStage()). Both
-    // share the same pop-in visual treatment, just a different sign/colour.
-    let popLabel = null, popColor = null;
-    if (scoreHighlightActive){
-      if (lastBuiltSquare && lastBuiltSquare[0]===r && lastBuiltSquare[1]===c){
-        popLabel = '+1'; popColor = PLAYER_COLORS[turn-1];
-      } else if (pendingVanishSquares.some(([vr,vc]) => vr===r && vc===c)){
-        popLabel = '-1'; popColor = PLAYER_COLORS[owner[r][c]-1];
-      }
-    }
-    if (popLabel){
+    const scoringSquare = scoreHighlightActive && lastScoringSquares.find(([sr,sc]) => sr===r && sc===c);
+    if (scoringSquare){
+      // Player's own colour (same values as the scorebox), rounded rect,
+      // with a thick white border specifically so that when several
+      // adjacent squares score at once, each one stays visually distinct
+      // rather than the highlights merging into one blob. Each square's
+      // own point value is its board-distance to the nearest edge plus 1
+      // (edge-adjacent = 1, centre-most = highest), so different squares
+      // scoring in the same turn can show different "+X" amounts.
+      const points = scoringSquare[2];
       const inset = 2;
       const borderWidth = Math.max(6, SIZE*0.12);
       const radius = SIZE*0.18;
@@ -1533,7 +1496,7 @@ function render(){
       }
       ctx.beginPath();
       ctx.roundRect(px+inset, py+inset, SIZE-2*inset, SIZE-2*inset, radius);
-      ctx.fillStyle = popColor;
+      ctx.fillStyle = PLAYER_COLORS[lastScoringPlayer-1];
       ctx.fill();
       ctx.lineWidth = borderWidth;
       ctx.strokeStyle = '#F7F3E8';
@@ -1542,7 +1505,7 @@ function render(){
       ctx.font = `bold ${Math.round(SIZE*0.4)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(popLabel, px+SIZE/2, py+SIZE/2);
+      ctx.fillText('+' + points, px+SIZE/2, py+SIZE/2);
       if (scoreAnimating) ctx.restore();
     }
   }
@@ -1570,21 +1533,14 @@ function render(){
   fillRoundedBand(0, boardEdge0+INSET, BAND, N*SIZE-2*INSET, false);
   fillRoundedBand(boardEdgeN, boardEdge0+INSET, BAND, N*SIZE-2*INSET, false);
 
+  const maxRevenue = Math.max(...Array.from({length:effectiveN}, (_,i) => revenue[i+1]));
   for (let p=1; p<=4; p++){
     const box = document.getElementById('scoreP'+p);
     const numEl = box.querySelector('.num');
-    if (p > effectiveN){
-      numEl.textContent = '';
-    } else if (eliminated[p]){
-      numEl.textContent = 'OUT';
-    } else if (scoreHighlightActive && lastRoundDeltas[p] !== 0){
-      numEl.textContent = (lastRoundDeltas[p] > 0 ? '+' : '') + lastRoundDeltas[p];
+    if (scoreHighlightActive && p === lastScoringPlayer){
+      numEl.textContent = '+' + lastScoringAmount;
     } else {
-      // Standing house count - not a score, just what's currently on the
-      // board for this player. Recomputed fresh every render(), since
-      // anyone's house count can change on anyone's turn (a disconnection
-      // affecting them, not just their own building).
-      numEl.textContent = standingHouseCount(p);
+      numEl.textContent = revenue[p];
     }
     try {
       fitTextToWidth(numEl, box.offsetWidth * 0.8, 22, 12);
@@ -1592,14 +1548,9 @@ function render(){
       console.error('fitTextToWidth failed for score box, continuing without it:', e);
     }
     box.classList.toggle('active', gameOver || turn===p);
-    box.classList.toggle('winner', gameOver && gameWinner === p);
+    box.classList.toggle('winner', gameOver && p<=effectiveN && revenue[p] === maxRevenue);
   }
-  if (roundNum <= GRACE_PERIOD_ROUNDS){
-    document.getElementById('roundNum').innerHTML = `Build:<br>Round ${roundNum}/${GRACE_PERIOD_ROUNDS}`;
-  } else {
-    document.getElementById('roundNum').innerHTML = `Knockout:<br>Round ${roundNum - GRACE_PERIOD_ROUNDS}/${KNOCKOUT_ROUNDS}`;
-  }
-  document.getElementById('roundNum').classList.toggle('dangerPhase', roundNum > GRACE_PERIOD_ROUNDS);
+  document.getElementById('roundNum').innerHTML = `Round<br>${roundNum}/${TOTAL_ROUNDS}`;
   document.querySelectorAll('#triesDots .tryDot').forEach((dot, i) => {
     dot.classList.toggle('used', practiceMode || i >= triesRemaining);
   });
@@ -1839,16 +1790,7 @@ let gameEpoch = 0;
 let awaitingAdvance = false;
 
 let isTodaysGame = false;
-// Each entry: {winner, roundWon} from one of the NUM_RANK_SIMULATIONS daily
-// ranking simulations - winner is 1 or 2 (or null for a draw), roundWon is
-// only meaningful when winner is non-null.
-let todaysSimResults = [];
-// Back to the original 99 - the earlier reduction to 24 (see version
-// history) was a workaround for how long the boot simulation batch took
-// with a 100-round Knockout cap; now that the cap is 50 rounds and the
-// shoot-the-moon win condition ends games earlier too, 99 sims run fast
-// enough on their own, so there's no longer a reason to trade away
-// precision for speed here.
+let todaysScoreDiffs = [];
 const NUM_RANK_SIMULATIONS = 99;
 let simulationModeActive = false;
 let shuffledExcuses = [];
@@ -1939,7 +1881,7 @@ function escapeHtml(s){
   return div.innerHTML;
 }
 
-function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped, rawHtml){
+function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped){
   const popup = document.getElementById('eventPopup');
   const inner = document.getElementById('eventPopupInner');
   inner.classList.toggle('park-event', !!isParkEvent);
@@ -1947,16 +1889,8 @@ function showEventPopup(line1, line2, autoHide, duration, isParkEvent, isStamped
   void inner.offsetWidth; // force reflow so the animation restarts if triggered twice in a row
   inner.classList.toggle('stamp-in', !!isStamped);
   inner.innerHTML = '<div class="line1"></div>' + (line2 ? '<div class="line2"></div>' : '');
-  // rawHtml is only ever set by the game-start popup, which needs italic/
-  // bold markup (<i>/<b>) in its line text; every other caller passes
-  // plain text and keeps going through escapeHtml as before.
-  if (rawHtml){
-    inner.querySelector('.line1').innerHTML = line1;
-    if (line2) inner.querySelector('.line2').innerHTML = line2;
-  } else {
-    inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
-    if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
-  }
+  inner.querySelector('.line1').innerHTML = line1.split('\n').map(s => escapeHtml(s)).join('<br>');
+  if (line2) inner.querySelector('.line2').innerHTML = line2.split('\n').map(s => escapeHtml(s)).join('<br>');
   popup.style.display = 'block';
   requestAnimationFrame(() => popup.classList.add('visible'));
   clearTimeout(eventPopupTimer);
@@ -1981,27 +1915,12 @@ function hideEventPopup(){
   }, 220);
 }
 
-// Rank 1 = best, 100 = worst. Ranked on the same three-tier effective-
-// round scale as the target popup (win < draw < loss) - a draw now
-// correctly ranks ahead of every loss, rather than tied with them as
-// before. Ties are counted in the player's favour: only simulated
-// results strictly better than the player's own count against them.
-// Rank 1 = best, 100 = worst. Ranked on the same three-tier effective-
-// round scale as the target popup (win < draw < loss) - a draw ranks
-// ahead of every loss, not tied with them. Ties are counted in the
-// player's favour: only simulated results strictly better than the
-// player's own count against them.
-// The raw rank is 1..(NUM_RANK_SIMULATIONS+1) (100 possible values, given
-// NUM_RANK_SIMULATIONS=99), scaled generically to land on "out of 100" for
-// display rather than a hardcoded formula - currently a no-op multiplier
-// (100/100=1) since NUM_RANK_SIMULATIONS is back to 99, but stays correct
-// automatically if that constant is ever tuned again.
+// Rank 1 = best, 100 = worst. Ties are counted in the player's favour: only
+// simulated scores strictly greater than the player's own count against them.
 function computeTodaysRank(){
-  const myEffectiveRound = effectiveRound(gameWinner, roundNum - GRACE_PERIOD_ROUNDS);
-  const simEffectiveRounds = todaysSimResults.map(r => effectiveRound(r.winner, r.roundWon));
-  const countBetter = simEffectiveRounds.filter(r => r < myEffectiveRound).length;
-  const rawRank = countBetter + 1;
-  return Math.round(rawRank * (100 / (NUM_RANK_SIMULATIONS + 1)));
+  const myDiff = revenue[1] - revenue[2];
+  const countAbove = todaysScoreDiffs.filter(d => d > myDiff).length;
+  return countAbove + 1;
 }
 
 function formatRank(x){
@@ -2009,22 +1928,14 @@ function formatRank(x){
 }
 
 // Shared between the animated popup and the copyable share text, so the
-// win/loss/draw wording only ever needs to be defined once. Round counts
-// shown are Knockout-phase-relative (round 11 overall = Knockout round 1),
-// matching the round display and the info text - a win (of either type)
-// can only ever happen during the Knockout phase in the first place (see
-// GRACE_PERIOD_ROUNDS - shoot-the-moon is checked at every phase in the
-// real game, but the Build phase itself is only 10 rounds, and reaching
-// SHOOT_THE_MOON_THRESHOLD houses that early is not realistic), so this
-// is always a positive number. The loss case deliberately doesn't say how
-// - knockout or shoot-the-moon, it reads the same either way, kept simple
-// on purpose.
+// win/loss/draw wording and emoji only ever need to be defined once.
+// Shared diff/pluralisation logic between the popup ("you") and the
+// copyable share text ("I") - only the pronoun differs between them.
 function buildResultLine(){
-  const koRound = roundNum - GRACE_PERIOD_ROUNDS;
-  if (gameWinner === 1 && winType === 'knockout') return `You won by KNOCKOUT in ${koRound} round${koRound===1?'':'s'}`;
-  if (gameWinner === 1 && winType === 'building') return `You won by BUILDING in ${koRound} round${koRound===1?'':'s'}`;
-  if (gameWinner === 2) return `You lost in ${koRound} round${koRound===1?'':'s'}`;
-  return "It's a DRAW";
+  const diff = revenue[1] - revenue[2];
+  if (diff > 0) return `You won by ${diff} point${diff===1?'':'s'}!`;
+  if (diff < 0) return `You lost by ${-diff} point${diff===-1?'':'s'}!`;
+  return "It's a draw!";
 }
 
 // Deliberately separate from buildResultLine() above, rather than a shared
@@ -2032,11 +1943,10 @@ function buildResultLine(){
 // explicitly (useful context for whoever receives it) while the in-app
 // popup doesn't need to (the player is already looking at it).
 function buildShareResultLine(){
-  const koRound = roundNum - GRACE_PERIOD_ROUNDS;
-  if (gameWinner === 1 && winType === 'knockout') return `I won by KNOCKOUT in ${koRound} round${koRound===1?'':'s'}! \u{1F60A}`;
-  if (gameWinner === 1 && winType === 'building') return `I won by BUILDING in ${koRound} round${koRound===1?'':'s'}! \u{1F60A}\u{1F60A}`;
-  if (gameWinner === 2) return `I lost in ${koRound} round${koRound===1?'':'s'}! \u{1F61E}`;
-  return "The game was a DRAW! \u{1F610}";
+  const diff = revenue[1] - revenue[2];
+  if (diff > 0) return `I won today's game by ${diff} point${diff===1?'':'s'}! \u{1F60A}`;
+  if (diff < 0) return `I lost today's game by ${-diff} point${diff===-1?'':'s'}! \u{1F61E}`;
+  return "Today's game was a draw! \u{1F610}";
 }
 
 function buildShareText(){
@@ -2049,7 +1959,7 @@ function buildShareText(){
     ? ` (with ${hintsUsedThisGame} hint${hintsUsedThisGame===1?'':'s'})`
     : '';
 
-  return `Today's Swalpa Adjust Maadi:\n${buildShareResultLine()}\n\n${niceDate} rank: ${rankText}${hintsText}\nYour turn! https://tinyurl.com/adjust-maadi`;
+  return `Swalpa Adjust Maadi!\n${buildShareResultLine()}\n\n${niceDate} rank: ${rankText}${hintsText}\nYour turn! https://tinyurl.com/adjust-maadi`;
 }
 
 // Animates the bar filling and the number counting down from 100 (the
@@ -2142,29 +2052,24 @@ function scheduleIfCurrent(fn, delay){
 }
 let previewSavedTile = null;
 let lastPlayedSquare = null;
-// True only between commitTurn() and resolveMove() actually
+// True only between commitTurn() and applyHouseAndRevenue() actually
 // running moments later - NOT for the rest of that turn or into the next
 // player's turn, even though lastPlayedSquare itself keeps pointing at the
-// same square until the following commit. Needed because commitTurn()
-// clears pendingSquare immediately, but the real house[][] data doesn't
-// land until resolveMove() runs ~500ms later - without this flag
-// bridging that gap via lastPlayedSquare, render()'s new-house preview
-// would go dark for that whole window (the house briefly "vanishing")
-// before the real data catches up and it reappears. Narrowed to this
-// specific window (rather than just checking lastPlayedSquare unconditionally)
-// so it doesn't also incorrectly re-fire for the rest of that turn or into
-// the next player's turn, when lastPlayedSquare is still set but no longer
-// relevant. (Named generically now, not steal-specific - the mechanic this
-// originally existed for, stealing, has been removed in this test version;
-// the same gap-bridging need remains for the new-house preview alone.)
-let awaitingCommitReveal = false;
-// The square that just became a brand-new house this move, if any (at most
-// one is ever possible - creation is scoped to the exact played square) -
-// together with pendingVanishSquares (declared earlier, alongside the other
-// per-game state), these are what the reveal stage highlights with a
-// "+1"/"-1" pop, and what lastRoundDeltas' per-player score-box numbers are
-// derived from. Reset every move by resolveMove().
-let lastBuiltSquare = null;
+// same square until the following commit. Without this narrower flag,
+// render()'s projected-steal check (which needs lastPlayedSquare to close
+// the gap right after commit) would also incorrectly re-fire on the next
+// player's entire turn for a square that was already, genuinely stolen -
+// purely because it's now someone else's turn, not because anything this
+// turn touches that square.
+let awaitingStealReveal = false;
+// Which squares just earned the current mover a point this turn, and how
+// many total - populated fresh by applyHouseAndRevenue() every turn, shown
+// briefly (scoreHighlightActive) so it's visually obvious that points come
+// specifically from doubly-connected, owned houses, not from building a
+// house or from a running tally of same-colour houses in general.
+let lastScoringSquares = [];
+let lastScoringPlayer = null;
+let lastScoringAmount = 0;
 let scoreHighlightActive = false;
 
 // Small, shared motion-touch infrastructure: a placed tile settles with a
@@ -2181,102 +2086,76 @@ function easeOutBack(t){
 let _placeAnimKey = null, _placeAnimStart = 0;
 let _scoreAnimWasActive = false, _scoreAnimStart = 0;
 
-function resolveMove(){
+function countMatchingNeighbors(r, c, ownerValue){
+  const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+  let count = 0;
+  for (const [nr,nc] of neighbors){
+    if (nr<0||nr>=N||nc<0||nc>=N) continue;
+    if (house[nr][nc] && owner[nr][nc] === ownerValue) count++;
+  }
+  return count;
+}
+
+function applyHouseAndRevenue(){
   const {redC, blueC} = connectivity();
+
+  // Playing a card on some square: if, after the move (whether or not this
+  // move itself caused it), the house there is fully disconnected (neither
+  // red nor blue), check its N/S/E/W neighbours. If 1 or more share that
+  // house's own owner, the current player steals it. Already the mover's
+  // own house: no-op. Any house that still has at least one connection is
+  // protected from stealing. (owner is always a real player here - there
+  // is no grey/unowned house any more, so no separate category to worry
+  // about; this logic needed no change when grey houses were removed.)
+  if (lastPlayedSquare){
+    const [lr, lc] = lastPlayedSquare;
+    if (house[lr][lc] && !redC[lr][lc] && !blueC[lr][lc]){
+      const ownerBeforeSteal = owner[lr][lc];
+      if (countMatchingNeighbors(lr, lc, owner[lr][lc]) >= 1){
+        owner[lr][lc] = turn;
+        if (ownerBeforeSteal !== turn && !simulationModeActive){
+          showEventPopup('Good steal!', null, true, LONG_DELAY_MS);
+          sounds.steal();
+        }
+      }
+    }
+  }
 
   // A new house can form ONLY on the exact square this turn's card was
   // played on, and only if that square is red+blue connected after the
-  // placement - unchanged rule from before.
-  let builtNewHouse = false;
+  // placement - regardless of any other connected-but-houseless square
+  // that might exist elsewhere on the board right now. No whole-board scan
+  // any more: this is the one and only place a house can ever be newly
+  // created, scoped to lastPlayedSquare specifically, mirroring exactly
+  // how render()'s own preview is scoped to pendingSquare (see there for
+  // the matching logic on the preview side).
   if (lastPlayedSquare){
     const [lr, lc] = lastPlayedSquare;
     if (redC[lr][lc] && blueC[lr][lc] && !house[lr][lc]){
       house[lr][lc] = true;
       owner[lr][lc] = turn;
-      builtNewHouse = true;
     }
   }
-
-  // Whole-board scan: ANY house (any owner, not just this move's mover) that
-  // is now fully disconnected (neither colour) is flagged to vanish. It
-  // stays in house[][]/owner[][] for now - still drawn completely normally
-  // - so the reveal stage can show the player what they're about to lose;
-  // it's only actually removed once that reveal finishes (see
-  // showSettledScoreStage()).
-  pendingVanishSquares = [];
-  lastRoundDeltas = {1:0, 2:0, 3:0, 4:0};
-  lastBuiltSquare = builtNewHouse ? [lastPlayedSquare[0], lastPlayedSquare[1]] : null;
-  if (builtNewHouse) lastRoundDeltas[turn] += 1;
+  lastScoringSquares = [];
+  lastScoringAmount = 0;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (house[r][c] && !redC[r][c] && !blueC[r][c]){
-      pendingVanishSquares.push([r,c]);
-      lastRoundDeltas[owner[r][c]] -= 1;
+    if (owner[r][c] === turn && redC[r][c] && blueC[r][c]){
+      const points = Math.min(r, N-1-r, c, N-1-c) + 1;
+      revenue[owner[r][c]] += points;
+      lastScoringSquares.push([r,c,points]);
+      lastScoringAmount += points;
     }
   }
-}
-
-// Simple existence count - every house[][]===true square this player owns,
-// regardless of current connectivity. Used ONLY for the score-box display:
-// during the brief window between a house losing its last connection and
-// the reveal actually removing it, it still counts here (matching what's
-// still visibly on the board), which is exactly the "stays displayed until
-// the animation completes" behaviour wanted.
-function standingHouseCount(player){
-  let n=0;
-  for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (house[r][c] && owner[r][c]===player) n++;
-  return n;
-}
-
-// Connectivity-aware count - only houses with at least one live connection
-// right now. Unlike standingHouseCount(), this is correct even for a
-// hypothetical board where a vanish has been detected (pendingVanishSquares
-// populated) but not yet physically applied - which is exactly the
-// situation the AI's own per-candidate evaluation is in, since it never
-// runs the removal step at all. Also what the real game's own elimination
-// check effectively needs, though in practice that runs after the removal
-// has already happened for real, so standingHouseCount()===0 there is
-// already equivalent - this function exists for the AI's sake.
-function aliveHouseCount(player){
-  const {redC, blueC} = connectivity();
-  let n=0;
-  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
-    if (house[r][c] && owner[r][c]===player && (redC[r][c]||blueC[r][c])) n++;
-  }
-  return n;
-}
-
-// Finds the next ACTIVE (non-eliminated) player after `current`, wrapping
-// around effectiveN's rotation, skipping anyone already eliminated.
-function nextActivePlayer(current){
-  for (let step=1; step<=effectiveN; step++){
-    const candidate = ((current - 1 + step) % effectiveN) + 1;
-    if (!eliminated[candidate]) return candidate;
-  }
-  return current; // unreachable in practice - would mean everyone is eliminated, which is already caught in finishRevealAndAdvance() before this could ever be called
+  lastScoringPlayer = turn;
 }
 
 function advanceToNextTurn(){
   scoreHighlightActive = false;
+  const wasLastPlayer = (turn === effectiveN);
+  turn = wasLastPlayer ? 1 : turn + 1;
 
-  // By the time this runs, finishRevealAndAdvance() has already checked
-  // for a winner/draw via elimination - if we're here at all, at least 2
-  // players are still active. Detect "a new round has begun" by whether
-  // the rotation just wrapped back around, rather than assuming every
-  // player slot 1..effectiveN is still in play.
-  const prevTurn = turn;
-  turn = nextActivePlayer(prevTurn);
-  const wrappedAround = turn <= prevTurn;
-
-  if (wrappedAround){
+  if (wasLastPlayer){
     if (roundNum >= TOTAL_ROUNDS){
-      // Hard cap reached without the game already having resolved itself -
-      // by construction (see above) that means 2+ players are still
-      // standing with neither side finished the other off. Unambiguously a
-      // draw - not to be confused with the "everyone eliminated at once"
-      // draw case, which finishRevealAndAdvance() already handles earlier
-      // and never reaches this function at all.
-      gameWinner = null;
-      winType = null;
       finishGame();
       return;
     }
@@ -2306,11 +2185,6 @@ const LONG_DELAY_MS = 1300;
 // the steal popup, which keeps LONG_DELAY_MS) - these carry noticeably more
 // text than a steal notification, and needed longer to actually be read.
 const EXTRA_LONG_DELAY_MS = 2500;
-// The game-start popup specifically carries the most text of any of them
-// (three lines always, four in Today's game) and needed longer again -
-// deliberately its own constant, not a change to EXTRA_LONG_DELAY_MS
-// itself, so every other popup using that duration is unaffected.
-const GAME_START_POPUP_DURATION_MS = 4000;
 
 const VISIBLE_TILES = 8;
 
@@ -2318,51 +2192,20 @@ let deck = [];
 let deckPos = 0;
 
 function buildAndShuffleDeck(){
-  // Each player gets their own independently-shuffled deck with the exact
-  // same fixed composition (DECK_COMPOSITION's countPerPlayer values,
-  // unscaled) - then these are interleaved round-robin (P1's card, P2's
-  // card, ..., P1's next card, ...) into the single combined draw sequence
-  // everyone actually pulls from via the unchanged deckPos/nextDeckCard()
-  // mechanics below. Since turn order cycles through players in exactly
-  // this same round-robin pattern (confirmed: deck[0] lands as the very
-  // first currentDraw, matching turn=1 at game start), every player's own
-  // turn always draws from their own sub-deck - guaranteeing everyone sees
-  // the identical card mix over the course of the game, rather than being
-  // subject to shared-pool luck (e.g. one player unluckily seeing far more
-  // Roadworks than another).
-  const perPlayerDecks = [];
-  for (let p=0; p<effectiveN; p++){
-    const oneDeck = [];
-    for (const {tile, countPerPlayer} of DECK_COMPOSITION){
-      for (let i=0;i<countPerPlayer;i++) oneDeck.push(tile);
-    }
-    for (let i=oneDeck.length-1;i>0;i--){
-      const j = Math.floor(boardRNG()*(i+1));
-      [oneDeck[i],oneDeck[j]] = [oneDeck[j],oneDeck[i]];
-    }
-    perPlayerDecks.push(oneDeck);
-  }
   deck = [];
-  const perPlayerLen = perPlayerDecks[0].length;
-  for (let i=0; i<perPlayerLen; i++){
-    for (let p=0; p<effectiveN; p++){
-      deck.push(perPlayerDecks[p][i]);
-    }
+  for (const {tile, countPerPlayer} of DECK_COMPOSITION){
+    for (let i=0;i<countPerPlayer*effectiveN;i++) deck.push(tile);
+  }
+  // Fisher-Yates shuffle, fixed once at the start of play.
+  for (let i=deck.length-1;i>0;i--){
+    const j = Math.floor(boardRNG()*(i+1));
+    [deck[i],deck[j]] = [deck[j],deck[i]];
   }
   deckPos = 0;
 }
 
 function nextDeckCard(){
-  if (deckPos >= deck.length){
-    // No round cap on the deck itself any more - once every player's own
-    // deck is exhausted, rebuild and reshuffle a fresh one (same
-    // construction as the very first, continuing to consume the ongoing
-    // rng() stream) and carry straight on, rather than running out. Turn
-    // order and the interleaving pattern both stay aligned across this
-    // boundary for the same reason they did at the very start (see
-    // buildAndShuffleDeck()'s own comment) - nothing else needs to change.
-    buildAndShuffleDeck();
-  }
+  if (deckPos >= deck.length) return null;
   return deck[deckPos++];
 }
 
@@ -2409,11 +2252,11 @@ function pickRoadworksTarget(){
 }
 
 // Single source of truth for everything that must be reset at the start of
-// a turn - used by beginTurn() itself and by showGameStartPopup() (whose
+// a turn - used by beginTurn() itself and by showTodaysTargetPopup() (whose
 // own render() happens before beginTurn() gets to run, since it's shown
 // first). Deliberately does NOT touch awaitingAdvance: the two callers
 // need genuinely different values for it (false to let the new turn begin
-// immediately; true to keep blocking input until the start popup closes),
+// immediately; true to keep blocking input until the Target popup closes),
 // so that stays each caller's own responsibility. Anything added here in
 // future automatically applies to both launch paths with no risk of one
 // being updated and the other forgotten.
@@ -2429,24 +2272,6 @@ function beginTurn(){
   resetForNewTurn();
   render();
 
-  if (roundNum === GRACE_PERIOD_ROUNDS + 1 && turn === 1){
-    // The very first turn of the Knockout phase (round 11's first mover is
-    // always player 1 - nobody can have been eliminated yet, since that
-    // requires round > GRACE_PERIOD_ROUNDS and this is the first such
-    // round) - flag the transition before anything else happens this turn
-    // (a card draw, an AI move, a Roadworks reveal). Same duration and
-    // sound as a Roadworks card, but the ordinary yellow popup style (not
-    // Roadworks' own "stamp" treatment), since this isn't itself a card
-    // event.
-    showEventPopup('Knockout rounds begin!', 'If you hit zero you are OUT!', true, EXTRA_LONG_DELAY_MS);
-    sounds.roadworks();
-    scheduleAfterPopupOrDelay(actuallyBeginTurn, 0);
-    return;
-  }
-  actuallyBeginTurn();
-}
-
-function actuallyBeginTurn(){
   if (currentDraw.kind === 'X'){
     // A short pause before the popup even appears, rather than it showing
     // in the very same instant as the deck/scorebox update above. The
@@ -2488,110 +2313,47 @@ function commitTurn(){
   lastPlayedSquare = pendingSquare ? [pendingSquare[0], pendingSquare[1]] : null;
   pendingSquare = null;
   previewSavedTile = null;
-  awaitingCommitReveal = true;
+  awaitingStealReveal = true;
   // Block input for the entire, multi-stage reveal sequence below, not just
   // once the highlight itself appears - otherwise a stray click during the
   // grey-only stage could start previewing a new card mid-reveal.
   awaitingAdvance = true;
-  render(); // Stage 1: only the grey "last played" square - nothing resolved yet.
+  render(); // Stage 1: only the grey "last played" square - scoring hasn't run yet.
   scheduleIfCurrent(revealScoringStage, QUICK_DELAY_MS);
 }
 
 function revealScoringStage(){
-  resolveMove();
-  awaitingCommitReveal = false;
-  if (!lastBuiltSquare && pendingVanishSquares.length === 0){
+  applyHouseAndRevenue();
+  awaitingStealReveal = false;
+  if (lastScoringAmount === 0){
     // Nothing changed since the grey stage began (scoreHighlightActive was
     // never turned on in this branch), so going via showSettledScoreStage()
     // would just be a second, redundant QUICK gap with nothing new to show
-    // at the end of it. Go straight to the elimination check/advance
-    // instead - a single QUICK gap, not two stacked back to back.
-    scheduleAfterPopupOrDelay(finishRevealAndAdvance, QUICK_DELAY_MS);
+    // at the end of it. Go straight to advancing instead - a single QUICK
+    // gap, not two stacked back to back.
+    scheduleAfterPopupOrDelay(advanceToNextTurn, QUICK_DELAY_MS);
     return;
   }
+  // If a steal just triggered its own popup above, let it fully close before
+  // showing the scoring highlight - otherwise the two compete for attention
+  // at the same time. scheduleAfterPopupOrDelay already does exactly this
+  // check.
   scheduleAfterPopupOrDelay(showScoreHighlightStage, QUICK_DELAY_MS);
 }
 
 function showScoreHighlightStage(){
   scoreHighlightActive = true;
-  render(); // Stage 2: "+1"/"-1" appear on affected score boxes; anything about to vanish is still fully visible on the board.
-  // Total number of squares affected this move (the build, if any, plus
-  // every vanish) - scoreChime() plays one ascending note per unit, up to
-  // 4, so a more dramatic turn (several houses going at once) gets a
-  // fuller chime rather than every reveal sounding identical.
-  sounds.scoreChime((lastBuiltSquare ? 1 : 0) + pendingVanishSquares.length);
+  render(); // Stage 2: green highlight + "+X" appear.
+  sounds.scoreChime(lastScoringAmount);
   scheduleAfterPopupOrDelay(showSettledScoreStage, LONG_DELAY_MS);
 }
 
 function showSettledScoreStage(){
   scoreHighlightActive = false;
-  // The moment anything flagged this move actually disappears - right as
-  // the "+1"/"-1" reveal clears, giving the player time to register what
-  // they lost before it's actually gone.
-  for (const [r,c] of pendingVanishSquares){
-    house[r][c] = false;
-    owner[r][c] = null;
-  }
-  pendingVanishSquares = [];
-  render(); // Stage 3: highlight clears, vanished houses are actually gone, standing counts shown.
-  scheduleAfterPopupOrDelay(finishRevealAndAdvance, QUICK_DELAY_MS);
+  render(); // Stage 3: highlight clears, plain total shown - still this player's turn.
+  scheduleAfterPopupOrDelay(advanceToNextTurn, QUICK_DELAY_MS);
 }
 
-// Elimination check - only from GRACE_PERIOD_ROUNDS+1 onward, and only
-// after any vanish this move has already been physically applied (whether
-// via showSettledScoreStage() just above, or trivially empty if nothing
-// vanished) - standingHouseCount()===0 is then exactly equivalent to "no
-// connections left", since anything disconnected has already been removed.
-// Sequential elimination: mark anyone newly at zero, then check how many
-// active players remain - exactly one is an immediate win, zero is an
-// immediate draw (a simultaneous wipeout), otherwise the game continues.
-function finishRevealAndAdvance(){
-  // Shoot-the-moon: an instant win for whoever just moved, checked at
-  // EVERY phase of the game (build included, unlike elimination below
-  // which only ever applies past the grace period) - the moment their own
-  // alive-house count reaches SHOOT_THE_MOON_THRESHOLD. Checked first: if
-  // a single move somehow both crosses this threshold and also happens to
-  // eliminate the last opponent on that same move, the win is attributed
-  // as a building win, not a knockout win - an arbitrary but consistent
-  // tiebreak for a genuinely rare simultaneous case.
-  if (aliveHouseCount(turn) >= SHOOT_THE_MOON_THRESHOLD){
-    gameWinner = turn;
-    winType = 'building';
-    finishGame();
-    return;
-  }
-
-  if (roundNum > GRACE_PERIOD_ROUNDS){
-    let anyNewlyEliminated = false;
-    for (let p=1; p<=effectiveN; p++){
-      if (!eliminated[p] && standingHouseCount(p) === 0){
-        eliminated[p] = true;
-        anyNewlyEliminated = true;
-      }
-    }
-    const stillActive = [];
-    for (let p=1; p<=effectiveN; p++){
-      if (!eliminated[p]) stillActive.push(p);
-    }
-    if (stillActive.length <= 1){
-      gameWinner = stillActive.length === 1 ? stillActive[0] : null;
-      winType = stillActive.length === 1 ? 'knockout' : null;
-      finishGame();
-      return;
-    }
-    // Someone (or more than one, on the same move) was knocked out this
-    // move, but the game itself isn't over yet - a single, simple message
-    // covering every intermediate case, without naming who or how many:
-    // the score boxes below already show OUT for whoever it was.
-    if (anyNewlyEliminated){
-      showEventPopup('Player KNOCKED OUT', null, true, EXTRA_LONG_DELAY_MS);
-      sounds.results();
-      scheduleAfterPopupOrDelay(advanceToNextTurn, 0);
-      return;
-    }
-  }
-  advanceToNextTurn();
-}
 
 const AI_SUBSET_SIZE_CONFIG = {6:18, 7:25, 8:32};
 
@@ -2602,32 +2364,34 @@ const AI_SUBSET_SIZE_CONFIG = {6:18, 7:25, 8:32};
 // per board size (AI_SUBSET_SIZE_CONFIG) - 18 was calibrated specifically for
 // 6x6 and would be a disproportionately smaller fraction of a larger board,
 // so 7x7 and 8x8 each get their own value instead of inheriting 6x6's. This
+// is always that many distinct spaces, never fewer unless fewer are
+// actually valid.
 // In games with more than one opponent (3/4-player mode), the AI/hint
 // heuristic's diff-term needs a single "opponent" to compare against - this
-// picks whoever is the biggest current threat (most alive houses), among
-// ACTIVE (not yet eliminated) opponents only - an eliminated player is no
-// longer a threat to anyone.
-// Tie-break order: most alive houses right now (at least one connection -
-// this is deliberately live, not a stored count, since a player's standing
-// can go up or down on anyone's turn); then, if still tied, most houses
-// currently standing at all (regardless of current connectivity - a
-// distinct, separate signal from alive count); then, if still tied,
-// whoever plays next soonest after the requesting player, in upcoming turn
-// order.
+// picks the genuinely-leading one, rather than assuming a fixed player ID.
+// Tie-break order: highest revenue so far; then, if still tied, most houses
+// currently owned (regardless of their current connectivity - a distinct,
+// separate signal from revenue, which only ever counts currently-connected
+// houses); then, if still tied, whoever plays next soonest after the
+// requesting player, in upcoming turn order.
 function pickLeadingOpponent(color){
   const others = [];
   for (let p=1; p<=effectiveN; p++){
-    if (p !== color && !eliminated[p]) others.push(p);
+    if (p !== color) others.push(p);
   }
-  if (others.length === 0) return null; // unreachable in practice - the game ends before this could happen (see finishRevealAndAdvance())
   if (others.length === 1) return others[0];
 
-  const maxAlive = Math.max(...others.map(p => aliveHouseCount(p)));
-  let topTier = others.filter(p => aliveHouseCount(p) === maxAlive);
+  const maxRevenue = Math.max(...others.map(p => revenue[p]));
+  let topTier = others.filter(p => revenue[p] === maxRevenue);
   if (topTier.length === 1) return topTier[0];
 
-  const maxHouses = Math.max(...topTier.map(standingHouseCount));
-  topTier = topTier.filter(p => standingHouseCount(p) === maxHouses);
+  const housesOwned = p => {
+    let count = 0;
+    for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (owner[r][c] === p) count++;
+    return count;
+  };
+  const maxHouses = Math.max(...topTier.map(housesOwned));
+  topTier = topTier.filter(p => housesOwned(p) === maxHouses);
   if (topTier.length === 1) return topTier[0];
 
   for (let offset=1; offset<=effectiveN; offset++){
@@ -2640,9 +2404,7 @@ function pickLeadingOpponent(color){
 function aiChooseSquare(color, drawTile, randFn){
   if (!randFn) randFn = rng;
   const otherC = pickLeadingOpponent(color);
-  const leaderAliveBefore = otherC !== null ? aliveHouseCount(otherC) : 0;
   const subsetSize = AI_SUBSET_SIZE_CONFIG[N];
-  const inKnockout = roundNum > GRACE_PERIOD_ROUNDS;
 
   const allSquares = [];
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
@@ -2663,103 +2425,87 @@ function aiChooseSquare(color, drawTile, randFn){
     return true;
   });
 
-  // Two different tuples depending on phase - decided once per turn, not
-  // per candidate, and confirmed by extensive simulation testing before
-  // being adopted here (see version history):
-  //
-  // BUILD PHASE (roundNum <= GRACE_PERIOD_ROUNDS): [avoidsSelfElimination,
-  // opponentsEliminated, diff, -otherOppAliveSum, isBuild, myTerr] - the
-  // original "standard" tuple, unchanged. avoidsSelfElimination and
-  // opponentsEliminated are trivially 1/0 the whole build phase, since
-  // elimination can't happen at all before GRACE_PERIOD_ROUNDS - so this
-  // reduces in practice to diff-maximization with the usual tail
-  // tiebreaks, exactly as before.
-  //
-  // KNOCKOUT PHASE (roundNum > GRACE_PERIOD_ROUNDS): [avoidsSelfElimination,
-  // leaderDecrease, myAlive, -otherOppAliveSum, isBuild, myTerr] - a
-  // genuinely different, more aggressive tuple. leaderDecrease (the
-  // CURRENT leader's alive count before this candidate, fixed once for
-  // the whole turn, minus their alive count after) becomes the primary
-  // objective in its own right - not folded into a combined diff against
-  // myAlive - so a candidate that hurts the leader is preferred purely on
-  // that basis, with growing my own count only a tiebreak below it. This
-  // was found, across many simulated games, to produce a meaningfully
-  // more decisive knockout phase (far fewer games running out the clock
-  // to a draw) than continuing to use the build-phase diff tuple
-  // throughout - see version history for the actual numbers.
-  //
-  // Both phases keep avoidsSelfElimination as the absolute top tier -
-  // never knowingly self-eliminate if any alternative exists - and the
-  // same tail tiebreaks (-otherOppAliveSum, isBuild, myTerr).
+  // Lexicographic comparison, not an additive score - each candidate is
+  // reduced to a tuple [diff, combinedBuildStealValue, myTerr], compared
+  // strictly in that order. diff dominates completely: any candidate with
+  // higher diff always wins, regardless of the other two values. Only when
+  // diff is exactly tied does combinedBuildStealValue break the tie; only
+  // when both are tied does myTerr get consulted. No weights, no decay -
+  // multiplying a strict tie-breaking criterion by any constant can never
+  // change which candidate wins, so none are needed.
   //
   // Housekeeping: each candidate is evaluated by actually calling
-  // resolveMove() - the same function a real commit uses - rather than a
-  // separate, hand-written reimplementation of house creation or vanishing.
-  // This guarantees the AI's notion of the board can never drift out of
-  // sync with the game's own rules. Everything the real function touches
-  // (house, owner, pendingVanishSquares, lastRoundDeltas, lastBuiltSquare,
-  // lastPlayedSquare, turn) is saved before each candidate and fully
-  // restored after, so evaluating a hypothetical move never actually
-  // affects the real game state - and, since resolveMove() never performs
-  // the actual removal step itself (only the real reveal sequence does
-  // that), aliveHouseCount() rather than standingHouseCount() is what's
-  // used to read the result, since it's correct whether or not a physical
-  // removal has actually happened.
+  // applyHouseAndRevenue() - the same function a real commit uses - rather
+  // than a separate, hand-written reimplementation of house creation and
+  // stealing. This guarantees the AI's notion of ownership can never drift
+  // out of sync with the game's own rules: any future change to how houses
+  // form or change hands only has to be made once, in that one function,
+  // and both real play and the AI's evaluation pick it up automatically.
+  // Everything the real function touches (house, owner, revenue, the
+  // lastScoring* fields, lastPlayedSquare, turn) is saved before each
+  // candidate and fully restored after, so evaluating a hypothetical move
+  // never actually affects the real game state. simulationModeActive is
+  // set for the whole loop so the function's own "Good steal!" popup/sound
+  // side-effects - meant only for a real, committed move - don't fire
+  // while the AI is just considering options (the same mechanism Today's
+  // Game's own ranking simulations already rely on for exactly this).
+  const wasSimulationModeActive = simulationModeActive;
+  simulationModeActive = true;
   let best = null, bestTuple = null;
   for (const [r,c] of subset){
     const savedTile = board[r][c];
     const savedHouse = house.map(row => row.slice());
     const savedOwner = owner.map(row => row.slice());
+    const savedRevenue = Object.assign({}, revenue);
     const savedLastPlayedSquare = lastPlayedSquare;
     const savedTurn = turn;
-    const savedPendingVanishSquares = pendingVanishSquares;
-    const savedLastRoundDeltas = lastRoundDeltas;
-    const savedLastBuiltSquare = lastBuiltSquare;
+    const savedLastScoringSquares = lastScoringSquares;
+    const savedLastScoringAmount = lastScoringAmount;
+    const savedLastScoringPlayer = lastScoringPlayer;
 
     board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
     lastPlayedSquare = [r,c];
     turn = color;
-    resolveMove();
-
-    const myAlive = aliveHouseCount(color);
-    const leaderAlive = otherC !== null ? aliveHouseCount(otherC) : 0;
-
-    let selfEliminated = 0, opponentsEliminated = 0;
-    if (inKnockout){
-      if (myAlive === 0) selfEliminated = 1;
-      for (let p=1;p<=effectiveN;p++){
-        if (p!==color && !eliminated[p] && aliveHouseCount(p)===0) opponentsEliminated++;
-      }
-    }
-    const avoidsSelfElimination = selfEliminated ? 0 : 1;
+    applyHouseAndRevenue();
+    const myScore = lastScoringAmount;
 
     const {redC, blueC} = connectivity();
-    let otherOppAliveSum = 0, myTerr = 0;
+    let oppScore = 0, myTerr = 0;
     for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
-      const own = owner[rr][cc];
-      if (own !== null && own !== color && own !== otherC && (redC[rr][cc]||blueC[rr][cc])){
-        otherOppAliveSum++;
+      const full = redC[rr][cc] && blueC[rr][cc];
+      if (full && owner[rr][cc] === otherC){
+        oppScore += Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
       }
       if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
     }
-
-    // A house can only ever newly form on the exact square played, so
-    // checking that one square directly (rather than scanning the board)
-    // is the complete check.
-    const isBuild = (house[r][c] && !savedHouse[r][c]) ? 1 : 0;
-
-    const tuple = inKnockout
-      ? [avoidsSelfElimination, leaderAliveBefore - leaderAlive, myAlive, -otherOppAliveSum, isBuild, myTerr]
-      : [avoidsSelfElimination, opponentsEliminated, myAlive - leaderAlive, -otherOppAliveSum, isBuild, myTerr];
+    // Build/steal value: comparing the resulting house[][]/owner[][] (just
+    // set by the real function above) against what they were before this
+    // candidate was tried - a square that's now color's and wasn't a house
+    // before is a build; one that's now color's and WAS already someone
+    // else's house is a steal. Reading the outcome this way, rather than
+    // re-deriving the rule itself, is what keeps this in step with
+    // applyHouseAndRevenue() regardless of how its rules change.
+    let sumBuiltHouseValues = 0, stolenHouseValue = 0;
+    for (let rr=0;rr<N;rr++) for (let cc=0;cc<N;cc++){
+      if (house[rr][cc] && owner[rr][cc] === color){
+        const points = Math.min(rr, N-1-rr, cc, N-1-cc) + 1;
+        if (!savedHouse[rr][cc]) sumBuiltHouseValues += points;
+        else if (savedOwner[rr][cc] !== color) stolenHouseValue += points;
+      }
+    }
+    const combinedBuildStealValue = sumBuiltHouseValues + stolenHouseValue;
+    const diff = myScore - oppScore;
+    const tuple = [diff, combinedBuildStealValue, myTerr];
 
     board[r][c] = savedTile;
     house = savedHouse;
     owner = savedOwner;
+    revenue = savedRevenue;
     lastPlayedSquare = savedLastPlayedSquare;
     turn = savedTurn;
-    pendingVanishSquares = savedPendingVanishSquares;
-    lastRoundDeltas = savedLastRoundDeltas;
-    lastBuiltSquare = savedLastBuiltSquare;
+    lastScoringSquares = savedLastScoringSquares;
+    lastScoringAmount = savedLastScoringAmount;
+    lastScoringPlayer = savedLastScoringPlayer;
 
     if (bestTuple === null){
       bestTuple = tuple; best = [r,c];
@@ -2770,6 +2516,7 @@ function aiChooseSquare(color, drawTile, randFn){
       }
     }
   }
+  simulationModeActive = wasSimulationModeActive;
   return best;
 }
 
@@ -2868,12 +2615,15 @@ canvas.addEventListener('click', (e)=>{
 function finishGame(){
   gameOver = true;
   render();
-  if (winType === 'knockout'){
-    showEventPopup(`Player ${gameWinner} wins by KNOCKOUT!`, 'Residents suffer \u{1F61E}', true, EXTRA_LONG_DELAY_MS);
-  } else if (winType === 'building'){
-    showEventPopup(`Player ${gameWinner} wins by BUILDING!`, 'Residents rejoice \u{1F60A}', true, EXTRA_LONG_DELAY_MS);
+  let maxRev = -Infinity, winners = [];
+  for (let p=1; p<=effectiveN; p++){
+    if (revenue[p] > maxRev){ maxRev = revenue[p]; winners = [p]; }
+    else if (revenue[p] === maxRev){ winners.push(p); }
+  }
+  if (winners.length === 1){
+    showEventPopup('Player ' + winners[0] + ' WINS', 'Residents LOSE', true, EXTRA_LONG_DELAY_MS);
   } else {
-    showEventPopup('NOBODY wins!', 'Residents are forgotten \u{1F610}', true, EXTRA_LONG_DELAY_MS);
+    showEventPopup("It's a draw!", 'Residents LOSE', true, EXTRA_LONG_DELAY_MS);
   }
   sounds.results();
   if (isTodaysGame){
@@ -2984,7 +2734,7 @@ function renderRuleDiagrams(){
   }
 }
 
-// Generates today's fixed set of NUM_RANK_SIMULATIONS outcomes, used
+// Generates today's fixed set of NUM_RANK_SIMULATIONS score-differences, used
 // later to rank the player's own result once their game ends. Runs once, at
 // Today's-game launch, before the player's own board is set up.
 //
@@ -3010,8 +2760,7 @@ function runOneRankSimulation(simDriverRNG){
   initFreshBoard();
 
   let moves = 0;
-  let winner = null, roundWon = null;
-  while (roundNum <= TOTAL_ROUNDS && moves < 2000){
+  while (roundNum <= TOTAL_ROUNDS && !gameOver && moves < 500){
     moves++;
     if (currentDraw.kind === 'X'){
       lastPlayedSquare = pickRoadworksTarget();
@@ -3024,105 +2773,44 @@ function runOneRankSimulation(simDriverRNG){
       board[rc[0]][rc[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
       lastPlayedSquare = rc;
     }
-    resolveMove();
-    // Apply the vanish immediately - no animation delay needed in a
-    // background simulation, matching what the real game's staged reveal
-    // eventually settles to anyway.
-    for (const [r,c] of pendingVanishSquares){
-      house[r][c] = false;
-      owner[r][c] = null;
-    }
-    pendingVanishSquares = [];
-
-    // Shoot-the-moon, checked at every phase, same as the real game's own
-    // finishRevealAndAdvance() - the AI itself never deliberately pursues
-    // this (aiChooseSquare() has no shoot-the-moon-specific logic
-    // anywhere), but it can and does happen as a natural side-effect of
-    // ordinary diff-maximizing play during the Build phase, so the
-    // simulations need to actually detect it too, or the target/rank
-    // they produce would be systematically wrong about how often and how
-    // fast player 1 can win.
-    if (aliveHouseCount(turn) >= SHOOT_THE_MOON_THRESHOLD){
-      winner = turn;
-      roundWon = roundNum - GRACE_PERIOD_ROUNDS;
-      break;
-    }
-
-    if (roundNum > GRACE_PERIOD_ROUNDS){
-      for (let p=1; p<=effectiveN; p++){
-        if (!eliminated[p] && standingHouseCount(p) === 0) eliminated[p] = true;
-      }
-      const stillActive = [];
-      for (let p=1; p<=effectiveN; p++) if (!eliminated[p]) stillActive.push(p);
-      if (stillActive.length <= 1){
-        winner = stillActive.length === 1 ? stillActive[0] : null;
-        roundWon = roundNum - GRACE_PERIOD_ROUNDS; // Knockout-phase-relative, matching the round display and result messages
-        break;
-      }
-    }
-
+    applyHouseAndRevenue();
     advanceTileQueue();
-    const prevTurn = turn;
-    turn = nextActivePlayer(prevTurn);
-    const wrapped = turn <= prevTurn;
-    if (wrapped){
-      if (roundNum >= TOTAL_ROUNDS) break; // draw - winner stays null
-      roundNum++;
-    }
+    const wasLast = (turn === effectiveN);
+    if (wasLast){ if (roundNum >= TOTAL_ROUNDS) break; roundNum++; }
+    turn = wasLast ? 1 : turn+1;
   }
-  return {winner, roundWon}; // roundWon is only meaningful when winner is non-null
+  return revenue[1] - revenue[2];
 }
 
-// Runs all NUM_RANK_SIMULATIONS in small yielding chunks, not one blocking
-// loop (see runNextSimulation() below for why). simulationModeActive is set
-// for the whole duration so any visual side-effects the reused game
-// functions normally trigger are suppressed, since these games are never
-// meant to be seen. Calls onComplete() once todaysSimResults is fully
-// populated and all live state has been restored.
+// Runs all NUM_RANK_SIMULATIONS as a single synchronous block (no chunking -
+// simpler and more robust). simulationModeActive is set for the whole
+// duration so any visual side-effects the reused game functions normally
+// trigger (e.g. the "Good steal!" popup) are suppressed, since these games
+// are never meant to be seen. Calls onComplete() once todaysScoreDiffs is
+// fully populated and all live state has been restored.
 function runTodaysRankSimulations(onComplete){
   const saved = {
-    board, house, owner, turn, currentDraw, upcomingTiles, roundNum, gameOver,
-    lastPlayedSquare, deck, deckPos, seededRandomFn, eliminated, gameWinner,
+    board, house, owner, revenue, turn, currentDraw, upcomingTiles, roundNum, gameOver,
+    lastPlayedSquare, deck, deckPos, seededRandomFn,
   };
 
   simulationModeActive = true;
   const simDriverRNG = mulberry32(seedFromDateString(todaysIndiaDateString()));
-  const results = [];
-  let i = 0;
-
-  // Deliberately NOT one long synchronous loop: each simulation runs in
-  // its own setTimeout tick, yielding control back to the browser in
-  // between. The 99 simulations together take several seconds, and a
-  // single blocking loop would freeze the entire page for that whole
-  // window - including the title screen's own looping animation, which
-  // is exactly what made the boot process look hung rather than merely
-  // slow. This has no effect on correctness: each simulation is fully
-  // self-contained (its own initFreshBoard() call), so splitting them
-  // across ticks changes nothing about what gets computed, only when.
-  function runNextSimulation(){
+  const diffs = [];
+  for (let i=0;i<NUM_RANK_SIMULATIONS;i++){
     seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
-    results.push(runOneRankSimulation(simDriverRNG));
-    i++;
-    if (i < NUM_RANK_SIMULATIONS){
-      setTimeout(runNextSimulation, 0);
-    } else {
-      finishSimulations();
-    }
+    diffs.push(runOneRankSimulation(simDriverRNG));
   }
+  simulationModeActive = false;
 
-  function finishSimulations(){
-    simulationModeActive = false;
-    todaysSimResults = results;
-    board=saved.board; house=saved.house; owner=saved.owner;
-    turn=saved.turn; currentDraw=saved.currentDraw; upcomingTiles=saved.upcomingTiles;
-    roundNum=saved.roundNum; gameOver=saved.gameOver; lastPlayedSquare=saved.lastPlayedSquare;
-    deck=saved.deck; deckPos=saved.deckPos; eliminated=saved.eliminated; gameWinner=saved.gameWinner;
-    // Fresh, unconsumed stream for the player's own upcoming game.
-    seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
-    if (onComplete) onComplete();
-  }
-
-  runNextSimulation();
+  todaysScoreDiffs = diffs;
+  board=saved.board; house=saved.house; owner=saved.owner; revenue=saved.revenue;
+  turn=saved.turn; currentDraw=saved.currentDraw; upcomingTiles=saved.upcomingTiles;
+  roundNum=saved.roundNum; gameOver=saved.gameOver; lastPlayedSquare=saved.lastPlayedSquare;
+  deck=saved.deck; deckPos=saved.deckPos;
+  // Fresh, unconsumed stream for the player's own upcoming game.
+  seededRandomFn = mulberry32(seedFromDateString(todaysIndiaDateString()));
+  if (onComplete) onComplete();
 }
 
 function enterTodaysGameMode(){
@@ -3291,40 +2979,47 @@ function drawInfoIcon(ctx, s){
   ctx.fillRect(cx - s*0.07, s*0.46, s*0.14, s*0.32);
 }
 
-const PLAY_TEXT = "The row of 8 icons shows the upcoming cards. " +
+const DECK_RULES_TEXT = "The row of 8 icons shows the upcoming cards. " +
   "All players use the same deck. The rightmost card is the current " +
-  "active card. To play your turn, click a space on the board to place " +
-  "the active card there and see what it does. You can try out any " +
-  "space except for Parks, and the space the previous player just " +
-  "played on (which is greyed out). You have up to five tries, " +
-  "indicated by dots (unlimited in Practice mode). The current chosen " +
-  "space is always highlighted by an orange border. Click the chosen " +
-  "space again to confirm your move and complete your turn. Tap the " +
-  "board to place your active card in that space. Once a player plays " +
-  "their card, the entire row moves one step to the right.";
+  "active card. Once a player plays their card, the entire row moves " +
+  "one step to the right. In the last few rounds, fewer than 8 cards " +
+  "remain in the deck, so this row shrinks; the very last card is used " +
+  "on the final turn of the game.";
 
-const HOUSES_TEXT = "Houses are built when an empty space on which " +
+const HOW_TO_PLAY_TEXT = "To play your turn, click a space on the board " +
+  "to place the active card there and see what it does. You can try " +
+  "out any space except for Parks, and the space the " +
+  "previous player just played on (which is greyed out). You have up " +
+  "to five tries, indicated by dots (unlimited in Practice mode). If " +
+  "the active card is Roadworks it lands on a random space, you can't choose " +
+  "where. Roadworks destroys any Park or house it lands on (ouch!), " +
+  "leaving the space up for grabs in subsequent turns. The current " +
+  "chosen space is always highlighted by an orange border. Click the " +
+  "chosen space again to confirm your move and complete your turn.";
+
+const HOUSE_RULES_TEXT = "Houses are built when an empty space on which " +
   "a player places their card connects to both red and blue supply. " +
-  "The player can henceforth claim that house, indicated by the roof " +
-  "of the house being in their colour. Houses vanish when they become " +
-  "disconnected from both red and blue supply. If the active card is " +
-  "Roadworks, it lands on a random space which you tap to finish your " +
-  "turn. If Roadworks destroys a Park or house, a new house can be " +
-  "built and claimed on that space.";
+  "The player can henceforth earn points from that house, indicated by " +
+  "the roof of the house being in their colour. You only earn points " +
+  "for houses that are simultaneously connected to both red and blue " +
+  "supply, with houses closer to the centre earning more points. " +
+  "If Roadworks destroys a Park or " +
+  "house, a new house can be built and claimed on that space.\n\n" +
+  "Stealing: On your turn, place your card on a space. If this space " +
+  "has a house disconnected from both red and blue, and if at least " +
+  "one of the four edgewise neighbours also contains a house of the " +
+  "same colour, you can steal the house. Its roof switches to your " +
+  "colour.";
 
-const HOW_TO_PLAY_TEXT = PLAY_TEXT + "\n\n" + HOUSES_TEXT;
-
-const HOW_TO_WIN_TEXT = "There are two ways to win: by knocking out " +
-  "all your rivals, or by having 7 houses claimed by you on the board " +
-  "on your turn. The first 10 rounds are \"Build\" rounds, where players " +
-  "try to build as many houses as possible. The next 50 rounds " +
-  "are \"Knockout\" rounds. A player is OUT when their house count " +
-  "(shown in their score box below the board) hits zero during the " +
-  "Knockout rounds. Players who are OUT sit out the rest of the game. " +
-  "A player who builds 7 houses wins instantly. Otherwise, the winner " +
-  "is the last player standing after others are knocked out. A game " +
-  "that runs through 50 Knockout rounds without a single winner is " +
-  "declared a draw.";
+const HOW_TO_SCORE_TEXT = "Each round consists of one move by each " +
+  "player in turn. After their turn, a player earns points for " +
+  "every house in their colour that is simultaneously connected to " +
+  "both red and blue supply. The points-per-house depends on location, " +
+  "increasing closer to centre: houses in the outermost zone are worth " +
+  "1 point each, houses in the next inner zone are worth 2 points each, " +
+  "and so on. A house that's only partly connected does " +
+  "not contribute to the score. Each player's total is checked and " +
+  "updated only once in a round, on their turn.";
 
 function toggleInfoPopup(text){
   const popup = document.getElementById('infoPopup');
@@ -3336,8 +3031,10 @@ function toggleInfoPopup(text){
   }
 }
 
+document.getElementById('deckRulesBtn').onclick = () => toggleInfoPopup(DECK_RULES_TEXT);
 document.getElementById('howToPlayBtn').onclick = () => toggleInfoPopup(HOW_TO_PLAY_TEXT);
-document.getElementById('howToWinBtn').onclick = () => toggleInfoPopup(HOW_TO_WIN_TEXT);
+document.getElementById('houseRulesBtn').onclick = () => toggleInfoPopup(HOUSE_RULES_TEXT);
+document.getElementById('howToScoreBtn').onclick = () => toggleInfoPopup(HOW_TO_SCORE_TEXT);
 
 document.querySelectorAll('.infoIcon').forEach(cnv => {
   drawInfoIcon(cnv.getContext('2d'), 15);
@@ -3365,17 +3062,13 @@ function bootLaunchScreen(){
   computeLayout();
   startRulesAnim(); // draws the animation's own first frame synchronously
   document.getElementById('preLaunchBox').classList.add('ready');
-  // Safe to start the ongoing frame-cycling immediately now, rather than
-  // waiting for the simulation batch to finish - runTodaysRankSimulations()
-  // runs in small yielding chunks (not one blocking loop), so this can
-  // genuinely interleave with it instead of being blocked behind it.
-  resumeRulesAnim();
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       runTodaysRankSimulations(() => {
         const btn = document.getElementById('digUpBtn');
         btn.innerHTML = "Let's start digging.<br>Take me to the game!";
         btn.disabled = false;
+        resumeRulesAnim(); // ongoing frame-cycling starts only now
       });
     });
   });
@@ -3514,16 +3207,9 @@ if (document.fonts && document.fonts.ready){
       [ {tile:{kind:'B',rot:2}, r:false, b:true}, {tile:{kind:'S',rot:0}, r:true,  b:true} ],
     ], [1,1], P1_COLOR, [1,1]),
     (ctx) => drawCornerCrop(ctx, [
-      [ {tile:{kind:'S',rot:1}, r:false, b:false}, {tile:{kind:'B',rot:2}, r:false, b:false} ],
-      [ {tile:{kind:'B',rot:2}, r:false, b:false}, {tile:{kind:'S',rot:0}, r:false, b:false} ],
-    ], [1,1], P1_COLOR, [0,0]),
-    // Frame 9: identical board to frame 8, but the house is gone (it just
-    // vanished) and there's no active card - a lingering beat on the same
-    // aftermath, not a new move.
-    (ctx) => drawCornerCrop(ctx, [
-      [ {tile:{kind:'S',rot:1}, r:false, b:false}, {tile:{kind:'B',rot:2}, r:false, b:false} ],
-      [ {tile:{kind:'B',rot:2}, r:false, b:false}, {tile:{kind:'S',rot:0}, r:false, b:false} ],
-    ], null, null, [0,0]),
+      [ {tile:{kind:'B',rot:0}, r:true,  b:true},  {tile:{kind:'B',rot:1}, r:false, b:false} ],
+      [ {tile:{kind:'B',rot:2}, r:false, b:true},  {tile:{kind:'S',rot:0}, r:false, b:true} ],
+    ], [1,1], P1_COLOR, [0,1]),
   ];
 
   const CAPTIONS = [
@@ -3534,13 +3220,12 @@ if (document.fonts && document.fonts.ready){
     'Red pipes carry power, blue pipes carry water',
     'Dark colours show power or water actually flowing',
     'A card that connects power and water forms a house',
-    'Houses lacking both power and water vanish',
-    'If you hit zero houses you are OUT!',
+    'Houses lacking power or water do not earn points',
   ];
 
   // Per-frame spec for the standalone active-card canvas above the board:
   // intro frames (0-3) show the explicit active card with its own greyed
-  // state; later frames (4-8) show whichever tile is greyed on the board
+  // state; later frames (4-7) show whichever tile is greyed on the board
   // via drawCornerCrop's own changedAt highlight, so the card above always
   // matches what's highlighted below. null means no changed tile that
   // frame, so the space stays blank (reserved, not collapsed).
@@ -3552,8 +3237,7 @@ if (document.fonts && document.fonts.ready){
     null,
     {tile: {kind:'B', rot:0}, greyed: true}, // matches FRAMES[5]'s changedAt [0,0]
     {tile: {kind:'S', rot:0}, greyed: true}, // matches FRAMES[6]'s changedAt [1,1]
-    {tile: {kind:'S', rot:1}, greyed: true}, // matches FRAMES[7]'s changedAt [0,0]
-    null, // frame 9 - no active card, lingering on the same aftermath
+    {tile: {kind:'B', rot:1}, greyed: true}, // matches FRAMES[7]'s changedAt [0,1]
   ];
   const cardWrap = document.getElementById('rulesAnimCardWrap');
   const cardCanvas = document.getElementById('rulesAnimCardCanvas');
@@ -3603,8 +3287,8 @@ if (document.fonts && document.fonts.ready){
     });
   };
 
-  // Starts the ongoing frame-cycling - called immediately at boot now
-  // (see bootLaunchScreen()), not gated behind the simulation batch.
+  // Starts the ongoing frame-cycling - called only once the simulation
+  // batch has finished, not before.
   window.resumeRulesAnim = function(){
     setTimeout(advanceRulesAnim, PERSIST_MS);
   };
