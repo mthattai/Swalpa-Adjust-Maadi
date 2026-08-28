@@ -3431,14 +3431,20 @@ function playOutSimultaneousReplay(){
       // color borders clear, board settles.
       squareChoosersByPos = {};
       // Off-limits only reflects a player's own genuine, successful
-      // play - a square that collapsed to Roadworks means NONE of its
-      // choosers' cards actually stuck there, so none of them get their
-      // off-limits square updated to it (each stays exactly as it was
-      // before this round). Only single-chooser squares (a real,
-      // successful play) update the mover's own off-limits square.
+      // play this round - a square that collapsed to Roadworks means
+      // NONE of its choosers' cards actually stuck there, so none of
+      // them get their off-limits square updated TO IT. But their turn
+      // was still forfeited (no card was actually placed anywhere this
+      // round), so whatever they were guarding from an earlier
+      // successful play no longer applies either - it's cleared, not
+      // left to linger across however many further collisions follow.
       for (const key in bySquare){
         const group = bySquare[key];
-        if (group.length === 1) setOffLimitsForPlayer(group[0].player, group[0].square);
+        if (group.length === 1){
+          setOffLimitsForPlayer(group[0].player, group[0].square);
+        } else {
+          for (const mv of group) setOffLimitsForPlayer(mv.player, null);
+        }
       }
       // Any square that collapsed to Roadworks: none of its choosers'
       // moves survive - mirrors the 1P AI's own handleCollision().
@@ -3593,18 +3599,27 @@ function handleCollision(move){
   const [r,c] = move.square;
   pendingSquare = null;
   previewSavedTile = null;
-  // No off-limits assignment here, deliberately - a collision means
-  // neither player's card actually stuck on this square (it became
-  // Roadworks/rubble instead), so it should be immediately buildable
-  // again next round, not greyed out. Off-limits only ever reflects a
-  // player's own genuine, successful play.
+  // A collision means neither player's card actually stuck on this
+  // square (it became Roadworks/rubble instead), so it should be
+  // immediately buildable again next round, not greyed out. Off-limits
+  // only ever reflects a player's own genuine, successful play - and
+  // since BOTH players' turns were forfeited this round, both players'
+  // off-limits squares are cleared entirely here, not left holding
+  // whatever they last successfully built (which would otherwise keep
+  // showing as guarded indefinitely across however many further
+  // collisions follow).
   //
-  // In 1P mode specifically, Player 1's own off-limits square was
-  // already set EAGERLY back in commitPrivateTurn() (their move applies
-  // for real immediately, before the AI's move - and thus before any
-  // collision - is even known). That eager assignment must be undone
-  // here, now that the collision reveals it never actually stuck.
-  p1OffLimitsSquare = roundStartP1OffLimits;
+  // Player 1's own off-limits square was already set EAGERLY back in
+  // commitPrivateTurn() (their move applies for real immediately,
+  // before the AI's move - and thus before any collision - is even
+  // known); that eager assignment is undone here by clearing rather
+  // than by reverting to round-start, now that the collision reveals
+  // it never actually stuck. Player 2 (the AI) never gets an eager
+  // assignment in the first place - it's only ever set in the
+  // non-collision branch above - so it's explicitly cleared here too,
+  // rather than being silently left as whatever it was before.
+  p1OffLimitsSquare = null;
+  p2OffLimitsSquare = null;
   p1MoveOnBoard = false; // neither move's tile survives a collision - without this, the house-preview logic (checking !house[r][c] against a still-true onBoard flag) can keep projecting a house on top of the rubble
   p2MoveOnBoard = false;
   clearSquareToRubble(r, c);
