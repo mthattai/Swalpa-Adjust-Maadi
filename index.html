@@ -53,7 +53,7 @@
   .legendItem .label { font-size:10px; color:var(--ink-soft); text-align:center; }
   .copyright { font-size:10px; color:var(--rule); text-align:center; margin-top:14px; }
   .social { font-size:10px; color:var(--rule); text-align:center; }
-  #app .social { margin-top:-6px; }
+  #app .social { margin-top:2px; }
   #rulesPage .social { margin-top:4px; }
   #app { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
   canvas#board { display:block; cursor:pointer; max-width:100%; outline:none; }
@@ -205,7 +205,6 @@
     <div class="legendItem"><canvas id="legRed" width="52" height="52"></canvas><div class="label">Power</div></div>
     <div class="legendItem"><canvas id="legBlue" width="52" height="52"></canvas><div class="label">Water</div></div>
     <div class="legendItem"><canvas id="legPark" width="52" height="52"></canvas><div class="label">Park</div></div>
-    <div class="legendItem"><canvas id="legSite" width="52" height="52"></canvas><div class="label">Site</div></div>
     <div class="legendItem"><canvas id="legHouse" width="52" height="52"></canvas><div class="label">House</div></div>
     <div class="legendItem"><canvas id="legRoad" width="52" height="52"></canvas><div class="label">Collision!</div></div>
   </div>
@@ -310,91 +309,91 @@
       </svg>
     </button>
   </div>
-  <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">v38 - 30 Aug 2026</div>
-  <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
+  <div id="footerInfo" style="display:none;">
+    <div class="copyright">Copyright 2026 Mukund Thattai</div>
+    <div class="lastUpdated social">v39 - 02 Sep 2026</div>
+    <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
+  </div>
 </div>
 
 <div id="rulesPage">
   <button id="backBtn">&lt;- Back to game</button>
-  <h1>Swalpa adjust maadi</h1>
-  <p class="ruleSub">Lay pipes, build houses, dig up roads and cut off your rivals from power and water!</p>
-  <p class="ruleMeta">Players: 2-4 &nbsp;&bull;&nbsp; Rounds: 36 &nbsp;&bull;&nbsp; Time per game: 30 mins</p>
+  <h1>Swalpa Adjust Maadi</h1>
+  <p class="ruleSub">Dig up roads to cut off power and water from your opponents!</p>
+  <p class="ruleMeta">Players: 2-4</p>
 
   <h2>Components</h2>
   <p>A board<br>
-  Cards: PARK, PIPE, COLLISION<br>
-  Tokens: SITE, HOUSE, GUARD</p>
+  Tiles: PARK, PIPE<br>
+  Tokens: HOUSE</p>
+
+  <h2>Dedication</h2>
+  <p>In the city of Bengaluru, footpaths and roads are constantly dug up to lay cables and pipes, metro pillars and flyovers. The city's residents, left to deal with unpredictable power and water, tell each other: "Swalpa adjust maadi -- please bear with the inconvenience". This game is dedicated to the resilient people of this once-beautiful city.</p>
 
   <h2>Objective</h2>
-  <p>Players are contractors laying power and water pipes on a board. A contractor who connects power and water to a square builds a house on that square. One contractor's work can break another's pipes, and a house is demolished once its power or water tanks go empty. Players survive as long as they have houses on the board, you must knock out all rivals' houses to win.</p>
-
-  <h2>Game Phases</h2>
-  <p>A typical game has three phases. BUILD: sites are plentiful, house building is rapid. FIGHT: players attack each other, house building and demolition are balanced. COLLAPSE: cards are depleted, house demolition is rapid. Almost all games end with just one player standing within 36 rounds.</p>
+  <p>Players are contractors laying power and water pipes on a board. One contractor's work can break another's pipes, so houses store power and water to deal with supply disruptions. A house is knocked out once its power or water tanks go empty. Players survive as long as they have houses on the board, you must knock out all the opponents' houses to win. The residents of these houses must suffer in silence. Swalpa adjust maadi.</p>
 
   <h2>The Board</h2>
-  <p>The board is a square grid (6x6 for 2 players, 7x7 for 3 and 4 players). It comes set up with a fixed set of PARK squares, a set of PIPE cards on all other squares, and two HOUSE tokens for each player. Score boxes track the number of houses each player has.</p>
-  <div id="ruleSetupBoardDiagram" class="ruleDiagramRow">
-    
-  </div>
-
-  <h2>The Deck</h2>
-  <p>There are 6 types of PIPE cards. Each player is dealt 6 cards of each type, making a deck of 36 cards in total. Each player plays one card per round over the 36 rounds of the game. The total number of remaining cards of each type is indicated by bars above the card. Once a card type is exhausted, it is greyed out and can no longer be played.</p>
-  <div id="ruleDeckDotsDiagram" class="ruleDiagramRow">
-    <div id="ruleDeckDotsRow" style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;"></div>
-  </div>
-  <p class="ruleCaption">The deck showing card types and quantities</p>
-
-  <h2>Playing a Round</h2>
-  <p>At the start of each round, each player secretly chooses a PIPE card from their own deck and a square on the board. All players then reveal their choices at once. Each player removes the card currently on their chosen square, and replaces it with the chosen card from their deck. Each player's chosen square is marked with a GUARD token during the next round.</p>
-  <div id="ruleConfirmMoveDiagram" class="ruleDiagramRow" style="gap:16px;">
-    <div><canvas id="ruleConfirmBeforeCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">Before: The starting board</div></div>
-    <div><canvas id="ruleConfirmAfterCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">After: A new card on the chosen square</div></div>
-  </div>
-
-  <p>If two or more players choose the same square, this is a collision! Their cards are discarded, and a COLLISION card is placed on that square. The square is left unguarded, and players can choose it on subsequent rounds.</p>
-  <div id="ruleCollisionDiagram" class="ruleDiagramRow" style="gap:16px;">
-    <div><canvas id="ruleCollisionCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">A collision!</div></div>
-  </div>
-
-  <p>Off-limits squares: No card may be played on a PARK square, or on any square with a GUARD token. A player cannot play a card on a square that has another player's HOUSE.</p>
-
-  <h2>Playing on a Device</h2>
-  <p>Your chosen square and chosen card are highlighted by an orange hazard-tape border. You can try up to five card/square combinations; tap the chosen square again to confirm your move. That square is then marked with a GUARD token (grey shading) during the next round. Trying to play on an off-limits square will trigger a message that explains why this can't be done.</p>
-  <p>In multi-player mode ("Human" icon) each player's choice is recorded serially, and then all players' moves are replayed together. In Human vs. Bot mode ("Bot" icon) Player 1 is the human, other players are Bots. On your turn you can use the Auto button to autoplay your move. Replay, Bot play, and Autoplay are indicated by a PLAY icon in the score box.</p>
+  <p>The board is a square grid (6x6 for 2 players, 7x7 for 3 and 4 players). It comes set up with a fixed set of PARK tiles, a set of PIPE tiles on all other squares, and three HOUSE tokens for each player. Score boxes track the number of houses each player has on the board, and how many units of POWER or WATER remain in each house's tank.</p>
 
   <h2>Power and Water Supplies</h2>
-  <p>The board's top and bottom edges SUPPLY POWER, shown in dark red, and its left and right edges SUPPLY WATER, shown in dark blue. The main goal of the game is to bring these resources INTO the board by placing PIPE cards cleverly.</p>
-  <p>Each PIPE card has a single POWER pipe, initially light red, and a single WATER pipe, initially light blue, crossing it. Each edge of a PIPE card has a single pipe ending on it. When a PIPE card is placed next to a SUPPLY edge, the resource will only flow into the square if both the SUPPLY and the PIPE are of the SAME COLOUR. If a blue pipe touches the red supply edge, the colours are mismatched and power WILL NOT flow into the pipe.</p>
-  <p>If a POWER pipe is connected to a POWER SUPPLY, it changes from light to dark red. This pipe can then supply power to another square, as long as it connects to a POWER pipe on that square. Similarly, if a WATER pipe is connected to a WATER SUPPLY, it changes from light to dark blue. This pipe can then supply water to another square, as long as it connects to a WATER pipe on that square.</p>
+  <p>The board's top and bottom edges are the POWER SUPPLY, and its left and right edges are the WATER SUPPLY. The main goal of the game is to bring these resources INTO the board, to your own houses, by placing PIPE cards cleverly. The key friction in the game is that you cannot change a POWER PIPE without also changing a WATER PIPE on the same square.</p>
+  <p>Each PIPE tile has a single POWER PIPE and a single WATER PIPE crossing it. Each edge of a PIPE tile has a single pipe ending on it. When a PIPE tile is placed next to a SUPPLY edge, the resource will only flow into the square if both the SUPPLY and the PIPE are of the same type. If a POWER PIPE touches the WATER SUPPLY edge, the pipes are mismatched and water WILL NOT flow into the pipe.</p>
+  <p>If a POWER PIPE is connected to a POWER SUPPLY, this pipe can then supply power to another square, as long as it connects to a POWER PIPE on that square. Similarly, if a WATER PIPE is connected to a WATER SUPPLY, this pipe can then supply water to another square, as long as it connects to a WATER PIPE on that square. Power and water pipes can cross without blocking one another.</p>
   <div id="ruleFlowDiagram" class="ruleDiagramRow" style="gap:16px;">
     <div><canvas id="ruleFlowBeforeCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">Before: Pipes with no supply</div></div>
     <div><canvas id="ruleFlowAfterCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">After: Power and water supply connected</div></div>
   </div>
 
-  <h2>Building Houses</h2>
-  <p>A square whose neighbours already supply it with both power and water but has no house is marked with a SITE token (brown shading). Sites and houses cannot form on the outermost layer of the board.</p>
-  <p>Power and water will only flow into a site if the pipes on that square actually match the supplies on its edges. If a card is placed on a site that connects it to both power and water, a house is built on that site. This house is claimed by the player who placed the card. The SITE token is removed and replaced by a HOUSE token in the player's colour (the brown colour is replaced by a house icon with a roof in the player's colour).</p>
-  <div id="ruleSiteToHouseDiagram" class="ruleDiagramRow" style="gap:16px;">
-    <div><canvas id="ruleSiteBeforeCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">Before: Many empty sites</div></div>
-    <div><canvas id="ruleSiteAfterCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">After: A newly-built house</div></div>
+  <h2>The Deck</h2>
+  <p>There are 6 possible types of oriented PIPE tiles. Each player plays one tile per round.</p>
+  <div id="ruleDeckDotsDiagram" class="ruleDiagramRow">
+    <div id="ruleDeckDotsRow" style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;"></div>
+  </div>
+  <p class="ruleCaption">The deck showing tile types</p>
+
+  <h2>Playing a Round</h2>
+  <p>At the start of each round, each player secretly chooses a PIPE tile (consisting of one POWER PIPE and one WATER PIPE) and a square on the board. All players then reveal their choices at once. Each player removes the POWER and WATER PIPES on their chosen square, and replaces them with pipes matching their chosen tile. Off-limits squares: No tile may be played on a PARK square. A player cannot play a tile on a square that has another player's HOUSE (unless that house has already been knocked out).</p>
+  <div id="ruleConfirmMoveDiagram" class="ruleDiagramRow" style="gap:16px;">
+    <div><canvas id="ruleConfirmBeforeCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">Before: The starting board</div></div>
+    <div><canvas id="ruleConfirmAfterCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">After: A new tile on the chosen square</div></div>
   </div>
 
-  <h2>Demolishing Houses</h2>
-  <p>Each house has two tanks, one for power and one for water, each with a capacity of three units. This is indicated by red and blue battery-type indicators. At the end of every round, power and water flows are updated and every house on the board is checked. If the house is still connected to power/water, then its power/water tank rises by one unit. If it is not connected to power/water, then its power/water tank falls by one unit. If either tank reaches zero, the house is demolished before the next round begins.</p>
+  <h2>Collisions</h2>
+  <p>If two or more players choose the same square, this is a collision. Any pipes presently on that square are struck out, so POWER and WATER no longer flow through it. These pipes stay broken until a player chooses that square on a subsequent turn.</p>
+  <div id="ruleCollisionDiagram" class="ruleDiagramRow" style="gap:16px;">
+    <div><canvas id="ruleCollisionCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">A collision!</div></div>
+  </div>
+
+  <h2>Knocking Out Houses</h2>
+  <p>POWER and WATER will only flow into a house if the PIPES on its square match the PIPES on its edges, and those pipes are connected to a POWER/WATER SUPPLY. Each house has two tanks, one for POWER and one for WATER, each with a capacity of three units. At setup, all houses start connected to POWER SUPPLY and WATER SUPPLY, so both tanks are full with three units of each. At the end of every round, every house on the board is checked. If the house is still connected to POWER/WATER SUPPLY, then its corresponding tank FILLS UP completely. If it is not connected to POWER/WATER SUPPLY, then its corresponding tank FALLS by one unit. If either tank reaches zero, the house is knocked out before the next round begins.</p>
   <div id="ruleReservoirDiagram" class="ruleDiagramRow" style="gap:16px;">
     <div><canvas id="ruleThreeHouseBeforeCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">Before: Updated flows, current tanks</div></div>
-    <div><canvas id="ruleThreeHouseAfterCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">After: Updated tanks, one house demolished</div></div>
+    <div><canvas id="ruleThreeHouseAfterCanvas"></canvas><div class="ruleCaption" style="margin-top:4px;">After: Updated tanks, one house knocked out</div></div>
   </div>
 
   <h2>Winning the Game</h2>
-  <p>A player is eliminated the instant all their houses are demolished. The last player standing wins. If every remaining player is eliminated in the same round, the game ends in a draw. If the game completes 36 rounds with two or more players still standing, it also ends in a draw.</p>
+  <p>A player is eliminated the instant all their houses are knocked out. The last player standing wins. If every remaining player is eliminated in the same round, the game ends in a draw.</p>
+
+  <h2>Playing on a Write &amp; Wipe Sheet</h2>
+  <p>Press the SAVE icon to export the present board to a WRITE &amp; WIPE sheet. The same board is shown twice: left shows POWER SUPPLY and PIPES, right shows WATER SUPPLY and PIPES. The board sheet should be cut out and kept visible to all the players. This board sheet also lists score boxes for each player, showing the POWER and WATER tank levels on every house. These tanks start with three units each.</p>
+  <p>Each player also has to cut out a CHOOSE SQUARE card, on which each PIPE tile type is shown twice: top shows POWER, bottom shows WATER. On your turn, choose a specific POWER/WATER PIPE tile and a square on the board (using the coordinates A,B,... and 1,2,...). All players then reveal their CHOOSE SQUARE cards at once. If there is a collision involving two or more players, the pipes on the corresponding square are erased. For all remaining squares, players erase the present pipes and replace them with the pipes on their chosen POWER/WATER PIPE tile.</p>
+  <p>Once all players have played, every HOUSE on the board is checked. The POWER/WATER levels on each houses's tanks are updated based on whether the houses are connected to POWER/WATER SUPPLY (fill up completely if connected, fall by one unit if not connected). If either tank reaches zero, the house is struck out on the score box.</p>
+
+  <h2>Playing on a Board</h2>
+  <p>Set up the initial board using the template layouts provided (the 2-player 6x6 board has 4 PARK tiles and 32 PIPE tiles; the 3/4 player 7x7 board has 6 PARK tiles and 43 PIPE tiles). Use the MAIN/CROSS tokens to label the rows and columns on the board. Place the N/S cards on the board top and bottom to mark POWER SUPPLY, and E/W cards on the board right and left to mark WATER SUPPLY. Place each player's HOUSE tokens as indicated on the template layouts. Each HOUSE token has blank spaces for its power and water tanks. Use a dry-erase marker to tally 3 units of POWER and 3 units of WATER on the HOUSE tokens at setup.</p>
+  <p>On each turn, all players use markers to write their chosen squares on their MAIN/CROSS cards (using the coordinates A,B,... and 1,2,...) and place them face-down. These squares are revealed simultaneously. If there is a collision involving two or more players, the exclamation-point token is placed on that square, indicating that the pipes are broken. For all remaining squares, players pick up the tile on that square, flip and rotate them as they choose, and replace them on the same square.</p>
+  <p>Once all players have played, every house on the board is checked. The POWER/WATER levels on each HOUSE token's tanks are updated using markers, based on whether the houses are connected to POWER/WATER SUPPLY. If either tank reaches zero, the house is removed from the board and discarded.</p>
+
+  <h2>Playing on a Device</h2>
+  <p>Your chosen square and chosen card are highlighted by a border in your colour. You can try up to five card/square combinations; tap the chosen square again to confirm your move. That square is then marked with grey shading during the next round as a reminder of the move. Trying to play on an off-limits square will trigger a message that explains why this can't be done.</p>
+  <p>In multi-player mode ("Human" icon) each player's choice is recorded serially, and then all players' moves are replayed together. In Human vs. Bot mode ("Bot" icon) Player 1 is the human, other players are Bots. On your turn you can use the Auto button to autoplay your move. Replay, Bot play, and Autoplay are indicated by a PLAY icon in the score box.</p>
 
   <p class="ruleClosing">Happy digging!</p>
 
   <button id="backBtn2">&lt;- Back to game</button>
   <div class="copyright">Copyright 2026 Mukund Thattai</div>
-  <div class="lastUpdated social">v38 - 30 Aug 2026</div>
+  <div class="lastUpdated social">v39 - 02 Sep 2026</div>
   <div class="social"><a href="https://bsky.app/profile/thattai.bsky.social" target="_blank" rel="noopener" style="color:inherit; text-decoration:none;">@thattai.bsky.social</a></div>
 </div>
 
@@ -461,23 +460,23 @@ const SETUP_MOVES_CONFIG = {6:48, 7:56};
 // and never once failed the old site threshold either, so the second
 // gate was pure redundant cost, not a real second constraint.
 //
-// v38: this is still the gate used for 3P/4P (always 7x7, the template
-// approach unchanged - see the loop below, which still reserves 2-house
+// v48: this is still the gate used for 3P/4P (always 7x7, the template
+// approach unchanged - see the loop below, which still reserves 3-house
 // slots for all 4 colours regardless of effectiveN). 2P is different as
-// of v38: since 2P now always plays on the smaller 6x6 board and never
-// needs more than 2 houses total (1 per player), demanding 8 connected
-// squares there is both unnecessarily strict and a needless drag on
-// setup attempts - so 2P games threshold directly on 2*effectiveN (= 4)
-// instead, computed at the loop's own call site just below.
-const REQUIRED_CONNECTED_FOR_HOUSES = 8;
+// of v38: since 2P now always plays on the smaller 6x6 board, demanding
+// the full 4-colour figure there is both unnecessarily strict and a
+// needless drag on setup attempts - so 2P games threshold directly on
+// 3*effectiveN (= 6) instead, computed at the loop's own call site just
+// below.
+const REQUIRED_CONNECTED_FOR_HOUSES = 12;
 // No fixed "Build" phase any more - elimination is live from round 1,
 // the whole game through. Kept as a named constant (rather than removed
 // outright) since a few round-counting expressions elsewhere still add
 // it for clarity/symmetry, even though it's always zero now.
 const GRACE_PERIOD_ROUNDS = 0;
-// The entire game is "Knockout" now, for this many rounds total.
-const KNOCKOUT_ROUNDS = 36;
-const TOTAL_ROUNDS = GRACE_PERIOD_ROUNDS + KNOCKOUT_ROUNDS;
+// v39: the round cap (previously KNOCKOUT_ROUNDS/TOTAL_ROUNDS, 36 rounds)
+// has been removed entirely - see advanceToNextRound()'s own comment.
+// Knockout (elimination) is now the only way a game can ever end.
 // Roadworks is no longer part of either player's personal hand at all -
 // it's a single shared, round-level event that clears one random square
 // BEFORE either player picks that round, so both players always see the
@@ -497,6 +496,12 @@ const PERIODIC_ROADWORKS_ENABLED = false;
 // connector proportions, Roadworks excluded) and runHiddenSetup() and the
 // in-game rules diagram all read from this one list. Change counts here
 // only, and both the actual game behaviour and the displayed rules update together.
+// v39: card-count limits are removed altogether - a player may play any
+// card type any number of times, for as long as the game goes on (see
+// selectCard()/aiChooseCardAndSquare(), which no longer check or track
+// remaining counts at all). countPerPlayer below now serves ONLY as the
+// relative weighting for buildSetupDeck()'s/runHiddenSetup()'s initial
+// board-fill draws - it no longer means "copies available in a hand".
 const DECK_COMPOSITION = [
   {tile:{kind:'S', rot:0}, countPerPlayer:6, label:'Straight A'},
   {tile:{kind:'S', rot:1}, countPerPlayer:6, label:'Straight B'},
@@ -554,43 +559,6 @@ function buildQuantityBar(total, filled, unitW, heightPx, color){
     seg.style.borderRadius = '1px';
     seg.style.background = color;
     seg.style.opacity = i < filled ? '1' : '0';
-    wrap.appendChild(seg);
-  }
-  return wrap;
-}
-
-// Deck-card variant: same minimal segment styling as buildQuantityBar
-// (small rounded units, true gaps, empty units fully invisible rather
-// than tinted), but arranged as a 2-row CSS grid instead of a single
-// row - this is what the original dot indicator did, and is what keeps
-// the deck's highest-count card type from overflowing a hand card's
-// own width the way a single wide row would. cols = ceil(total/2), so
-// every card type's grid is an exact total/2-by-2 fit with no leftover
-// cells. Depletion order: top row right-to-left first, then bottom row
-// right-to-left - a card's last-remaining copies are always toward the
-// left, matching the tries indicator's own right-to-left depletion
-// (where T, the leftmost letter, is always the last one lit).
-function buildQuantityGrid(total, remaining, unitW, heightPx, color, cols){
-  const wrap = document.createElement('div');
-  wrap.className = 'qbar';
-  wrap.style.display = 'grid';
-  wrap.style.gridTemplateColumns = `repeat(${cols}, ${unitW}px)`;
-  wrap.style.gridTemplateRows = `repeat(2, ${heightPx}px)`;
-  wrap.style.gap = '1.5px';
-  const usedCount = total - remaining;
-  for (let i=0;i<total;i++){
-    const row = Math.floor(i/cols);
-    const col = i % cols;
-    // Depletion rank of this grid cell: 0 = used first (top-right), up
-    // to total-1 = used last (bottom-left) - the grid index i itself
-    // (row-major left-to-right) is only the DOM/visual placement order,
-    // not the depletion order, so this rank is computed separately.
-    const rank = row === 0 ? (cols-1-col) : (cols + (cols-1-col));
-    const seg = document.createElement('div');
-    seg.className = 'qbar-seg';
-    seg.style.borderRadius = '1px';
-    seg.style.background = color;
-    seg.style.opacity = rank < usedCount ? '0' : '1';
     wrap.appendChild(seg);
   }
   return wrap;
@@ -1064,6 +1032,41 @@ let board, house, owner, turn, currentDraw, roundNum, gameOver;
 // start completely full in both.
 const RESERVOIR_MAX = 3;
 let powerReservoir, waterReservoir;
+// v40: house-building is being reworked into its own separate phase and
+// token pool - see houseTokensRemaining below and the new house-build
+// phase functions. The old flat MAX_HOUSES_PER_PLAYER cap is retired;
+// HMAX takes over that role, but as a TOTAL EVER-BUILT budget rather
+// than a standing-count cap - a house that later vanishes never returns
+// its token (see houseTokensRemaining's own comment).
+const HMAX = 3;
+// v49: house-building disabled for now (every player's full HMAX budget
+// is handed out at setup - see the "3 houses already built by setup"
+// comment below - so houseTokensRemaining is always 0 and no build move
+// can ever succeed, gated at every trigger point: selectHouseIcon(),
+// the bot's own allHousesFragile() check, etc. all already required
+// houseTokensRemaining > 0 before doing anything, so this alone fully
+// disables building without touching any of that logic). The UI icon
+// for it is separately hidden via HOUSE_BUILDING_UI_ENABLED below - the
+// whole feature is left in place, just switched off, in case a future
+// iteration wants it back; flip both this and that flag to restore it.
+const HOUSE_BUILDING_UI_ENABLED = false;
+// Sites are still tracked and computed as before (hasFullEdgeSupply(),
+// scanAllSiteOverlays() etc. are all untouched, and the AI heuristics
+// that key off "is this square a site" still see exactly what they did
+// before) - only the VISUAL highlight on the live board and the legend-
+// row icon for it are switched off below, since a site no longer leads
+// anywhere for the player to see (building is disabled - see
+// HOUSE_BUILDING_UI_ENABLED just above). Flip this back on together
+// with that flag if house-building ever returns.
+const SHOW_SITE_HIGHLIGHT = false;
+// Tokens remaining in a player's hand, per player (1-indexed). This is
+// literally the "Y" half of the X/Y scorebox reading - Y = HMAX minus
+// however many houses this player has EVER built (setup houses
+// included), regardless of whether any of them later vanished. A token
+// is spent exactly once, permanently, the instant a house is actually
+// built - never restored. Initialized in initFreshBoard() to HMAX minus
+// however many starting houses setup just handed out (2, currently).
+let houseTokensRemaining = {};
 // No points any more - the board itself is the state. A player is
 // "eliminated" once they have zero houses left with any connection at all
 // (checked only from GRACE_PERIOD_ROUNDS+1 onward - see finishRevealAndAdvance()).
@@ -1247,7 +1250,7 @@ function initFreshBoard(){
   // v38: 2P plays a genuinely smaller table (6x6, 2 houses total) - see
   // REQUIRED_CONNECTED_FOR_HOUSES's own comment - so it gets its own,
   // lower gate rather than reusing the 4-colour template's threshold.
-  const requiredConnectedForHouses = (effectiveN === 2) ? (2 * effectiveN) : REQUIRED_CONNECTED_FOR_HOUSES;
+  const requiredConnectedForHouses = (effectiveN === 2) ? (3 * effectiveN) : REQUIRED_CONNECTED_FOR_HOUSES;
   let eligibleConnectedSquares = [];
   for (let attempt = 0; attempt < MAX_SETUP_ATTEMPTS; attempt++){
     const setupDeck = buildSetupDeck();
@@ -1295,7 +1298,7 @@ function initFreshBoard(){
   }
   let houseIdx = 0;
   for (let p=1; p<=4; p++){
-    for (let k=0; k<2 && houseIdx<shuffledConnected.length; k++, houseIdx++){
+    for (let k=0; k<3 && houseIdx<shuffledConnected.length; k++, houseIdx++){
       if (p > effectiveN) continue; // this colour isn't in play - leave the square as-is
       const [r,c] = shuffledConnected[houseIdx];
       house[r][c] = true;
@@ -1303,6 +1306,16 @@ function initFreshBoard(){
       powerReservoir[r][c] = RESERVOIR_MAX;
       waterReservoir[r][c] = RESERVOIR_MAX;
     }
+  }
+
+  // v49: every player starts with all 3 houses already built by setup,
+  // and HMAX is now also 3 - so houseTokensRemaining is always 0 and
+  // house-building is fully (if softly) disabled for every colour, from
+  // the very first render. See HOUSE_BUILDING_UI_ENABLED's own comment
+  // near HMAX for the rest of this story.
+  houseTokensRemaining = {};
+  for (let p=1; p<=effectiveN; p++){
+    houseTokensRemaining[p] = HMAX - 3;
   }
 
   // Snapshotted immediately, not left for beginRound() to set later -
@@ -1319,8 +1332,6 @@ function initFreshBoard(){
   roundStartBoard = board.map(row => row.map(t => ({...t})));
   roundStartHouse = house.map(row => row.slice());
   roundStartOwner = owner.map(row => row.slice());
-
-  resetHandsForPhase();
 }
 
 // Runs once, silently, before the game is ever shown to the player -
@@ -1868,7 +1879,7 @@ function render(){
       const earlyRelevant = (pendingSquare && r === pendingSquare[0] && c === pendingSquare[1]) || tileChangedThisRound;
       const earlyProjectedNewHouse = earlyRelevant && !house[r][c] && redC[r][c] && blueC[r][c]
         && !(r===0 || r===N-1 || c===0 || c===N-1);
-      if (!earlyProjectedNewHouse && !house[r][c] && board[r][c].kind !== 'P'
+      if (SHOW_SITE_HIGHLIGHT && !earlyProjectedNewHouse && !house[r][c] && board[r][c].kind !== 'P'
           && r>0 && r<N-1 && c>0 && c<N-1 && hasFullEdgeSupply(redC, blueC, r, c)){
         ctx.save();
         ctx.fillStyle = SITE_COLOR;
@@ -1894,55 +1905,46 @@ function render(){
       drawTileOn(ctx, px,py,SIZE,board[r][c],redC[r][c],blueC[r][c]);
     }
 
-    const rSup = redC[r][c], bSup = blueC[r][c];
-    const onOuterRing = (r===0 || r===N-1 || c===0 || c===N-1);
-    // The current player's own live preview (pendingSquare) stays fully
-    // live - recomputed every frame, exactly as before, since that's
-    // "how the board would actually look" if committed right now. A
-    // square already committed/replayed earlier this round instead uses
-    // its OWN frozen wasConnectedAtCommit snapshot (captured the instant
-    // it committed - see commitPrivateTurn()/playOutDecidedMove()) so it
-    // can't flicker away mid-round just because the OTHER player's later
-    // move happens to disrupt it - that disruption, or just as often a
-    // connection this move's own preview never showed, only ever becomes
-    // visible at the real resolveRound() reveal, exactly like v33's
-    // explicit vanish/build animations, never as a live flicker
-    // beforehand. Never on the outermost ring, same rule resolveRound()
-    // itself uses.
-    let projectedNewHouse = false;
-    let projectedOwner = null;
-    if (pendingSquare && r === pendingSquare[0] && c === pendingSquare[1]){
-      projectedNewHouse = !house[r][c] && rSup && bSup && !onOuterRing;
-      projectedOwner = turn;
-    } else {
-      // Each player's own frozen wasConnectedAtCommit snapshot - only
-      // relevant while that player's move is genuinely on the board
-      // (see p1MoveOnBoard's own declaration for why an explicit flag,
-      // not a tile-value comparison, is required here).
+    // v43: a house preview shows in two cases - (a) the player's own
+    // live, not-yet-confirmed choice (pendingSquare + houseModeSelected),
+    // and (b) a move that's already been committed this round and is
+    // still genuinely "on board" (getMoveOnBoardForPlayer()) - exactly
+    // like a committed CARD's tile, which persists on the board the
+    // instant it's placed rather than only while pendingSquare points at
+    // it. Case (b) is deliberately skipped during isReplayPhase - the
+    // replay has its own distinct visual language (colour/hazard
+    // rectangles only, no house glyph) right up until the real tally
+    // actually builds it; without this guard, playOutSimultaneousReplay()
+    // re-arming these same flags for its own placement step would leak
+    // an early house glyph into that sequence. Both cases derive tanks
+    // from THIS square's current connectivity, exactly matching what
+    // resolveRound() would actually do if ticked right now: full on the
+    // side that's connected, debited by one on the side that isn't.
+    let housePreviewMover = null;
+    if (houseModeSelected && pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c && !house[r][c]){
+      housePreviewMover = turn;
+    } else if (!isReplayPhase && !house[r][c]){
       for (let p=1; p<=effectiveN; p++){
         const mv = getMoveForPlayer(p);
-        if (mv && getMoveOnBoardForPlayer(p) && mv.square[0]===r && mv.square[1]===c){
-          projectedNewHouse = !house[r][c] && mv.wasConnectedAtCommit;
-          projectedOwner = p;
+        if (mv && mv.isHouse && getMoveOnBoardForPlayer(p) && mv.square[0]===r && mv.square[1]===c){
+          housePreviewMover = p;
           break;
         }
       }
     }
-
-    if (house[r][c] || projectedNewHouse){
+    const isHousePreview = housePreviewMover !== null;
+    if (house[r][c] || isHousePreview){
       const cx=px+SIZE/2, cy=py+SIZE/2;
-      // Purely visual: the actual owner[][] reassignment still only
-      // happens once resolveRound() actually runs. Naturally reverts if
-      // the player instead previews a different space, since this is
-      // recomputed fresh from the live board on every render() call.
-      let ownerColor = null;
-      const effOwner = projectedNewHouse ? projectedOwner : owner[r][c];
-      if (effOwner) ownerColor = PLAYER_COLORS[effOwner - 1];
-      // A real, existing house shows its actual reservoir levels; a
-      // hypothetical not-yet-confirmed preview shows a full meter, since
-      // a brand new house always starts completely full.
-      const previewPower = house[r][c] ? powerReservoir[r][c] : RESERVOIR_MAX;
-      const previewWater = house[r][c] ? waterReservoir[r][c] : RESERVOIR_MAX;
+      let ownerColor, previewPower, previewWater;
+      if (house[r][c]){
+        ownerColor = owner[r][c] ? PLAYER_COLORS[owner[r][c] - 1] : null;
+        previewPower = powerReservoir[r][c];
+        previewWater = waterReservoir[r][c];
+      } else {
+        ownerColor = PLAYER_COLORS[housePreviewMover - 1];
+        previewPower = redC[r][c] ? RESERVOIR_MAX : RESERVOIR_MAX - 1;
+        previewWater = blueC[r][c] ? RESERVOIR_MAX : RESERVOIR_MAX - 1;
+      }
       if (isPlaceAnimating){
         const t = (performance.now()-_placeAnimStart) / ANIM_DURATION_MS;
         const scale = 0.55 + 0.45*easeOutBack(t);
@@ -1959,8 +1961,23 @@ function render(){
 
     ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.strokeRect(px,py,SIZE,SIZE);
 
+    // v41: squareChoosersByPos is now generic across BOTH card and house
+    // moves - any move (of either type) landing on this square this
+    // round shows up here, since the P-player replay's own square
+    // grouping (playOutSimultaneousReplay()) already keys purely by
+    // .square, never by move type. A house move never changes board[][]
+    // itself, so it never gets its own tile-placement step here - but it
+    // still participates fully in the collision outline below, and in
+    // the "+1" pop once resolveRound() actually builds it.
     const squareChoosers = squareChoosersByPos[`${r},${c}`] || [];
-    if ((pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c) || squareChoosers.length >= 2){
+    if (pendingSquare && pendingSquare[0]===r && pendingSquare[1]===c){
+      // v42: a player's own live choice (card or house, mid-preview) is
+      // shown in their own colour now - hazard tape is reserved for a
+      // genuine replay collision (2+ choosers), never for an ordinary
+      // in-progress preview.
+      const inset = SIZE*0.10;
+      drawPlayerColorBorder(ctx, px, py, SIZE, SIZE, inset, PLAYER_COLORS[turn-1]);
+    } else if (squareChoosers.length >= 2){
       const inset = SIZE*0.10;
       drawHazardTapeBorder(ctx, px+inset, py+inset, SIZE-2*inset, SIZE-2*inset, px, py, SIZE, SIZE);
     } else if (squareChoosers.length === 1){
@@ -1968,14 +1985,14 @@ function render(){
       drawPlayerColorBorder(ctx, px, py, SIZE, SIZE, inset, PLAYER_COLORS[squareChoosers[0]-1]);
     }
 
-    // Either of the two squares played this round that just became a
-    // brand-new house pops "+1" in the builder's own colour; any square
-    // that just lost its last connection pops "-1" in its owner's colour
-    // (owner[][] still holds it - the actual removal only happens once
-    // this whole reveal finishes, at showSettledScoreStage()). Both share
-    // the same pop-in visual treatment, just a different sign/colour.
-    // owner[][] is used directly for both (rather than some notion of
-    // "whoever's turn it is") since resolveRound() has already set it
+    // A square that just became a brand-new house this round pops "+1"
+    // in the builder's own colour; any square that just lost its last
+    // connection pops "-1" in its owner's colour (owner[][] still holds
+    // it - the actual removal only happens once showSettledScoreStage()
+    // finishes). Both share the same pop-in visual treatment, just a
+    // different sign/colour. owner[][] is used directly for both (rather
+    // than some notion of "whoever's turn it is") since resolveRound()
+    // has already set it
     // correctly by the time this renders, and either or both players may
     // have built this round.
     let popLabel = null, popColor = null;
@@ -2065,7 +2082,9 @@ function render(){
       // Standing house count - not a score, just what's currently on the
       // board for this player. Recomputed fresh every render(), since
       // anyone's house count can change on anyone's turn (a disconnection
-      // affecting them, not just their own building).
+      // affecting them, not just their own building). The token count
+      // (houseTokensRemaining) is shown on the house icon next to the
+      // deck now, not here.
       numEl.textContent = standingHouseCount(p);
     }
     if (!showAutoPlayIcon){
@@ -2083,7 +2102,7 @@ function render(){
   // since there's no longer a separate Build phase to distinguish it
   // from (knockout is live for the whole game now).
   const roundNumEl = document.getElementById('roundNum');
-  roundNumEl.innerHTML = `Round ${roundNum}/${TOTAL_ROUNDS}`;
+  roundNumEl.innerHTML = `Round ${roundNum}`;
   try {
     fitTextToWidth(roundNumEl, roundNumEl.offsetWidth, 26, 10);
   } catch (e) {
@@ -2252,64 +2271,126 @@ function drawPlayerColorBorder(ctx, outerX, outerY, outerW, outerH, thickness, c
   ctx.restore();
 }
 
-// v32: the 6 pipe card types (Roadworks excluded - see playerHandCounts'
-// own comment) laid out as a row of fully-visible, evenly-spaced slots,
-// replacing the old sliding/partially-hidden queue. Each slot shows a
-// small row of dots above the card - one per copy of that type this
-// phase, dimmed once used - so the remaining count is always visible at a
-// glance, then the card itself: hazard-striped ('active') if it's this
-// player's current selection, greyed out ('committed') if depleted, or
-// plain ('normal') otherwise. buildDeckCardCanvas() already draws exactly
-// these three states - reused unchanged from the old deck UI.
+// v39: the 6 pipe card types (Roadworks excluded - never part of either
+// player's personal deck at all, see ROADWORKS_ROUNDS instead) laid out
+// as a row of fully-visible, evenly-spaced slots. No quantity bar above
+// each card anymore - card-count limits were removed altogether, so
+// there's no "remaining" to show. Each card is: hazard-striped ('active')
+// if it's this player's current selection, briefly greyed out
+// ('committed') right after being played, or plain ('normal') otherwise.
+// buildDeckCardCanvas() already draws exactly these three states -
+// reused unchanged from the old deck UI.
+// v41: n=7 now - the 6 real cards plus the house icon, which is a real
+// 7th slot in the same row (appended by renderPlayerHand()/
+// renderNeutralDeck() themselves, not a separate element) and must
+// shrink together with the cards to keep the whole row fitting a small
+// screen width.
 function computeHandCardGeometry(){
-  const n = 6;
+  const n = HOUSE_BUILDING_UI_ENABLED ? 7 : 6;
   const gap = 4;
   const gapTotal = (n - 1) * gap;
   const borderTotal = n * 2;
-  const psize = Math.max(24, Math.min(48, Math.floor((CANVAS_SIZE - gapTotal - borderTotal) / n)));
+  const psize = Math.max(22, Math.min(48, Math.floor((CANVAS_SIZE - gapTotal - borderTotal) / n)));
   return {psize, gap};
 }
 
+// v41: the house icon's own glyph - same body/roof geometry as
+// drawHouseShape() (the real board-house drawing), but the body shows
+// the remaining token count, centred, instead of reservoir bars, since
+// there's no reservoir here - just a count of houses left to build.
+// tokenCount===null skips the digit entirely - used during the shared
+// replay reveal, where there's no single player whose count would even
+// make sense to show. roofColor mirrors a real house's own owner-colour
+// roof (see drawHouseShape()) - the current mover's colour for a live
+// render, or left neutral during replay (the border, not the glyph,
+// carries "who chose this" during a shared reveal, exactly like a real
+// card).
+function drawHouseIconGlyph(ctx, cx, cy, s, tokenCount, roofColor){
+  const baseW = s*0.5, baseH = s*0.4;
+  const baseX = cx - baseW/2, baseY = cy - baseH*0.15;
+  const roofOverhang = s*0.06;
+  const roofTopY = baseY - s*0.32;
+
+  ctx.fillStyle = '#F7F3E8';
+  ctx.fillRect(baseX, baseY, baseW, baseH);
+  ctx.strokeStyle = '#2B2620'; ctx.lineWidth = s*0.045;
+  ctx.strokeRect(baseX, baseY, baseW, baseH);
+
+  if (tokenCount !== null){
+    ctx.fillStyle = '#2B2620';
+    ctx.font = `bold ${Math.round(baseH*0.70)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Canvas's 'middle' baseline centers on the font's em-box, not the
+    // actual glyph - for bold digits that sits visibly above the true
+    // geometric centre, especially at the small sizes this icon renders
+    // at on a full 7-slot row. Nudged down to compensate.
+    ctx.fillText(String(tokenCount), cx, baseY + baseH/2 + baseH*0.08);
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(baseX - roofOverhang, baseY);
+  ctx.lineTo(cx, roofTopY);
+  ctx.lineTo(baseX + baseW + roofOverhang, baseY);
+  ctx.closePath();
+  ctx.fillStyle = roofColor || '#F7F3E8';
+  ctx.fill();
+  ctx.strokeStyle = '#2B2620'; ctx.lineWidth = s*0.045; ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+// v41: same card frame (background texture, hazard/color/committed
+// border states) as buildDeckCardCanvas(), just drawing the house glyph
+// above instead of a pipe tile - the icon behaves and renders exactly
+// like the 6 real cards in every way that matters, since it's built by
+// the very same state machinery.
+function buildHouseCardCanvas(psize, tokenCount, cardState, borderColor, roofColor){
+  const cnv = document.createElement('canvas');
+  cnv.width = psize; cnv.height = psize;
+  const c = cnv.getContext('2d');
+  c.fillStyle = '#FBF9F3'; c.fillRect(0,0,psize,psize);
+  c.fillStyle = getBoardTexturePattern(c); c.fillRect(0,0,psize,psize);
+  drawHouseIconGlyph(c, psize/2, psize/2, psize, tokenCount, roofColor);
+  if (cardState === 'active'){
+    cnv.classList.add('activeCard');
+    const inset = psize*0.10;
+    drawHazardTapeBorder(c, inset, inset, psize-2*inset, psize-2*inset, 0, 0, psize, psize);
+  } else if (cardState === 'playerColor'){
+    cnv.classList.add('activeCard');
+    c.strokeStyle = borderColor; c.lineWidth = 3;
+    c.strokeRect(1.5, 1.5, psize-3, psize-3);
+  } else if (cardState === 'committed'){
+    c.fillStyle = 'rgba(120,120,120,0.65)'; c.fillRect(0,0,psize,psize);
+    c.strokeStyle='#999'; c.lineWidth=2; c.strokeRect(1,1,psize-2,psize-2);
+  } else {
+    c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(1,1,psize-2,psize-2);
+  }
+  return cnv;
+}
+
+// justCommittedIndex: -1 is the house icon's own sentinel (matches the
+// -1 cardIndex a house move itself carries - see commitPrivateTurn()),
+// so "the house was just committed" falls out of the exact same
+// comparison every real card index already uses, no special-casing
+// needed anywhere in this function.
 function renderPlayerHand(player, justCommittedIndex = null){
   const area = document.getElementById('handRow');
   area.innerHTML = '';
   const {psize, gap} = computeHandCardGeometry();
   area.style.gap = `${gap}px`;
-  const counts = playerHandCounts[player];
-  const playerColor = PLAYER_COLORS[player-1];
-  // Two rows, same as the original dot indicator - cols = ceil(total/2)
-  // per card, so every card type's grid is an exact fit with no
-  // leftover cells. All cards share one absolute px-per-unit scale,
-  // fixed at 4 columns' worth of width - originally derived from the
-  // widest card type in the deck at the time (Straight A's old 8
-  // copies, ceil(8/2)=4), back when the six card types weren't evenly
-  // sized. Deliberately kept fixed rather than recomputed from the
-  // deck's current actual max column count: with every type now dealt
-  // 6 copies apiece (cols=3 each), recomputing this per-deck would
-  // stretch every bar to fill the full card width, visibly wider than
-  // the original 6-copy Bend cards ever were - fixing the reference at
-  // 4 keeps today's uniform 6-copy bars at that exact same familiar
-  // narrower size instead.
-  const GRID_GAP = 1.5;
-  const HAND_BAR_MAX_COLS = 4;
-  const unitW = (psize - (HAND_BAR_MAX_COLS-1)*GRID_GAP) / HAND_BAR_MAX_COLS;
   for (let idx=0; idx<DECK_COMPOSITION.length; idx++){
     const entry = DECK_COMPOSITION[idx];
     if (entry.tile.kind === 'X') continue; // Roadworks is never shown here
-    const remaining = counts[idx];
-    const isSelected = justCommittedIndex === null && idx === selectedCardIndex;
-    const isDepleted = remaining === 0 || idx === justCommittedIndex;
-
-    const total = entry.countPerPlayer;
-    const cols = Math.ceil(total/2);
+    const isSelected = justCommittedIndex === null && idx === selectedCardIndex && !houseModeSelected;
+    // "Committed" here means "was just played this instant" (a brief
+    // grey flash), never "ran out" - there's no such thing anymore.
+    const justCommitted = idx === justCommittedIndex;
 
     const slot = document.createElement('div');
     slot.className = 'handCardSlot';
 
-    const bar = buildQuantityGrid(total, remaining, unitW, 5, playerColor, cols);
-
-    const cardState = isSelected ? 'active' : (isDepleted ? 'committed' : 'normal');
-    const cnv = buildDeckCardCanvas(psize, entry.tile, cardState);
+    const cardState = isSelected ? 'playerColor' : (justCommitted ? 'committed' : 'normal');
+    const cnv = buildDeckCardCanvas(psize, entry.tile, cardState, PLAYER_COLORS[player-1]);
     cnv.classList.add('handCardCanvas');
     // Explicit CSS box size, matching the canvas's own pixel size exactly -
     // combined with box-sizing:border-box (see CSS), this keeps the total
@@ -2317,13 +2398,32 @@ function renderPlayerHand(player, justCommittedIndex = null){
     // present, since the border (or its absence, for the 'active'/hazard-
     // tape state) is drawn inside this fixed box rather than added onto
     // it. Without this, toggling a card's selection state visibly jittered
-    // the whole card (and the bar above it) by a couple of pixels.
+    // the whole card by a couple of pixels.
     cnv.style.width = `${psize}px`;
     cnv.style.height = `${psize}px`;
-    if (isDepleted) cnv.classList.add('depleted');
+    if (justCommitted) cnv.classList.add('depleted');
     cnv.dataset.cardIndex = idx;
 
-    slot.appendChild(bar);
+    slot.appendChild(cnv);
+    area.appendChild(slot);
+  }
+
+  // The house icon - the 7th slot, appended last, built and behaving
+  // exactly like the 6 cards above. Hidden while HOUSE_BUILDING_UI_ENABLED
+  // is false (see its own comment near HMAX) - block left intact, not
+  // deleted, so re-enabling later is a one-line flip.
+  if (HOUSE_BUILDING_UI_ENABLED) {
+    const houseSelected = justCommittedIndex === null && houseModeSelected;
+    const houseCommitted = justCommittedIndex === -1;
+    const slot = document.createElement('div');
+    slot.className = 'handCardSlot';
+    const cardState = houseSelected ? 'playerColor' : (houseCommitted ? 'committed' : 'normal');
+    const cnv = buildHouseCardCanvas(psize, houseTokensRemaining[player] || 0, cardState, PLAYER_COLORS[player-1], PLAYER_COLORS[player-1]);
+    cnv.classList.add('handCardCanvas');
+    cnv.style.width = `${psize}px`;
+    cnv.style.height = `${psize}px`;
+    if (houseCommitted) cnv.classList.add('depleted');
+    cnv.dataset.house = '1';
     slot.appendChild(cnv);
     area.appendChild(slot);
   }
@@ -2337,7 +2437,11 @@ function renderPlayerHand(player, justCommittedIndex = null){
 // a card chosen by exactly one player gets that player's own colored
 // border; a card chosen by two or more (a genuine card-level collision)
 // gets the hazard-tape border instead. greyedIndices get the grey
-// "committed" overlay (once every move has actually landed).
+// "committed" overlay (once every move has actually landed). The house
+// icon's own choosers live under chosenByCardIndex[-1] (a house move's
+// cardIndex is that same -1 sentinel), so it participates in exactly
+// the same grouping the 6 real cards already use - no separate house
+// argument needed.
 function renderNeutralDeck(chosenByCardIndex = {}, greyedIndices = []){
   const area = document.getElementById('handRow');
   area.innerHTML = '';
@@ -2349,13 +2453,6 @@ function renderNeutralDeck(chosenByCardIndex = {}, greyedIndices = []){
 
     const slot = document.createElement('div');
     slot.className = 'handCardSlot';
-
-    // Bar-row space stays reserved (for consistent layout height, same
-    // as every other hand render) but genuinely empty - this deck isn't
-    // tied to any single player's own remaining counts.
-    const dotsWrap = document.createElement('div');
-    dotsWrap.style.width = `${psize}px`;
-    dotsWrap.style.height = '11.5px';
 
     const choosers = chosenByCardIndex[idx] || [];
     const isGreyed = greyedIndices.includes(idx);
@@ -2376,7 +2473,33 @@ function renderNeutralDeck(chosenByCardIndex = {}, greyedIndices = []){
     if (isGreyed) cnv.classList.add('depleted');
     cnv.dataset.cardIndex = idx;
 
-    slot.appendChild(dotsWrap);
+    slot.appendChild(cnv);
+    area.appendChild(slot);
+  }
+
+  if (HOUSE_BUILDING_UI_ENABLED) {
+    const houseChoosers = chosenByCardIndex[-1] || [];
+    const houseGreyed = greyedIndices.includes(-1);
+    let cardState = 'normal', borderColor;
+    if (houseGreyed){
+      cardState = 'committed';
+    } else if (houseChoosers.length >= 2){
+      cardState = 'active';
+    } else if (houseChoosers.length === 1){
+      cardState = 'playerColor';
+      borderColor = PLAYER_COLORS[houseChoosers[0] - 1];
+    }
+    const slot = document.createElement('div');
+    slot.className = 'handCardSlot';
+    // No token digit during a shared reveal - there's no one player
+    // whose count would make sense to show here (see buildHouseCardCanvas
+    // callers elsewhere for the live, single-player equivalent).
+    const cnv = buildHouseCardCanvas(psize, null, cardState, borderColor, undefined);
+    cnv.classList.add('handCardCanvas');
+    cnv.style.width = `${psize}px`;
+    cnv.style.height = `${psize}px`;
+    if (houseGreyed) cnv.classList.add('depleted');
+    cnv.dataset.house = '1';
     slot.appendChild(cnv);
     area.appendChild(slot);
   }
@@ -2396,12 +2519,7 @@ function selectCard(cardIndex){
   if (vsComputerOn && turn !== 1) return;
   if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment"); return; }
 
-  if (playerHandCounts[turn][cardIndex] === 0){
-    sounds.invalidTap();
-    showMsg("This card type has run out");
-    return;
-  }
-  if (cardIndex === selectedCardIndex){
+  if (cardIndex === selectedCardIndex && !houseModeSelected){
     // More specific once a space has actually been picked too - nothing
     // left to do but confirm it.
     showMsg(pendingSquare ? "Tap the selected space again to confirm" : "Tap the board to place your card");
@@ -2409,15 +2527,55 @@ function selectCard(cardIndex){
   }
 
   // A new selection always clears whatever square was highlighted for
-  // the previous one - the player starts choosing a spot fresh.
-  if (pendingSquare){
+  // the previous one - the player starts choosing a spot fresh. Only
+  // restores a board tile if the PREVIOUS preview was itself a card
+  // preview (houseModeSelected) - a house preview never touched
+  // board[][] in the first place, so there's nothing to undo there.
+  if (pendingSquare && !houseModeSelected){
     board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
-    pendingSquare = null;
-    previewSavedTile = null;
   }
+  pendingSquare = null;
+  previewSavedTile = null;
 
   selectedCardIndex = cardIndex;
+  houseModeSelected = false;
   currentDraw = {...DECK_COMPOSITION[cardIndex].tile};
+  renderPlayerHand(turn);
+  render();
+  sounds.previewTap();
+}
+
+// v41: the house icon behaves like a 7th card slot - same tries/preview/
+// confirm mechanic, same mutual-exclusivity with the 6 real cards, just
+// a different underlying move type. Choosing it never places a tile
+// preview (see the click handler's own square-tap logic) - only the
+// hazard-tape outline shows, exactly per spec.
+function selectHouseIcon(){
+  if (gameOver){ showMsg("Game over! Find another neighbourhood to dig up!"); return; }
+  if (isReplayPhase) return;
+  if (isHintPlaying) return;
+  if (vsComputerOn && turn !== 1) return;
+  if (awaitingAdvance || popupBlocking){ showMsg("Give it a moment"); return; }
+
+  if (houseTokensRemaining[turn] <= 0){
+    sounds.invalidTap();
+    showMsg("You can't build more houses");
+    return;
+  }
+
+  if (houseModeSelected){
+    showMsg(pendingSquare ? "Tap the selected space again to confirm" : "Tap the board to choose a square");
+    return;
+  }
+
+  if (pendingSquare && !houseModeSelected){
+    board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
+  }
+  pendingSquare = null;
+  previewSavedTile = null;
+
+  houseModeSelected = true;
+  selectedCardIndex = null;
   renderPlayerHand(turn);
   render();
   sounds.previewTap();
@@ -2865,7 +3023,16 @@ function setRoundStartOffLimitsForPlayer(p, val){
 // [p1Move, p2Move] pattern used throughout resolveRound() etc.
 function movesInPlay(){
   const result = [];
-  for (let p=1; p<=effectiveN; p++) result.push(getMoveForPlayer(p));
+  // Filters out null (an eliminated player never gets a move set for
+  // them this round - see nextActivePlayer() and its callers) - every
+  // consumer of this list (resolveRound(), playOutSimultaneousReplay())
+  // assumes each entry is a real move object, so this is the one place
+  // that guarantee needs to actually be enforced, as a safety net on top
+  // of the turn-sequencing fix itself.
+  for (let p=1; p<=effectiveN; p++){
+    const mv = getMoveForPlayer(p);
+    if (mv) result.push(mv);
+  }
   return result;
 }
 // True only during 2P hotseat's replay of Player 1's earlier, hidden
@@ -2916,6 +3083,10 @@ let scoreHighlightActive = false;
 // at decision time anyway, so evaluating "what if only I play here" is
 // actually the most honest information state available to it.
 let lastPlayedSquare = null;
+// v41: which kind of candidate lastPlayedSquare represents - true for a
+// house-build candidate, false for a card-placement candidate. AI-internal
+// only, same lifecycle as lastPlayedSquare itself (see its own comment).
+let lastPlayedIsHouse = false;
 // The squares that just became brand-new houses this round (0, 1, or 2 -
 // creation is scoped to exactly the two squares played this round, never
 // anywhere else) - together with pendingVanishSquares (declared earlier,
@@ -2924,6 +3095,7 @@ let lastPlayedSquare = null;
 // score-box numbers are derived from. Reset every round by
 // resolveRound().
 let lastBuiltSquares = [];
+
 
 // Small, shared motion-touch infrastructure: a placed tile settles with a
 // touch of weight/overshoot rather than snapping in instantly, and a
@@ -2939,42 +3111,27 @@ function easeOutBack(t){
 let _placeAnimKeys = new Set(), _placeAnimStart = 0;
 let _scoreAnimWasActive = false, _scoreAnimStart = 0;
 
+// v41: shared by real single-move resolution and the AI's own
+// hypothetical per-candidate evaluation (aiChooseCardAndSquare() sets
+// lastPlayedSquare/lastPlayedIsHouse/turn, calls this, reads the result,
+// then restores everything - see that function's own comment). A house
+// candidate builds directly at lastPlayedSquare (full reservoirs, no
+// board[][] change at all); a card candidate has already had its tile
+// placed on board[][] by the caller and builds nothing here - see
+// selectHouseIcon()/resolveRound() for the real-gameplay equivalent.
 function resolveMove(){
-  const {redC, blueC} = connectivity();
-
-  // A new house can form ONLY on the exact square this candidate's card
-  // was played on, and only if that square is red+blue connected after
-  // the placement - unchanged rule from before. It also can't be on the
-  // board's outermost ring (row/col 0 or N-1) - those squares always have
-  // an exposed supply edge that can be attacked, so a house there could
-  // never be made durable the way the corner/edge-lock problem showed
-  // interior-adjacent houses increasingly could be.
-  let builtNewHouse = false;
-  if (lastPlayedSquare){
+  if (lastPlayedSquare && lastPlayedIsHouse){
     const [lr, lc] = lastPlayedSquare;
-    const onOuterRing = (lr===0 || lr===N-1 || lc===0 || lc===N-1);
-    if (redC[lr][lc] && blueC[lr][lc] && !house[lr][lc] && !onOuterRing){
-      house[lr][lc] = true;
-      owner[lr][lc] = turn;
-      powerReservoir[lr][lc] = RESERVOIR_MAX;
-      waterReservoir[lr][lc] = RESERVOIR_MAX;
-      builtNewHouse = true;
-    }
+    house[lr][lc] = true;
+    owner[lr][lc] = turn;
+    powerReservoir[lr][lc] = RESERVOIR_MAX;
+    waterReservoir[lr][lc] = RESERVOIR_MAX;
   }
-
-  // Whole-board scan: every OTHER existing house (any owner, not just
-  // this move's mover) has its power/water reservoir ticked - see
-  // tickReservoirsAndFindVanishing() for the actual rule, shared with
-  // resolveRound() so the AI's own preview can never drift from what
-  // the real game does. A house that would now lose either reservoir
-  // stays in house[][]/owner[][] for now - still drawn completely
-  // normally - so the reveal stage can show the player what they're
-  // about to lose; it's only actually removed once that reveal
-  // finishes (see showSettledScoreStage()).
   lastRoundDeltas = {1:0, 2:0, 3:0, 4:0};
-  lastBuiltSquares = builtNewHouse ? [[lastPlayedSquare[0], lastPlayedSquare[1]]] : [];
-  if (builtNewHouse) lastRoundDeltas[turn] += 1;
-  pendingVanishSquares = tickReservoirsAndFindVanishing(redC, blueC, lastBuiltSquares);
+  lastBuiltSquares = (lastPlayedSquare && lastPlayedIsHouse) ? [[lastPlayedSquare[0], lastPlayedSquare[1]]] : [];
+  if (lastBuiltSquares.length) lastRoundDeltas[turn] += 1;
+  const {redC, blueC} = connectivity();
+  pendingVanishSquares = tickReservoirsAndFindVanishing(redC, blueC);
   for (const [r,c] of pendingVanishSquares){
     lastRoundDeltas[owner[r][c]] -= 1;
   }
@@ -2989,30 +3146,58 @@ function resolveMove(){
 // still genuinely standing (its reservoir buffer hasn't run out), so
 // "still exists" rather than "currently connected" is the right measure
 // once any vanish this round has already been physically resolved.
+// Bug fix: an eliminated player was still being handed a private turn -
+// the round-start `turn = 1` and the mid-round `turn = player + 1`
+// advancement both used to assume every player number in range was
+// still in the game, with no eliminated[] check anywhere in the turn
+// sequence itself (only the END-of-round tally ever consulted it). Both
+// call sites below now go through this helper instead of a raw +1/
+// literal 1, so an eliminated player is silently skipped over, never
+// prompted for a move. p=0 means "first active player in the game" (used
+// at round start); any other p means "next active player after p".
+function nextActivePlayer(p){
+  for (let q = p+1; q <= effectiveN; q++){
+    if (!eliminated[q]) return q;
+  }
+  return null;
+}
+
 function standingHouseCount(player){
   let n=0;
   for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (house[r][c] && owner[r][c]===player) n++;
   return n;
 }
 
+// v46: true only if this player has at least one house AND every one of
+// them is currently fragile (power===1 or water===1 - one tick from
+// vanishing outright). Used by aiChooseCardAndSquare() to decide
+// whether house-building is even worth considering this turn - tested
+// head-to-head via simulation against simpler "spend whenever it scores
+// well" and "spend once down to N houses" variants; this one won
+// decisively (see the AI heuristic's own comment for the reasoning).
+function allHousesFragile(player){
+  let anyHouse = false;
+  for (let r=0; r<N; r++) for (let c=0; c<N; c++){
+    if (house[r][c] && owner[r][c] === player){
+      anyHouse = true;
+      if (powerReservoir[r][c] > 1 && waterReservoir[r][c] > 1) return false;
+    }
+  }
+  return anyHouse;
+}
+
 // Both players have now completed the round (reveal fully finished, any
 // vanish already applied). Starts the next round directly - no more
 // per-player rotation/wrap-around detection needed now that a "turn" is
 // a whole round, not a single player's move.
+// v39: the round cap is gone - this used to force a draw once roundNum
+// reached TOTAL_ROUNDS (36); that whole branch, and the "endgame_draw"
+// outcome it produced, no longer exist. Elimination (checkEliminationAndMaybeFinish(),
+// called earlier in finishRevealAndAdvance() before this ever runs) is
+// now the only way a game can end - this function unconditionally
+// advances to the next round.
 function advanceToNextRound(){
   scoreHighlightActive = false;
-
-  if (roundNum >= TOTAL_ROUNDS){
-    // Hard cap reached without the game already having resolved itself -
-    // 2+ players are still standing with neither side finished the other
-    // off. Unambiguously a draw - not to be confused with the "everyone
-    // eliminated at once" draw case, which finishRevealAndAdvance()
-    // already handles earlier and never reaches this function at all.
-    gameWinner = null;
-    winType = null;
-    finishGame();
-    return;
-  }
   roundNum++;
   beginRound();
 }
@@ -3036,26 +3221,18 @@ const EXTRA_LONG_DELAY_MS = 2500;
 // itself, so every other popup using that duration is unaffected.
 const GAME_START_POPUP_DURATION_MS = 4000;
 
-// Per-player pipe-card hand, held for the WHOLE game now, never reset
-// mid-game. Index matches DECK_COMPOSITION (all 6 entries are pipe
-// types - Roadworks is no longer part of either player's personal deck
-// at all, see ROADWORKS_ROUNDS instead). Exactly 36 cards per player -
-// one full copy of DECK_COMPOSITION's own counts - matching
-// TOTAL_ROUNDS exactly, since every round consumes exactly one card
-// from each hand (a collision still discards both players' chosen
-// cards, just without placing them). Function name kept as-is even
-// though it's now only ever called once, at game start - nothing
-// currently calls it a second time.
-let playerHandCounts = {};
+// v39: card-count limits removed altogether - there is no per-player
+// hand-count tracking at all anymore. A card type can be played any
+// number of times, forever; selectCard() and aiChooseCardAndSquare()
+// both just check DECK_COMPOSITION directly for available TYPES (never
+// counts), and nothing decrements anything mid-game.
 let selectedCardIndex = null;
-
-function resetHandsForPhase(){
-  const counts = DECK_COMPOSITION.map(e => e.countPerPlayer);
-  playerHandCounts = {};
-  for (let p=1; p<=effectiveN; p++){
-    playerHandCounts[p] = counts.slice();
-  }
-}
+// v41: true when the house icon (not one of the 6 real cards) is the
+// current selection - mutually exclusive with selectedCardIndex, see
+// selectCard()/selectHouseIcon(). A house move's own "cardIndex" in the
+// move object is the -1 sentinel (see commitPrivateTurn()); this flag is
+// the live selection-state equivalent, before a move object even exists.
+let houseModeSelected = false;
 
 // The actual Roadworks rule: choose a random square via boardRNG() and
 // clear it to rubble if it isn't already. Returns [r,c,wasPark]. Used by
@@ -3109,6 +3286,35 @@ function pickRoadworksTarget(){
 // so that stays each caller's own responsibility. Anything added here in
 // future automatically applies to both launch paths with no risk of one
 // being updated and the other forgotten.
+// vsComputerOn only: player 1 is always the sole human seat, and every
+// bot's move has only ever been computed as a side effect of player 1
+// actually committing their own turn (see commitPrivateTurn()'s own
+// vsComputerOn branch) - meaning that once player 1 is eliminated, there
+// was no remaining trigger point left for the bots to keep playing each
+// other at all. This is that trigger point: called instead of
+// beginPrivateTurn() whenever the human seat is already out, so the
+// bots' fight continues on its own rather than the game silently
+// hanging, waiting for input from a player who's no longer there to
+// give it. No board/house/owner snapshot-swap is needed here the way
+// commitPrivateTurn()'s equivalent branch needs one - player 1 isn't
+// moving this round at all, so the board is already sitting at exactly
+// the round-start state every bot should be reading.
+function playAllBotsAndReplay(){
+  awaitingAdvance = true;
+  for (let p = 2; p <= effectiveN; p++){
+    if (eliminated[p]) continue;
+    const aiPick = aiChooseCardAndSquare(p);
+    if (aiPick.isHouse){
+      setMoveForPlayer(p, {player: p, cardIndex: -1, isHouse: true, square: aiPick.square, tile: null});
+      houseTokensRemaining[p]--;
+    } else {
+      const aiTile = {...DECK_COMPOSITION[aiPick.cardIndex].tile};
+      setMoveForPlayer(p, {player: p, cardIndex: aiPick.cardIndex, isHouse: false, square: aiPick.square, tile: aiTile});
+    }
+  }
+  startSimultaneousReplay();
+}
+
 // Starts a new round: applies this round's Roadworks clear first if it's
 // one of ROADWORKS_ROUNDS (before either player sees anything - both
 // players always see the identical post-clear board when deciding, which
@@ -3130,6 +3336,7 @@ function beginRound(){
   isPointsTallyStage = false;
   isAutoPlaying = false;
   isHintPlaying = false;
+  houseModeSelected = false;
   for (let p=1; p<=effectiveN; p++) setRoundStartOffLimitsForPlayer(p, getOffLimitsForPlayer(p));
 
   // The round number itself has already been incremented by the caller
@@ -3161,8 +3368,11 @@ function beginRound(){
   roundStartBoard = board.map(row => row.map(t => ({...t})));
   roundStartHouse = house.map(row => row.slice());
   roundStartOwner = owner.map(row => row.slice());
-  turn = 1;
-  beginPrivateTurn();
+  turn = nextActivePlayer(0); // first active player - was hardcoded to 1, which wrongly
+                                // handed the very first turn of the round to player 1 even
+                                // when they'd already been eliminated
+  if (vsComputerOn && eliminated[1]) playAllBotsAndReplay();
+  else beginPrivateTurn();
 }
 
 // Roadworks' own effect on the square it actually clears (if it had a
@@ -3180,7 +3390,7 @@ function beginRound(){
 function resolveRoadworksVanish(){
   const {redC, blueC} = connectivity();
   lastRoundDeltas = {1:0, 2:0, 3:0, 4:0};
-  pendingVanishSquares = tickReservoirsAndFindVanishing(redC, blueC, []);
+  pendingVanishSquares = tickReservoirsAndFindVanishing(redC, blueC);
   for (const [r,c] of pendingVanishSquares){
     lastRoundDeltas[owner[r][c]] -= 1;
   }
@@ -3190,8 +3400,10 @@ function resolveRoadworksVanish(){
     roundStartBoard = board.map(row => row.map(t => ({...t})));
     roundStartHouse = house.map(row => row.slice());
     roundStartOwner = owner.map(row => row.slice());
-    turn = 1;
-    beginPrivateTurn();
+    turn = nextActivePlayer(0); // was hardcoded to 1 - see the other proceedToRound-style
+                                  // callers' comment on nextActivePlayer() for why that's wrong
+    if (vsComputerOn && eliminated[1]) playAllBotsAndReplay();
+    else beginPrivateTurn();
   };
 
   if (pendingVanishSquares.length === 0){
@@ -3228,6 +3440,7 @@ function resetForNewTurn(){
   triesRemaining = maxTries;
   hintUsedThisTurn = false;
   selectedCardIndex = null;
+  houseModeSelected = false;
 }
 
 const HAND_FADE_MS = 220;
@@ -3335,25 +3548,26 @@ function fadeThenPlayOutDecidedMove(move, onComplete){
 function commitPrivateTurn(){
   const player = turn; // always a human here - the AI never calls this
   const [mr, mc] = pendingSquare;
-  const {redC, blueC} = connectivity(); // the board already has this player's own tile here, from their live preview
+  const {redC, blueC} = connectivity(); // the board already has this player's own tile here, from their live preview (unchanged for a card; never touched at all for a house)
   const onOuterRing = (mr===0 || mr===N-1 || mc===0 || mc===N-1);
   const move = {
     player,
-    cardIndex: selectedCardIndex,
+    cardIndex: houseModeSelected ? -1 : selectedCardIndex,
+    isHouse: houseModeSelected,
     square: [mr, mc],
-    tile: {kind: currentDraw.kind, rot: currentDraw.rot},
-    // Frozen the instant this move commits - render()'s house preview
-    // reads this rather than recomputing live connectivity for an
-    // already-committed square, so it can't flicker away mid-round if
-    // the OTHER player's later move happens to disrupt it - that
-    // disruption (or, just as often, a connection this move's own
-    // preview never showed) only ever becomes visible at the real
-    // resolveRound() reveal, exactly like v33's explicit vanish/build
-    // animations, not as a live flicker beforehand.
+    tile: houseModeSelected ? null : {kind: currentDraw.kind, rot: currentDraw.rot},
+    // Vestigial - no longer read by any house preview (that preview was
+    // retired along with card placement ever building a house directly),
+    // kept only because removing it here isn't worth the risk of missing
+    // some other reader; harmless either way.
     wasConnectedAtCommit: redC[mr][mc] && blueC[mr][mc] && !onOuterRing,
   };
   setMoveForPlayer(player, move);
-  playerHandCounts[player][selectedCardIndex]--;
+  // v41: a house token is spent the instant the choice is confirmed,
+  // permanently - never refunded even if this exact square later
+  // collides with another player's choice this same round (see
+  // resolveRound()'s own comment on getMoveOnBoardForPlayer()).
+  if (move.isHouse) houseTokensRemaining[player]--;
 
   // Every human player except the last one to move this round (hotseat
   // multiplayer only - Bot mode is handled entirely by its own branch
@@ -3365,11 +3579,19 @@ function commitPrivateTurn(){
   // happened, but only temporarily - reverts a beat later, once the
   // board hides this choice from the next player, back to exactly how
   // it looked at the start of the round.
-  if (player < effectiveN && !vsComputerOn){
+  //
+  // Bug fix: "the next player" and "the last player this round" both
+  // used to be determined purely by player NUMBER (player < effectiveN /
+  // player === effectiveN), with no regard for whether that next seat
+  // was still actually in the game - an eliminated player would still
+  // get handed a private turn. Both checks now go through
+  // nextActivePlayer(), which skips straight past anyone eliminated.
+  const nextP = nextActivePlayer(player);
+  if (nextP !== null && !vsComputerOn){
     setOffLimitsForPlayer(player, move.square);
     setMoveOnBoardForPlayer(player, true);
     pendingSquare = null; // stops the hazard-tape border specifically; the tile itself stays exactly as placed
-    renderPlayerHand(player, move.cardIndex); // temporary - card shows greyed, as if already played
+    renderPlayerHand(player, move.cardIndex); // temporary - card (or house, via the -1 sentinel) shows greyed, as if already played
     render();
     awaitingAdvance = true;
     scheduleIfCurrent(() => {
@@ -3379,7 +3601,7 @@ function commitPrivateTurn(){
       previewSavedTile = null;
       setOffLimitsForPlayer(player, getRoundStartOffLimitsForPlayer(player)); // revert the temporary grey along with the board
       setMoveOnBoardForPlayer(player, false); // genuinely reverted now, regardless of whether the reverted-to tile happens to match this move's values
-      turn = player + 1; // set BEFORE beginPrivateTurn() below, so its own render() reflects the reverted board AND the newly-active player together
+      turn = nextP; // set BEFORE beginPrivateTurn() below, so its own render() reflects the reverted board AND the newly-active player together
       // Reverted board, the next player's own deck, the flash, and the
       // whoosh all land together in this single call - matching
       // startSimultaneousReplay()'s identical "deck stays, board
@@ -3390,11 +3612,11 @@ function commitPrivateTurn(){
     return;
   }
 
-  // The LAST player to move this round (hotseat multiplayer only):
-  // applies for real immediately (no need to hide this player's own
-  // choice from themselves), then startSimultaneousReplay() reveals
+  // The LAST active player to move this round (hotseat multiplayer
+  // only): applies for real immediately (no need to hide this player's
+  // own choice from themselves), then startSimultaneousReplay() reveals
   // every player's move together.
-  if (player === effectiveN && !vsComputerOn){
+  if (nextP === null && !vsComputerOn){
     pendingSquare = null;
     previewSavedTile = null;
     setMoveOnBoardForPlayer(player, true); // applies for real immediately - the tile is genuinely on the board
@@ -3451,10 +3673,15 @@ function commitPrivateTurn(){
     setOffLimitsForPlayer(1, getRoundStartOffLimitsForPlayer(1));
 
     for (let p = 2; p <= effectiveN; p++){
+      if (eliminated[p]) continue; // bug fix: an eliminated bot was still having a move computed and applied for it every round
       const aiPick = aiChooseCardAndSquare(p);
-      const aiTile = {...DECK_COMPOSITION[aiPick.cardIndex].tile};
-      setMoveForPlayer(p, {player: p, cardIndex: aiPick.cardIndex, square: aiPick.square, tile: aiTile});
-      playerHandCounts[p][aiPick.cardIndex]--;
+      if (aiPick.isHouse){
+        setMoveForPlayer(p, {player: p, cardIndex: -1, isHouse: true, square: aiPick.square, tile: null});
+        houseTokensRemaining[p]--;
+      } else {
+        const aiTile = {...DECK_COMPOSITION[aiPick.cardIndex].tile};
+        setMoveForPlayer(p, {player: p, cardIndex: aiPick.cardIndex, isHouse: false, square: aiPick.square, tile: aiTile});
+      }
     }
 
     board = liveBoard;
@@ -3535,7 +3762,10 @@ function playOutSimultaneousReplay(){
   }
 
   // Step: the chosen cards, shown together - each player's own color,
-  // or hazard tape where 2+ chose the same card type - one beep.
+  // or hazard tape where 2+ chose the same card type - one beep. A
+  // house move's cardIndex is the -1 sentinel, so it naturally groups
+  // under its own bucket here too, and renderNeutralDeck() draws the
+  // icon's own collision/color treatment straight from that same bucket.
   renderNeutralDeck(byCardIndex);
   render();
   sounds.previewTap();
@@ -3544,7 +3774,9 @@ function playOutSimultaneousReplay(){
     // Step: placement. Squares with 2+ choosers collapse to a single
     // Roadworks/rubble placement, shown directly (never any of their
     // own tiles landing there at all); every other square gets its own
-    // player's tile normally, in the very same step.
+    // player's tile normally, in the very same step - except a house
+    // move, which never touches board[][] at all (see resolveRound()'s
+    // own comment - it only actually builds once the tally runs).
     squareChoosersByPos = {};
     for (const key in bySquare){
       const group = bySquare[key];
@@ -3554,7 +3786,7 @@ function playOutSimultaneousReplay(){
         clearSquareToRubble(r, c);
       } else {
         const mv = group[0];
-        board[r][c] = {...mv.tile};
+        if (!mv.isHouse) board[r][c] = {...mv.tile};
         setMoveOnBoardForPlayer(mv.player, true);
       }
     }
@@ -3714,7 +3946,6 @@ function playOutDecidedMove(move, onComplete){
       pendingSquare = null;
       previewSavedTile = null;
       if (move.player === 1) p1OffLimitsSquare = move.square; else p2OffLimitsSquare = move.square;
-      playerHandCounts[move.player][move.cardIndex]--;
       renderPlayerHand(move.player, move.cardIndex);
       render();
       sounds.confirmTap();
@@ -3772,7 +4003,6 @@ function handleCollision(move){
   p1MoveOnBoard = false; // neither move's tile survives a collision - without this, the house-preview logic (checking !house[r][c] against a still-true onBoard flag) can keep projecting a house on top of the rubble
   p2MoveOnBoard = false;
   clearSquareToRubble(r, c);
-  playerHandCounts[move.player][move.cardIndex]--;
   renderPlayerHand(move.player, move.cardIndex);
   render();
   sounds.confirmTap(); // the commit beep - same sound a normal commit would have had
@@ -3808,49 +4038,76 @@ function handleCollision(move){
 // actually does. Given already-computed redC/blueC and the set of
 // squares that just became houses THIS round (which start fresh/full
 // and never tick the same round they're born), every OTHER existing
-// house has its power reservoir nudged +1 (capped at RESERVOIR_MAX) if
-// redC reaches it this round, else -1 - and independently, its water
-// reservoir the same way against blueC. Mutates powerReservoir/
+// house has its power reservoir set to FULL (v39: instant top-up, not a
+// +1 nudge) if redC reaches it this round, else drops by 1 - and
+// independently, its water reservoir the same way against blueC.
+// Because this is the one shared implementation (see above), the AI's
+// own candidate evaluation in aiChooseCardAndSquare() picks up this
+// rule automatically via its own call to resolveMove() below - nothing
+// in the heuristic itself needed to change. Mutates powerReservoir/
 // waterReservoir directly (the caller is responsible for saving/
 // restoring them first if this is only a hypothetical, exactly the
 // same convention already used for board/house/owner). Returns the
 // list of squares where EITHER reservoir would now be <=0 - a house
 // loses either supply and it's gone, never averaged against the other.
-function tickReservoirsAndFindVanishing(redC, blueC, justBuiltSquares){
-  const justBuilt = new Set(justBuiltSquares.map(([r,c]) => `${r},${c}`));
+// v41: no more "just built" exclusion - a brand new house starts full
+// (see resolveRound()) and is ticked exactly like every other house this
+// same round; if it isn't red+blue connected right now it drops by one
+// immediately, same as anything else. Shared by real gameplay
+// (resolveRound()) and the AI's own hypothetical-move evaluation
+// (resolveMove()) - never hand-reimplemented separately, so the AI's
+// own preview of consequences can never drift from what the real game
+// actually does. Mutates powerReservoir/waterReservoir directly (the
+// caller is responsible for saving/restoring them first if this is only
+// a hypothetical, exactly the same convention already used for board/
+// house/owner). Returns the list of squares where EITHER reservoir
+// would now be <=0 - a house loses either supply and it's gone, never
+// averaged against the other.
+function tickReservoirsAndFindVanishing(redC, blueC){
   const vanishing = [];
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (!house[r][c]) continue;
-    if (justBuilt.has(`${r},${c}`)) continue;
-    powerReservoir[r][c] += redC[r][c] ? 1 : -1;
-    if (powerReservoir[r][c] > RESERVOIR_MAX) powerReservoir[r][c] = RESERVOIR_MAX;
-    waterReservoir[r][c] += blueC[r][c] ? 1 : -1;
-    if (waterReservoir[r][c] > RESERVOIR_MAX) waterReservoir[r][c] = RESERVOIR_MAX;
+    powerReservoir[r][c] = redC[r][c] ? RESERVOIR_MAX : powerReservoir[r][c] - 1;
+    waterReservoir[r][c] = blueC[r][c] ? RESERVOIR_MAX : waterReservoir[r][c] - 1;
     if (powerReservoir[r][c] <= 0 || waterReservoir[r][c] <= 0) vanishing.push([r,c]);
   }
   return vanishing;
 }
 
+// v41: card placement and house-building are now a single unified choice
+// (see selectCard()/selectHouseIcon()), so this is the one place either
+// kind of move actually takes effect. A house move never touches
+// board[][] at all - it just marks whatever square the player chose as
+// a brand new house, starting completely full (RESERVOIR_MAX both
+// tanks), which then gets ticked in the very same pass as every other
+// house below (see tickReservoirsAndFindVanishing()'s own comment) - a
+// house built on a square that turns out disconnected this round
+// immediately loses a tank unit, exactly as if it had already existed.
+// getMoveOnBoardForPlayer() is the authoritative "did this player's
+// square survive this round's collision resolution" signal, already set
+// correctly for every player (of either move type) by
+// playOutSimultaneousReplay() before this ever runs - a move whose
+// square collided this round never builds a house, and its token was
+// already permanently spent regardless (see selectHouseIcon()'s own
+// comment).
 function resolveRound(){
-  const {redC, blueC} = connectivity();
-
-  const builtSquares = [];
   lastRoundDeltas = {1:0, 2:0, 3:0, 4:0};
+  const builtSquares = [];
   for (const mv of movesInPlay()){
+    if (!mv.isHouse) continue;
+    if (!getMoveOnBoardForPlayer(mv.player)) continue;
     const [r,c] = mv.square;
-    const onOuterRing = (r===0 || r===N-1 || c===0 || c===N-1);
-    if (!house[r][c] && redC[r][c] && blueC[r][c] && !onOuterRing){
-      house[r][c] = true;
-      owner[r][c] = mv.player;
-      powerReservoir[r][c] = RESERVOIR_MAX;
-      waterReservoir[r][c] = RESERVOIR_MAX;
-      builtSquares.push([r,c]);
-      lastRoundDeltas[mv.player] += 1;
-    }
+    house[r][c] = true;
+    owner[r][c] = mv.player;
+    powerReservoir[r][c] = RESERVOIR_MAX;
+    waterReservoir[r][c] = RESERVOIR_MAX;
+    builtSquares.push([r,c]);
+    lastRoundDeltas[mv.player] += 1;
   }
   lastBuiltSquares = builtSquares;
 
-  pendingVanishSquares = tickReservoirsAndFindVanishing(redC, blueC, builtSquares);
+  const {redC, blueC} = connectivity();
+  pendingVanishSquares = tickReservoirsAndFindVanishing(redC, blueC);
   for (const [r,c] of pendingVanishSquares){
     lastRoundDeltas[owner[r][c]] -= 1;
   }
@@ -3873,10 +4130,10 @@ function revealScoringStage(){
 function showScoreHighlightStage(){
   scoreHighlightActive = true;
   render(); // Stage 2: "+1"/"-1" appear on affected score boxes; anything about to vanish is still fully visible on the board.
-  // Total number of squares affected this round (up to 2 builds, plus
-  // every vanish) - scoreChime() plays one ascending note per unit, up to
-  // 4, so a more dramatic round (several houses going at once) gets a
-  // fuller chime rather than every reveal sounding identical.
+  // Total number of squares affected this round (up to effectiveN builds,
+  // plus every vanish) - scoreChime() plays one ascending note per unit,
+  // up to 4, so a more dramatic round gets a fuller chime rather than
+  // every reveal sounding identical.
   sounds.scoreChime(lastBuiltSquares.length + pendingVanishSquares.length);
   scheduleAfterPopupOrDelay(showSettledScoreStage, LONG_DELAY_MS);
 }
@@ -3997,6 +4254,12 @@ function reservoirBreakdown(player, vanishSet){
 // remains, mattering most once few or no houses are untouched and the
 // population's fate is governed by reservoir depletion rather than
 // waiting.
+// v39 note: this formula never encodes the tick rule itself (+1 vs.
+// full-refill) directly - it only reads whatever powerReservoir/
+// waterReservoir already hold after aiChooseCardAndSquare()'s call to
+// the real resolveMove() (see tickReservoirsAndFindVanishing()), plus
+// live redC/blueC. So the full-tank-on-reconnect tweak changes the
+// numbers this reads, but never requires a change to this formula.
 function computeLifetimeH(player, vanishSet, redC, blueC){
   let houseCount = 0, untouchedCount = 0, sumMin = 0;
   for (let r=0; r<N; r++) for (let c=0; c<N; c++){
@@ -4049,9 +4312,8 @@ function computeLifetimeH(player, vanishSet, redC, blueC){
 //   collision, not a tie-break - an opponent's own evaluation could
 //   independently converge on the exact same single best square, making
 //   a deterministic top-1 choice a predictable, avoidable collision.
-function aiChooseCardAndSquare(color, randFn){
+function aiChooseCardAndSquare(color, randFn, cardsOnly){
   if (!randFn) randFn = rng;
-  const counts = playerHandCounts[color];
 
   const subsetSize = AI_SUBSET_SIZE_CONFIG[N];
   const allSquares = [];
@@ -4079,7 +4341,7 @@ function aiChooseCardAndSquare(color, randFn){
   const allCandidates = [];
 
   for (let cardIndex=0; cardIndex<DECK_COMPOSITION.length; cardIndex++){
-    if (DECK_COMPOSITION[cardIndex].tile.kind === 'X' || counts[cardIndex] <= 0) continue;
+    if (DECK_COMPOSITION[cardIndex].tile.kind === 'X') continue; // Roadworks is never a real candidate here - resolved automatically elsewhere
     const drawTile = DECK_COMPOSITION[cardIndex].tile;
 
     for (const [r,c] of subset){
@@ -4089,6 +4351,7 @@ function aiChooseCardAndSquare(color, randFn){
       const savedPowerReservoir = powerReservoir.map(row => row.slice());
       const savedWaterReservoir = waterReservoir.map(row => row.slice());
       const savedLastPlayedSquare = lastPlayedSquare;
+      const savedLastPlayedIsHouse = lastPlayedIsHouse;
       const savedTurn = turn;
       const savedPendingVanishSquares = pendingVanishSquares;
       const savedLastRoundDeltas = lastRoundDeltas;
@@ -4096,6 +4359,7 @@ function aiChooseCardAndSquare(color, randFn){
 
       board[r][c] = {kind: drawTile.kind, rot: drawTile.rot};
       lastPlayedSquare = [r,c];
+      lastPlayedIsHouse = false;
       turn = color;
       resolveMove();
 
@@ -4148,7 +4412,7 @@ function aiChooseCardAndSquare(color, randFn){
 
       const tuple = [knockoutCount, leadScore, allSites1, myTerr];
 
-      allCandidates.push({cardIndex, square: [r,c], tuple, staysAlive});
+      allCandidates.push({cardIndex, isHouse: false, square: [r,c], tuple, staysAlive});
 
       board[r][c] = savedTile;
       house = savedHouse;
@@ -4156,6 +4420,7 @@ function aiChooseCardAndSquare(color, randFn){
       powerReservoir = savedPowerReservoir;
       waterReservoir = savedWaterReservoir;
       lastPlayedSquare = savedLastPlayedSquare;
+      lastPlayedIsHouse = savedLastPlayedIsHouse;
       turn = savedTurn;
       pendingVanishSquares = savedPendingVanishSquares;
       lastRoundDeltas = savedLastRoundDeltas;
@@ -4163,7 +4428,104 @@ function aiChooseCardAndSquare(color, randFn){
     }
   }
 
-  if (allCandidates.length === 0) return {cardIndex: null, square: null};
+  // v48: house-building candidates - "build a house at square X" is
+  // scored by the exact same heuristic as a card+square candidate,
+  // competing head-to-head in the same ranked pool. Uses the SAME
+  // `subset` (visibility) the card candidates above already used - the
+  // AI doesn't get to see anything extra just because it's considering a
+  // house instead of a card - but every legal square in that subset is
+  // actually tested here, not just the ones currently red+blue connected.
+  // A disconnected square isn't excluded outright: it's still run
+  // through the real resolveMove()+scoring simulation, which will
+  // naturally rank it lower (its tank gets debited immediately at the
+  // very next tally - see tickReservoirsAndFindVanishing()'s own
+  // comment) rather than being pre-filtered out by a hard-coded
+  // assumption. cardsOnly is set by the Hint feature, which can only
+  // currently demo a card+square choice.
+  //
+  // Every player starts with 3 of their HMAX (4) houses already built by
+  // setup, so houseTokensRemaining is only ever 0 or 1 for the whole
+  // game - simplified from the earlier "last-token-fragile" version
+  // (which also spent freely with no fragility check whenever more than
+  // one token remained) down to just its fragility check directly, since
+  // that ">1 token" branch can now never trigger. Only spent when
+  // allHousesFragile(color) is true - every current house is one tick
+  // from vanishing - never merely because a house candidate happens to
+  // score marginally better this round: a token, once spent, never comes
+  // back (see resolveRound()'s own comment), so with only one to work
+  // with all game, it's held in reserve until it's genuinely needed.
+  if (!cardsOnly && houseTokensRemaining[color] > 0 && allHousesFragile(color)){
+    const houseSquares = subset.filter(([r,c]) => {
+      const onOuterRing = (r===0 || r===N-1 || c===0 || c===N-1);
+      return !house[r][c] && board[r][c].kind !== 'P' && !onOuterRing;
+    });
+
+    for (const [r,c] of houseSquares){
+      const savedHouse = house.map(row => row.slice());
+      const savedOwner = owner.map(row => row.slice());
+      const savedPowerReservoir = powerReservoir.map(row => row.slice());
+      const savedWaterReservoir = waterReservoir.map(row => row.slice());
+      const savedLastPlayedSquare = lastPlayedSquare;
+      const savedLastPlayedIsHouse = lastPlayedIsHouse;
+      const savedTurn = turn;
+      const savedPendingVanishSquares = pendingVanishSquares;
+      const savedLastRoundDeltas = lastRoundDeltas;
+      const savedLastBuiltSquares = lastBuiltSquares;
+
+      lastPlayedSquare = [r,c];
+      lastPlayedIsHouse = true;
+      turn = color;
+      resolveMove();
+
+      const {redC, blueC} = connectivity();
+      const vanishSet = new Set(pendingVanishSquares.map(([vr,vc]) => `${vr},${vc}`));
+
+      const my = reservoirBreakdown(color, vanishSet);
+      const staysAlive = my.houseCount > 0;
+
+      let knockoutCount = 0;
+      for (let p=1; p<=effectiveN; p++){
+        if (p === color) continue;
+        const before = reservoirBreakdown(p, null);
+        const after = reservoirBreakdown(p, vanishSet);
+        if (before.houseCount > 0 && after.houseCount === 0) knockoutCount++;
+      }
+
+      const myG = computeLifetimeH(color, vanishSet, redC, blueC);
+      let maxOppG = -Infinity;
+      for (let p=1; p<=effectiveN; p++){
+        if (p === color) continue;
+        const oppG = computeLifetimeH(p, vanishSet, redC, blueC);
+        if (oppG > maxOppG) maxOppG = oppG;
+      }
+      const leadScore = myG - maxOppG;
+
+      let allSites1 = 0, myTerr = 0;
+      for (let rr=0; rr<N; rr++) for (let cc=0; cc<N; cc++){
+        if (redC[rr][cc] || blueC[rr][cc]) myTerr++;
+        if (rr===0 || rr===N-1 || cc===0 || cc===N-1) continue;
+        if (house[rr][cc]) continue;
+        if (board[rr][cc].kind === 'P') continue;
+        if (hasFullEdgeSupply(redC, blueC, rr, cc)) allSites1++;
+      }
+
+      const tuple = [knockoutCount, leadScore, allSites1, myTerr];
+      allCandidates.push({cardIndex: -1, isHouse: true, square: [r,c], tuple, staysAlive});
+
+      house = savedHouse;
+      owner = savedOwner;
+      powerReservoir = savedPowerReservoir;
+      waterReservoir = savedWaterReservoir;
+      lastPlayedSquare = savedLastPlayedSquare;
+      lastPlayedIsHouse = savedLastPlayedIsHouse;
+      turn = savedTurn;
+      pendingVanishSquares = savedPendingVanishSquares;
+      lastRoundDeltas = savedLastRoundDeltas;
+      lastBuiltSquares = savedLastBuiltSquares;
+    }
+  }
+
+  if (allCandidates.length === 0) return {cardIndex: null, square: null, isHouse: false};
 
   const aliveCandidates = allCandidates.filter(cand => cand.staysAlive);
   const pool = aliveCandidates.length > 0 ? aliveCandidates : allCandidates;
@@ -4177,7 +4539,7 @@ function aiChooseCardAndSquare(color, randFn){
 
   const top2 = pool.slice(0, 2);
   const chosen = top2.length === 2 ? top2[Math.floor(randFn()*2)] : top2[0];
-  return {cardIndex: chosen.cardIndex, square: chosen.square};
+  return {cardIndex: chosen.cardIndex, square: chosen.square, isHouse: chosen.isHouse};
 }
 
 canvas.addEventListener('click', (e)=>{
@@ -4195,7 +4557,7 @@ canvas.addEventListener('click', (e)=>{
   const c = Math.floor(x/SIZE), r = Math.floor(y/SIZE);
   if (r<0||r>=N||c<0||c>=N) return;
 
-  if (selectedCardIndex === null){
+  if (selectedCardIndex === null && !houseModeSelected){
     sounds.invalidTap();
     showMsg("Pick a card first");
     return;
@@ -4207,17 +4569,41 @@ canvas.addEventListener('click', (e)=>{
     return;
   }
 
-  let clickedOffLimits = false;
-  for (let p=1; p<=effectiveN; p++){
-    const sq = getOffLimitsForPlayer(p);
-    if (sq && sq[0]===r && sq[1]===c){ clickedOffLimits = true; break; }
-  }
-  if (clickedOffLimits){
-    sounds.invalidTap();
-    showMsg("You can't play here, concrete is still setting");
+  // v41: house-mode square validation - any square except one already
+  // occupied by a house, a park, or on the outermost ring (edge). Never
+  // requires red+blue connectivity - that's an AI-only search
+  // optimization (see aiChooseCardAndSquare()), not a real rule.
+  // Off-limits/guard squares are deliberately NOT excluded here - that
+  // restriction is specifically about re-laying pipe on freshly-placed
+  // concrete, and a house move never touches the pipe network at all.
+  if (houseModeSelected){
+    const onOuterRing = (r===0 || r===N-1 || c===0 || c===N-1);
+    if (house[r][c] || board[r][c].kind === 'P' || onOuterRing){
+      sounds.invalidTap();
+      showMsg("You cannot build a house there");
+      return;
+    }
+    if (maxTries !== Infinity && triesRemaining <= 0){
+      sounds.invalidTap();
+      showMsg("You've run out of tries");
+      return;
+    }
+    // Preview never touches board[][] for a house choice - only the
+    // hazard-tape outline (already unconditional on pendingSquare) shows
+    // anything at all, per spec.
+    pendingSquare = [r,c];
+    if (maxTries !== Infinity) triesRemaining--;
+    render();
+    sounds.previewTap();
     return;
   }
 
+  // v43: off-limits/guard squares no longer block a human's own tap at
+  // all - the grey shading render() still draws there is now purely a
+  // visual indicator of what was just played, not a restriction. The
+  // AI's own candidate generation (aiChooseCardAndSquare()'s subset
+  // filter) still excludes these squares exactly as before, and Hint
+  // (which just calls that same function) inherits that unchanged.
   if (board[r][c].kind === 'P'){
     sounds.invalidTap();
     showMsg("You can't dig up a park");
@@ -4258,11 +4644,11 @@ function finishGame(){
 
 // Renders every rules-page diagram using the game's own real drawing and
 // board-generation functions (drawTileOn, connectivity, buildSetupDeck,
-// runHiddenSetup, buildDeckCardCanvas, buildQuantityGrid, drawHouseShape,
-// fillPipeBand, getBoardTexturePattern) - never a reimplementation. Since
-// this runs inside the same script as the live game, every global these
-// functions read/write (N, board, house, owner, effectiveN, the board RNG
-// state) is snapshotted first and restored immediately after, synchronously,
+// runHiddenSetup, buildDeckCardCanvas, drawHouseShape, fillPipeBand,
+// getBoardTexturePattern) - never a reimplementation. Since this runs
+// inside the same script as the live game, every global these functions
+// read/write (N, board, house, owner, effectiveN, the board RNG state)
+// is snapshotted first and restored immediately after, synchronously,
 // so the actual in-progress game is never visibly disturbed.
 let rulesDiagramsRendered = false;
 function withScratchBoardState(fn){
@@ -4341,14 +4727,9 @@ function renderRuleDeckDiagram(){
     slot.style.flexDirection = 'column';
     slot.style.alignItems = 'center';
     slot.style.gap = '3px';
-    const total = entry.countPerPlayer;
-    const cols = Math.ceil(total/2);
-    const unitW = (psize - (4-1)*1.5) / 4;
-    const bar = buildQuantityGrid(total, total, unitW, 5, PLAYER_COLORS[0], cols);
     const cnv = buildDeckCardCanvas(psize, entry.tile, 'normal');
     cnv.style.width = psize+'px';
     cnv.style.height = psize+'px';
-    slot.appendChild(bar);
     slot.appendChild(cnv);
     area.appendChild(slot);
   }
@@ -4505,7 +4886,7 @@ function scanAllSiteOverlays(N, board, redC, blueC, excludeSquares){
   return overlays;
 }
 
-function renderRuleSiteAndThreeHouseDiagrams(){
+function renderRuleThreeHouseDiagram(){
   withScratchBoardState(() => {
     N = 6; effectiveN = 2; isTodaysGame = false;
     const DECK_TYPES = DECK_COMPOSITION.map(e => e.tile).filter(t => t.kind !== 'X');
@@ -4533,40 +4914,15 @@ function renderRuleSiteAndThreeHouseDiagrams(){
     }
     if (!found) return;
     const siteR = found.r, siteC = found.c;
-
-    const siteBoard = board.map(row => row.map(t => ({...t})));
-    const {redC: siteRedC, blueC: siteBlueC} = connectivity();
-
-    const siteOverlay = {
-      under: (ctx, px, py, SIZE) => {
-        ctx.save();
-        ctx.fillStyle = SITE_COLOR;
-        ctx.globalAlpha = 0.75;
-        ctx.fillRect(px, py, SIZE, SIZE);
-        ctx.globalAlpha = 1;
-        ctx.restore();
-      }
-    };
     const SIZE = 40;
-    const beforeSiteOverlays = scanAllSiteOverlays(N, siteBoard, siteRedC, siteBlueC, [[siteR, siteC]]);
-    beforeSiteOverlays[`${siteR},${siteC}`] = siteOverlay;
-    drawRuleBoard(document.getElementById('ruleSiteBeforeCanvas'), siteBoard, siteRedC, siteBlueC, N, SIZE, beforeSiteOverlays);
 
+    // This square becomes houseA below - no longer shown as its own
+    // "site becomes a house" diagram (that section of the rules is
+    // gone now that houses are all placed at setup - see
+    // HOUSE_BUILDING_UI_ENABLED's comment near HMAX), but still needed
+    // as where houseA's board state comes from for the reservoir/
+    // knockout diagram just below.
     board[siteR][siteC] = {kind:'S', rot:1};
-    const houseBoard = board.map(row => row.map(t => ({...t})));
-    const {redC: houseRedC, blueC: houseBlueC} = connectivity();
-    const guardOverlay = {
-      under: (ctx, px, py, SIZE) => {
-        ctx.fillStyle = 'rgba(120,120,120,0.35)';
-        ctx.fillRect(px, py, SIZE, SIZE);
-      },
-      over: (ctx, px, py, SIZE) => {
-        drawHouseShape(ctx, px+SIZE/2, py+SIZE/2, SIZE*0.9, 3, 3, PLAYER_COLORS[0]);
-      }
-    };
-    const afterSiteOverlays = scanAllSiteOverlays(N, houseBoard, houseRedC, houseBlueC, [[siteR, siteC]]);
-    afterSiteOverlays[`${siteR},${siteC}`] = guardOverlay;
-    drawRuleBoard(document.getElementById('ruleSiteAfterCanvas'), houseBoard, houseRedC, houseBlueC, N, SIZE, afterSiteOverlays);
 
     // Break the water path into the north neighbour of the site square,
     // for the three-house reservoir diagram's power-only house.
@@ -4611,11 +4967,35 @@ function renderRuleSiteAndThreeHouseDiagrams(){
 
     const threeBoard = board.map(row => row.map(t => ({...t})));
     const {redC: threeRedC, blueC: threeBlueC} = connectivity();
-    const houses = [
-      {pos: houseA, before: [2,1], after: null, color: PLAYER_COLORS[0]},
-      {pos: houseB, before: [2,1], after: [3,2], color: PLAYER_COLORS[1]},
-      {pos: houseC, before: [2,1], after: [1,2], color: PLAYER_COLORS[0]},
+
+    // v39: "after" tank levels are computed by actually running the real
+    // tickReservoirsAndFindVanishing() rule against each house's "before"
+    // level - the same shared function real gameplay and the AI's own
+    // hypothetical-move evaluation both use (see that function's own
+    // comment) - rather than hand-picked numbers. That keeps this
+    // teaching diagram from ever silently drifting out of sync with a
+    // future change to the tick rule again.
+    const houseSetup = [
+      {pos: houseA, before: [2,1], color: PLAYER_COLORS[0]},
+      {pos: houseB, before: [2,1], color: PLAYER_COLORS[1]},
+      {pos: houseC, before: [2,1], color: PLAYER_COLORS[0]},
     ];
+    house = Array.from({length:N},()=>Array(N).fill(false));
+    powerReservoir = Array.from({length:N},()=>Array(N).fill(0));
+    waterReservoir = Array.from({length:N},()=>Array(N).fill(0));
+    for (const h of houseSetup){
+      house[h.pos.r][h.pos.c] = true;
+      powerReservoir[h.pos.r][h.pos.c] = h.before[0];
+      waterReservoir[h.pos.r][h.pos.c] = h.before[1];
+    }
+    const threeVanishing = tickReservoirsAndFindVanishing(threeRedC, threeBlueC);
+    const threeVanishSet = new Set(threeVanishing.map(([vr,vc]) => `${vr},${vc}`));
+    const houses = houseSetup.map(h => ({
+      pos: h.pos,
+      before: h.before,
+      after: threeVanishSet.has(`${h.pos.r},${h.pos.c}`) ? null : [powerReservoir[h.pos.r][h.pos.c], waterReservoir[h.pos.r][h.pos.c]],
+      color: h.color,
+    }));
     const houseOverlay = (levels, color) => ({
       over: (ctx, px, py, SIZE) => {
         if (levels) drawHouseShape(ctx, px+SIZE/2, py+SIZE/2, SIZE*0.9, levels[0], levels[1], color);
@@ -4640,7 +5020,7 @@ function renderRulesDiagrams(){
   renderRuleFlowDiagram();
   renderRuleConfirmMoveDiagram();
   renderRuleCollisionDiagram();
-  renderRuleSiteAndThreeHouseDiagrams();
+  renderRuleThreeHouseDiagram();
 }
 
 document.getElementById('rulesBtn').onclick = () => {
@@ -4660,6 +5040,7 @@ function exitPreLaunch(){
   document.getElementById('board').style.display = 'block';
   document.getElementById('scoreRow').style.display = 'flex';
   document.querySelectorAll('.btnRow').forEach(el => { el.style.display = 'flex'; });
+  document.getElementById('footerInfo').style.display = 'block';
   updateScoreBoxVisibility();
 }
 
@@ -4757,76 +5138,884 @@ function backgroundPreloadJsPDF(){
   const idle = window.requestIdleCallback || function(fn){ setTimeout(fn, 500); };
   idle(() => { loadJsPDF().catch(() => {}); });
 }
-// Draws a simple house icon for the schematic page: white-filled roof
-// triangle + body rect (opaque, so it cleanly covers whatever pipe
-// routing sits underneath, exactly like a real house hides its tile),
-// black outline, with the owning player's number centred in the body in
-// place of the live game's own reservoir-tank visualisation - there's no
-// colour to encode ownership with on a monochrome page, so the number
-// carries it instead.
-// Simple schematic tree for PARK squares: a triangular canopy over a
-// short trunk, outline only - matching the plain line-art style of the
-// rest of the monochrome page rather than the live game's own shaded,
-// gradient-filled park icon.
-function drawSchematicHouse(doc, cx, cy, cellSize, playerNum){
-  const bodyW = cellSize*0.5, bodyH = cellSize*0.4;
-  const bodyX = cx - bodyW/2, bodyY = cy - bodyH*0.15;
-  const roofOverhang = cellSize*0.06;
-  const roofTopY = bodyY - cellSize*0.32;
-  doc.setDrawColor(0,0,0);
-  doc.setLineWidth(1.2);
-  doc.setFillColor(255,255,255);
-  doc.triangle(bodyX-roofOverhang, bodyY, cx, roofTopY, bodyX+bodyW+roofOverhang, bodyY, 'FD');
-  doc.rect(bodyX, bodyY, bodyW, bodyH, 'FD');
+// ---------------------------------------------------------------------------
+// Write & Wipe sheet generator - exports the SAME print sheet this game's
+// own design process produced as a Python/reportlab pipeline (board +
+// tables + legend + choice cards), ported to jsPDF so Save Board can
+// generate it client-side from the CURRENT live game state (board/house/
+// owner/N/effectiveN) rather than a fixed layout. See the design repo's
+// combine_a4.py/shade_options.py/choice_sheet.py/generate_playsheet.py
+// for the original Python version this was ported from line-for-line;
+// the geometry (title/board/table positions, the choice-card rotation
+// mapping, score-box centring) is identical, just re-expressed in
+// jsPDF's own (already Y-down, so no extra flip needed) coordinate
+// convention. edgesOf()/straightEdges()/bendEdges()/blankEdges() are
+// NOT redefined here - the versions already defined above in this file
+// are reused directly, so tile logic can never drift out of sync
+// between the live board and the exported sheet.
+// ---------------------------------------------------------------------------
+
+// ---- Write & Wipe sheet generator: core helpers ----
+const MM = 2.8346;
+function mm(v) { return v * MM; }
+
+// edgesOf/straightEdges/bendEdges/blankEdges: reuse the game's own
+// top-level versions directly (already defined earlier in this file) -
+// not redeclared here, to guarantee this can never drift out of sync
+// with the live game's own tile logic.
+
+// ---- generic filled polygon via jsPDF's lines(), absolute points ----
+function polygon(doc, points, style) {
+  const deltas = [];
+  for (let i = 1; i < points.length; i++) deltas.push([points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]]);
+  deltas.push([points[0][0] - points[points.length - 1][0], points[0][1] - points[points.length - 1][1]]);
+  doc.lines(deltas, points[0][0], points[0][1], [1, 1], style, true);
+}
+
+// ---- rotation support for the choice-card section (drawn "final
+// position" directly rather than as a separate rotated sub-page - see
+// ww_choice.js for the derivation). rotateOffset(dx,dy) = (dy,-dx) is
+// the LOCAL-vector counterpart of the same transform, verified
+// empirically (a native rightward-pointing shape ends up pointing
+// upward in final space, matching jsPDF text angle=90's own direction). ----
+function rotateOffset(dx, dy) { return [dy, -dx]; }
+
+function drawRotatedPolygon(doc, localPoints, fcx, fcy, style) {
+  // localPoints: offsets from the shape's own centre (pre-rotation)
+  const abs = localPoints.map(([dx, dy]) => {
+    const [rdx, rdy] = rotateOffset(dx, dy);
+    return [fcx + rdx, fcy + rdy];
+  });
+  polygon(doc, abs, style);
+}
+
+function drawRotatedPath(doc, startOffset, segs, fcx, fcy, style, closed) {
+  // startOffset: [dx,dy] from centre; segs: array of [dx,dy] (line) or
+  // [dx1,dy1,dx2,dy2,dx3,dy3] (bezier) - all LOCAL, pre-rotation.
+  const [sdx, sdy] = rotateOffset(startOffset[0], startOffset[1]);
+  const startX = fcx + sdx, startY = fcy + sdy;
+  const rotSegs = segs.map(seg => {
+    const out = [];
+    for (let i = 0; i < seg.length; i += 2) {
+      const [rdx, rdy] = rotateOffset(seg[i], seg[i + 1]);
+      out.push(rdx, rdy);
+    }
+    return out;
+  });
+  doc.lines(rotSegs, startX, startY, [1, 1], style, closed);
+}
+
+// ---- bolt / drop icons - EXACT path data from the game's own live
+// icon-row drawing (drawLightningBoltLegend/drawWaterDropLegend below),
+// recentred from canvas top-left-origin coordinates to offsets from the
+// shape's own centre, so the PDF export uses the identical outline the
+// player already sees in the game UI, not a separate approximation. ----
+const BOLT_LOCAL = [
+  [0.08, -0.42], [-0.22, 0.05], [-0.02, 0.05], [-0.1, 0.42], [0.26, -0.1], [0.04, -0.1],
+];
+function scalePoints(pts, s) { return pts.map(([x, y]) => [x * s, y * s]); }
+
+function drawBolt(doc, cx, cy, size) {
+  doc.setFillColor(0, 0, 0);
+  const pts = scalePoints(BOLT_LOCAL, size).map(([dx, dy]) => [cx + dx, cy + dy]);
+  polygon(doc, pts, 'F');
+}
+function drawBoltRotated(doc, fcx, fcy, size) {
+  doc.setFillColor(0, 0, 0);
+  drawRotatedPolygon(doc, scalePoints(BOLT_LOCAL, size), fcx, fcy, 'F');
+}
+
+const DROP_START_LOCAL = [0, -0.42];
+const DROP_SEGS_LOCAL = [
+  [0.34, 0.47, 0.3, 0.82, 0, 0.82],
+  [-0.3, 0, -0.34, -0.35, 0, -0.82],
+];
+function scaleSegs(segs, s) { return segs.map(seg => seg.map(v => v * s)); }
+
+function drawDrop(doc, cx, cy, size) {
+  doc.setDrawColor(0, 0, 0);
+  doc.setFillColor(255, 255, 255);
+  doc.setLineWidth(size * 0.09);
+  doc.setLineJoin('round');
+  const [sdx, sdy] = DROP_START_LOCAL.map(v => v * size);
+  doc.lines(scaleSegs(DROP_SEGS_LOCAL, size), cx + sdx, cy + sdy, [1, 1], 'FD', true);
+}
+function drawDropRotated(doc, fcx, fcy, size) {
+  doc.setDrawColor(0, 0, 0);
+  doc.setFillColor(255, 255, 255);
+  doc.setLineWidth(size * 0.09);
+  doc.setLineJoin('round');
+  const startOffset = DROP_START_LOCAL.map(v => v * size);
+  drawRotatedPath(doc, startOffset, scaleSegs(DROP_SEGS_LOCAL, size), fcx, fcy, 'FD', true);
+}
+
+// ---- player identity icon (matches Python's PLAYER_SHAPE/PLAYER_FILLED convention) ----
+const PLAYER_SHAPE = { 1: 'circle', 2: 'square', 3: 'circle', 4: 'square' };
+const PLAYER_FILLED = { 1: false, 2: true, 3: true, 4: false };
+const ICON_GREY = 115;
+const ROMAN = { 1: 'I', 2: 'II', 3: 'III' };
+
+function drawIdentityIcon(doc, cx, cy, size, player, text, textSize) {
+  const filled = PLAYER_FILLED[player];
+  const shape = PLAYER_SHAPE[player];
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(1.3);
+  if (filled) doc.setFillColor(ICON_GREY, ICON_GREY, ICON_GREY);
+  else doc.setFillColor(255, 255, 255);
+
+  if (shape === 'circle') doc.circle(cx, cy, size / 2, 'FD');
+  else doc.roundedRect(cx - size / 2, cy - size / 2, size, size, size * 0.18, size * 0.18, 'FD');
+
+  if (text) {
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(textSize);
+    doc.setTextColor(filled ? 255 : 0, filled ? 255 : 0, filled ? 255 : 0);
+    doc.text(text, cx, cy, { align: 'center', baseline: 'middle' });
+    doc.setTextColor(0, 0, 0);
+  }
+}
+
+// ---- Write & Wipe sheet generator: board rendering ----
+const BG_GRAY_255 = 250;   // 0.98
+const PARK_GRAY_255 = 222; // 0.87
+const TRUNK_255 = 115;     // 0.45
+const CANOPY_255 = 153;    // 0.60
+const OUTLINE_255 = 51;    // 0.20
+
+const LABEL_GUTTER_X = mm(9);
+const LABEL_GUTTER_Y = mm(10);
+
+function edgeMidpoint(r, c, dir, originX, boardTop, cell) {
+  const x0 = originX + c * cell, y0 = boardTop + r * cell;
+  const cx = x0 + cell / 2, cy = y0 + cell / 2;
+  if (dir === 'N') return [cx, y0];
+  if (dir === 'S') return [cx, y0 + cell];
+  if (dir === 'E') return [x0 + cell, cy];
+  return [x0, cy];
+}
+
+function drawCellBg(doc, r, c, originX, boardTop, cell, tile) {
+  if (tile.kind === 'P') return;
+  const x0 = originX + c * cell, y0 = boardTop + r * cell;
+  doc.setFillColor(BG_GRAY_255, BG_GRAY_255, BG_GRAY_255);
+  doc.rect(x0, y0, cell, cell, 'F');
+}
+
+function drawParkFill(doc, N, board, originX, boardTop, cell) {
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (board[r][c].kind === 'P') {
+      const x0 = originX + c * cell, y0 = boardTop + r * cell;
+      doc.setFillColor(PARK_GRAY_255, PARK_GRAY_255, PARK_GRAY_255);
+      doc.rect(x0, y0, cell, cell, 'F');
+    }
+  }
+}
+
+// one tree, matching shade_options.py's draw_tree_mono exactly (position/scale ratios)
+function drawTreeMono(doc, cx, cy, s, cardS) {
+  doc.saveGraphicsState();
+  doc.setGState(new doc.GState({ opacity: 0.22 }));
+  doc.setFillColor(38, 38, 38); // 0.15*255
+  const scx = cx + s * 0.05, scy = cy + s * 0.22;
+  doc.ellipse(scx, scy, s * 0.19, s * 0.065, 'F');
+  doc.restoreGraphicsState();
+
+  const tx0 = cx - s * 0.035, ty0 = cy + s * 0.04;
+  const tw = s * 0.07, th = s * 0.22;
+  doc.setFillColor(TRUNK_255, TRUNK_255, TRUNK_255);
+  doc.rect(tx0, ty0, tw, th, 'F');
+
+  const ccx = cx, ccy = cy - s * 0.10, r = s * 0.24;
+  doc.setFillColor(CANOPY_255, CANOPY_255, CANOPY_255);
+  doc.setDrawColor(OUTLINE_255, OUTLINE_255, OUTLINE_255);
+  doc.setLineWidth(cardS * 0.022);
+  doc.circle(ccx, ccy, r, 'FD');
+}
+
+// Only PARK_CONFIGS[0] (single tree) and [1] (two trees) are used on the
+// sheet (matching the legend's own choice - see swalpa's choice_sheet.py) -
+// but the real board uses all 12 for variety across different park cells,
+// so port the full list for fidelity with the Python reportlab version.
+const PARK_CONFIGS = [
+  [[0.65, 0.62, 0.91]],
+  [[0.39, 0.68, 0.83], [0.61, 0.41, 0.59]],
+  [[0.58, 0.39, 0.78], [0.74, 0.69, 0.43]],
+  [[0.31, 0.39, 0.66], [0.54, 0.48, 0.5]],
+  [[0.62, 0.61, 0.74], [0.43, 0.33, 0.55]],
+  [[0.38, 0.5, 0.95]],
+  [[0.39, 0.54, 0.87], [0.75, 0.34, 0.44]],
+  [[0.51, 0.4, 0.9], [0.7, 0.66, 0.62]],
+  [[0.71, 0.45, 0.73], [0.48, 0.51, 0.4]],
+  [[0.68, 0.39, 0.71], [0.28, 0.57, 0.49]],
+  [[0.495, 0.64, 0.73], [0.295, 0.45, 0.46]],
+  [[0.35, 0.54, 0.79], [0.76, 0.51, 0.51]],
+];
+
+function drawParkTrees(doc, N, board, originX, boardTop, cell) {
+  let idx = 0;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (board[r][c].kind !== 'P') continue;
+    const x0 = originX + c * cell, y0 = boardTop + r * cell;
+    const cfg = PARK_CONFIGS[idx % PARK_CONFIGS.length];
+    idx++;
+    // depth-sort by tcy like the Python version
+    const sorted = cfg.slice().sort((a, b) => a[1] - b[1]);
+    for (const [tcx, tcy, ts] of sorted) {
+      drawTreeMono(doc, x0 + cell * tcx, y0 + cell * tcy, cell * ts, cell);
+    }
+  }
+}
+
+function drawPipeChannel(doc, N, board, originX, boardTop, cell, color, channelWidth) {
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(channelWidth);
+  doc.setLineCap('butt');
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const tile = board[r][c];
+    if (tile.kind === 'P') continue;
+    const edges = edgesOf(tile);
+    const active = ['N', 'S', 'E', 'W'].filter(d => edges[d] && edges[d].includes(color));
+    if (active.length !== 2) continue;
+    const [x1, y1] = edgeMidpoint(r, c, active[0], originX, boardTop, cell);
+    const [x2, y2] = edgeMidpoint(r, c, active[1], originX, boardTop, cell);
+    doc.line(x1, y1, x2, y2);
+  }
+}
+
+function drawGrid(doc, N, originX, boardTop, cell) {
+  doc.setDrawColor(140, 140, 140);
+  doc.setLineWidth(0.4);
+  for (let i = 0; i <= N; i++) {
+    doc.line(originX + i * cell, boardTop, originX + i * cell, boardTop + N * cell);
+    doc.line(originX, boardTop + i * cell, originX + N * cell, boardTop + i * cell);
+  }
+}
+
+function drawSupplyStrokeVisible(doc, N, originX, boardTop, cell, color) {
+  doc.setStrokeColor && null;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(1.1);
+  if (color === 'R') {
+    const xs = [...Array(N).keys()].map(c => originX + c * cell + cell / 2);
+    doc.line(xs[0], boardTop, xs[xs.length - 1], boardTop);
+    doc.line(xs[0], boardTop + N * cell, xs[xs.length - 1], boardTop + N * cell);
+  } else {
+    const ys = [...Array(N).keys()].map(r => boardTop + r * cell + cell / 2);
+    doc.line(originX, ys[0], originX, ys[ys.length - 1]);
+    doc.line(originX + N * cell, ys[0], originX + N * cell, ys[ys.length - 1]);
+  }
+}
+
+function drawCircuitNodes(doc, N, board, originX, boardTop, cell, radius) {
+  radius = radius || mm(1.0);
+  const exclude = new Set();
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (board[r][c].kind === 'P') {
+      for (const dd of ['N', 'S', 'E', 'W']) {
+        const [x, y] = edgeMidpoint(r, c, dd, originX, boardTop, cell);
+        exclude.add(Math.round(x * 100) + ',' + Math.round(y * 100));
+      }
+    }
+  }
+  const seen = new Set();
+  const pts = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    for (const dd of ['N', 'S', 'E', 'W']) {
+      const [x, y] = edgeMidpoint(r, c, dd, originX, boardTop, cell);
+      const key = Math.round(x * 100) + ',' + Math.round(y * 100);
+      if (seen.has(key) || exclude.has(key)) continue;
+      seen.add(key);
+      pts.push([x, y]);
+    }
+  }
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.setFillColor(255, 255, 255);
+  for (const [x, y] of pts) doc.circle(x, y, radius, 'FD');
+}
+
+function drawSupplyCenterNode(doc, N, originX, boardTop, cell, color) {
+  const bigR = mm(2.9);
+  const iconFn = color === 'R' ? drawBolt : drawDrop;
+  let centres;
+  if (color === 'R') centres = [[originX + N * cell / 2, boardTop], [originX + N * cell / 2, boardTop + N * cell]];
+  else centres = [[originX, boardTop + N * cell / 2], [originX + N * cell, boardTop + N * cell / 2]];
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(1.0);
+  for (const [cx, cy] of centres) {
+    doc.setFillColor(255, 255, 255);
+    doc.circle(cx, cy, bigR, 'FD');
+    iconFn(doc, cx, cy, bigR * 1.15);
+  }
+}
+
+function maxNumeralSize(doc, iconSize, strokeW, capRatio) {
+  strokeW = strokeW || 1.3; capRatio = capRatio || 0.717;
+  const innerD = iconSize - strokeW;
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(1);
+  const wRatio = doc.getTextWidth('III');
+  return innerD / Math.sqrt(wRatio * wRatio + capRatio * capRatio);
+}
+
+function drawCenterCircleIcon(doc, r, c, originX, boardTop, cell, player, houseNum) {
+  const x0 = originX + c * cell, y0 = boardTop + r * cell;
+  const cx = x0 + cell / 2, cy = y0 + cell / 2;
+  const size = cell * 0.40;
+  drawIdentityIcon(doc, cx, cy, size, player, ROMAN[houseNum], maxNumeralSize(doc, size));
+}
+
+function drawHouses(doc, N, house, owner, index, originX, boardTop, cell) {
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (!house[r][c]) continue;
+    drawCenterCircleIcon(doc, r, c, originX, boardTop, cell, owner[r][c], index[r + ',' + c]);
+  }
+}
+
+function drawCoordLabels(doc, N, originX, boardTop, cell) {
+  doc.setTextColor(0, 0, 0);
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(cellSize*0.4);
-  doc.setTextColor(0,0,0);
-  doc.text(String(playerNum), cx, bodyY+bodyH/2, {align:'center', baseline:'middle'});
+  doc.setFontSize(9.5);
+  for (let row = 0; row < N; row++) {
+    const label = String(N - row);
+    const cy = boardTop + row * cell + cell / 2;
+    doc.text(label, originX - LABEL_GUTTER_X * 0.62, cy, { align: 'center', baseline: 'middle' });
+  }
+  for (let col = 0; col < N; col++) {
+    const label = String.fromCharCode(65 + col);
+    const cx = originX + col * cell + cell / 2;
+    const cy = boardTop + N * cell + LABEL_GUTTER_Y * 0.62;
+    doc.text(label, cx, cy, { align: 'center', baseline: 'middle' });
+  }
 }
 
-// Builds a monochrome vector schematic PDF of the CURRENT board -
-// line-only pipe routing (dotted for power, dashed for water, from the
-// game's own edgesOf(), same as the live board), plus real sites (light
-// grey wash) and real houses (owner number in place of a reservoir
-// gauge, since there's no colour available here to carry ownership).
-// Renders one PARK tile as a monochrome outline - the trunk and canopy
-// at the exact same position and proportions the game's own drawTileOn()
-// uses, just white-filled with a black outline instead of the live
-// board's shaded gradients (no colour to encode on a monochrome page).
-// The ground shadow is kept, as a translucent grey wash matching the
-// same treatment already used for site shading elsewhere on this page.
-// Rendered once onto a small throwaway canvas and returned as a PNG data
-// URL; every park square on the printed page stamps this same image.
-function buildParkTileImage(){
-  const PX = 200;
-  const s = PX;
-  const canvas = document.createElement('canvas');
-  canvas.width = PX; canvas.height = PX;
-  const ctx = canvas.getContext('2d');
-  const cx = s*0.5, cy = s*0.5;
+// ---- Write & Wipe sheet generator: score tables ----
+const TABLE_LABEL_W = mm(6);
+const TABLE_DATA_W = mm(9);
+const TABLE_HEADER_H = mm(6);
+const TABLE_ROW_H = mm(6);
+const TABLE_W = TABLE_LABEL_W + 2 * TABLE_DATA_W;
+const TABLE_H = TABLE_HEADER_H + 3 * TABLE_ROW_H;
 
-  ctx.beginPath();
-  ctx.ellipse(cx + s*0.05, cy + s*0.20, s*0.19, s*0.065, 0, 0, 2*Math.PI);
-  ctx.fillStyle = 'rgba(120,120,120,0.35)';
-  ctx.fill();
+function drawPlayerTable(doc, x, y, player) {
+  const totalH = TABLE_HEADER_H + 3 * TABLE_ROW_H;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.9);
+  doc.line(x + TABLE_LABEL_W, y, x + TABLE_W, y);
+  doc.line(x, y + totalH, x + TABLE_W, y + totalH);
+  doc.line(x, y + TABLE_HEADER_H, x, y + totalH);
+  doc.line(x + TABLE_W, y, x + TABLE_W, y + totalH);
+  doc.line(x, y + TABLE_HEADER_H, x + TABLE_W, y + TABLE_HEADER_H);
+  doc.line(x + TABLE_LABEL_W, y, x + TABLE_LABEL_W, y + totalH);
+  doc.line(x + TABLE_LABEL_W + TABLE_DATA_W, y, x + TABLE_LABEL_W + TABLE_DATA_W, y + totalH);
+  doc.setLineWidth(0.4);
+  for (let i = 1; i < 3; i++) {
+    const yy = y + TABLE_HEADER_H + i * TABLE_ROW_H;
+    doc.line(x, yy, x + TABLE_W, yy);
+  }
 
-  ctx.fillStyle = '#FFFFFF';
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = s*0.012;
-  const trunkX = cx - s*0.035, trunkY = cy + s*0.04, trunkW = s*0.07, trunkH = s*0.20;
-  ctx.fillRect(trunkX, trunkY, trunkW, trunkH);
-  ctx.strokeRect(trunkX, trunkY, trunkW, trunkH);
+  const cornerCx = x + TABLE_LABEL_W / 2, cornerCy = y + TABLE_HEADER_H / 2;
+  drawIdentityIcon(doc, cornerCx, cornerCy, TABLE_HEADER_H * 0.60, player, '', 1);
 
-  ctx.beginPath();
-  ctx.arc(cx, cy - s*0.10, s*0.24, 0, 2*Math.PI);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fill();
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = s*0.012;
-  ctx.stroke();
+  const boltCx = x + TABLE_LABEL_W + TABLE_DATA_W / 2;
+  const dropCx = x + TABLE_LABEL_W + TABLE_DATA_W + TABLE_DATA_W / 2;
+  const headerCy = y + TABLE_HEADER_H / 2;
+  drawBolt(doc, boltCx, headerCy, TABLE_HEADER_H * 0.62);
+  drawDrop(doc, dropCx, headerCy, TABLE_HEADER_H * 0.62);
 
-  return canvas.toDataURL('image/png');
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('Helvetica', 'bold');
+  for (let i = 1; i <= 3; i++) {
+    const rowCy = y + TABLE_HEADER_H + (i - 1) * TABLE_ROW_H + TABLE_ROW_H / 2;
+    doc.setFontSize(TABLE_ROW_H * 0.55);
+    doc.text(ROMAN[i], x + TABLE_LABEL_W / 2, rowCy, { align: 'center', baseline: 'middle' });
+  }
 }
+
+// ---- Write & Wipe sheet generator: choice cards (rotated) ----
+
+const A4_H = mm(297);
+const A4_W = mm(210);
+const CHOICE_H = mm(210);   // native (pre-rotation) choice-card page height
+const BOARD_CELL = mm(11);
+const CHANNEL_RATIO = 1.6 / 11;
+const NODE_RATIO = 1.0 / 11;
+
+// Verified final-position mapping (empirically confirmed via a probe
+// shape this session): for a point at NATIVE (x,y) - the same Y-down
+// system choice_sheet.py used, as if drawn onto its own 148x210mm page
+// that then gets rotated 90deg and placed under the play sheet:
+//   finalX (from A4 left) = y_native
+//   finalY (from A4 top)  = A4_H - x_native
+function toFinal(xN, yN) { return [yN, A4_H - xN]; }
+
+function transformRect(x0, y0, w, h) {
+  const [fx1, fy1] = toFinal(x0, y0);
+  const [fx2, fy2] = toFinal(x0 + w, y0 + h);
+  return { fx: Math.min(fx1, fx2), fy: Math.min(fy1, fy2), fw: Math.abs(fx2 - fx1), fh: Math.abs(fy2 - fy1) };
+}
+
+function drawTileIconFinal(doc, cxN, cyN, size, tile, color, fillBg, borderOn) {
+  if (fillBg === undefined) fillBg = true;
+  if (borderOn === undefined) borderOn = true;
+  const x0 = cxN - size / 2, y0 = cyN - size / 2;
+  const channelW = size * CHANNEL_RATIO;
+  const nodeR = size * NODE_RATIO;
+
+  if (fillBg) {
+    const { fx, fy, fw, fh } = transformRect(x0, y0, size, size);
+    doc.setFillColor(BG_GRAY_255, BG_GRAY_255, BG_GRAY_255);
+    doc.rect(fx, fy, fw, fh, 'F');
+  }
+  if (borderOn) {
+    const { fx, fy, fw, fh } = transformRect(x0, y0, size, size);
+    doc.setDrawColor(153, 153, 153);
+    doc.setLineWidth(0.4);
+    doc.rect(fx, fy, fw, fh, 'S');
+  }
+
+  const edges = edgesOf(tile);
+  const active = ['N', 'S', 'E', 'W'].filter(d => edges[d] && edges[d].includes(color));
+  if (active.length === 2) {
+    const pts = { N: [cxN, y0], S: [cxN, y0 + size], E: [x0 + size, cyN], W: [x0, cyN] };
+    const p1 = pts[active[0]], p2 = pts[active[1]];
+    const [f1x, f1y] = toFinal(p1[0], p1[1]);
+    const [f2x, f2y] = toFinal(p2[0], p2[1]);
+
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(channelW);
+    doc.setLineCap('butt');
+    doc.line(f1x, f1y, f2x, f2y);
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(channelW * 0.22);
+    doc.line(f1x, f1y, f2x, f2y);
+
+    doc.setLineWidth(0.5);
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(0, 0, 0);
+    doc.circle(f1x, f1y, nodeR, 'FD');
+    doc.circle(f2x, f2y, nodeR, 'FD');
+  }
+}
+
+const TILE_TYPES = [
+  { kind: 'S', rot: 0 }, { kind: 'S', rot: 1 },
+  { kind: 'B', rot: 0 }, { kind: 'B', rot: 1 }, { kind: 'B', rot: 2 }, { kind: 'B', rot: 3 },
+];
+
+function drawTextFinal(doc, xN, yN, text, fontSize) {
+  const [fx, fy] = toFinal(xN, yN);
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(fontSize);
+  doc.setTextColor(0, 0, 0);
+  // jsPDF 2.5.1's {align:'center', baseline:'middle'} does NOT combine
+  // correctly with {angle:90} - verified empirically (a probe shape showed
+  // the text landing well off from the given anchor, matching the reported
+  // "too far up and right" symptom). Centring is instead done manually:
+  // angle=90 with the default left-align/alphabetic-baseline anchors the
+  // text at its (pre-rotation) reading-start/baseline point, so shifting
+  // that anchor by half the text's width (along the now-vertical reading
+  // direction) and half the cap-height (along the now-horizontal baseline
+  // direction) lands the text's true centre exactly on (fx,fy) - confirmed
+  // with a marker-dot probe.
+  const w = doc.getTextWidth(text);
+  const capH = fontSize * 0.717;
+  doc.text(text, fx + capH / 2, fy + w / 2, { angle: 90 });
+}
+
+// Draws one player's row in NATIVE coordinates, transforming each
+// element to its final position at draw time - ports choice_sheet.py's
+// draw_player_row. Returns [topN, contentBottomN] for cut-line placement.
+function drawPlayerRow(doc, x0, y0, rowW, rowH, playerIconW, labelW, player, targetMidY) {
+  const tileW = BOARD_CELL * 1.35;
+  const gap = mm(2);
+  const iconH = BOARD_CELL / 0.88;
+  const boxH = mm(7);
+  const contentH = iconH * 2 + gap * 2 + boxH;
+  const iconGap = mm(2);
+
+  let topY, midY;
+  if (targetMidY !== undefined && targetMidY !== null) {
+    midY = targetMidY - boxH;
+    topY = midY - iconH - gap;
+  } else {
+    topY = y0 + (rowH - contentH) / 2;
+    midY = topY + iconH + gap;
+  }
+  const botY = midY + boxH + gap;
+  const contentBottom = botY + iconH;
+
+  const picx = x0 + playerIconW / 2;
+  const picy = topY + contentH / 2;
+  const picSize = Math.min(playerIconW, contentH) * 0.62;
+  {
+    const [fx, fy] = toFinal(picx, picy);
+    drawIdentityIcon(doc, fx, fy, picSize, player, '', 1);
+  }
+  drawTextFinal(doc, picx, picy - picSize / 2 - mm(5), 'P' + player, 11);
+
+  const labelX0 = x0 + playerIconW + iconGap;
+  const lcx = labelX0 + labelW / 2;
+  const tagSize = Math.min(labelW * 0.5, iconH * 0.8);
+
+  {
+    const [fx, fy] = toFinal(lcx, topY + iconH / 2);
+    drawBoltRotated(doc, fx, fy, tagSize);
+  }
+  drawTextFinal(doc, lcx, midY + boxH / 2 - 2.5, 'CHOOSE', 7.5);
+  drawTextFinal(doc, lcx, midY + boxH / 2 + 7.5, 'SQUARE', 7.5);
+  {
+    const [fx, fy] = toFinal(lcx, botY + iconH / 2);
+    drawDropRotated(doc, fx, fy, tagSize);
+  }
+
+  for (let i = 0; i < TILE_TYPES.length; i++) {
+    const tile = TILE_TYPES[i];
+    const cx = labelX0 + labelW + i * tileW + tileW / 2;
+    drawTileIconFinal(doc, cx, topY + iconH / 2, BOARD_CELL, tile, 'R');
+    {
+      const { fx, fy, fw, fh } = transformRect(cx - tileW * 0.42, midY, tileW * 0.84, boxH);
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.8);
+      doc.rect(fx, fy, fw, fh, 'S');
+    }
+    drawTileIconFinal(doc, cx, botY + iconH / 2, BOARD_CELL, tile, 'B');
+  }
+
+  doc.setDrawColor(217, 217, 217);
+  doc.setLineWidth(0.3);
+  for (let i = 1; i < 6; i++) {
+    const cx = labelX0 + labelW + i * tileW;
+    const [f1x, f1y] = toFinal(cx, topY);
+    const [f2x, f2y] = toFinal(cx, contentBottom);
+    doc.line(f1x, f1y, f2x, f2y);
+  }
+  doc.setDrawColor(153, 153, 153);
+  doc.setLineWidth(0.5);
+  {
+    const [f1x, f1y] = toFinal(labelX0 + labelW, topY);
+    const [f2x, f2y] = toFinal(labelX0 + labelW, contentBottom);
+    doc.line(f1x, f1y, f2x, f2y);
+  }
+
+  return [topY, contentBottom];
+}
+
+// Draws all n rows for the choice-card section, laid out by target_mid_y
+// (score-table divider positions) - ports render_choice_cards. cutLineXMax
+// (native-X) caps the cut-lines so they stop exactly at the seam.
+function drawChoiceRows(doc, nPlayers, dividerXList, cutLineXMax) {
+  const margin = mm(10);
+  const rowGap = mm(7);
+  const playerIconW = mm(14);
+  const labelW = mm(16);
+  const pageW = mm(148);
+  const usableW = pageW - 2 * margin;
+  const usableH = CHOICE_H - 2 * margin;
+  const rowH = (usableH - (nPlayers - 1) * rowGap) / nPlayers;
+
+  const bounds = [];
+  for (let p = 0; p < nPlayers; p++) {
+    const y0 = margin + p * (rowH + rowGap);
+    const targetMidY = dividerXList ? dividerXList[p] : null;
+    const [top, bottom] = drawPlayerRow(doc, margin, y0, usableW, rowH, playerIconW, labelW, p + 1, targetMidY);
+    bounds.push([top, bottom]);
+  }
+
+  bounds.sort((a, b) => a[0] - b[0]);
+  const lineXMax = cutLineXMax !== undefined ? cutLineXMax : pageW - margin;
+  for (let i = 1; i < bounds.length; i++) {
+    const cutY = (bounds[i - 1][1] + bounds[i][0]) / 2;
+    const [f1x, f1y] = toFinal(margin, cutY);
+    const [f2x, f2y] = toFinal(lineXMax, cutY);
+    doc.setDrawColor(128, 128, 128);
+    doc.setLineWidth(0.5);
+    doc.setLineDashPattern([3, 2], 0);
+    doc.line(f1x, f1y, f2x, f2y);
+    doc.setLineDashPattern([], 0);
+  }
+}
+
+// ---- Write & Wipe sheet generator: legend ----
+
+
+// Plain (upright) tile icon - same visual as the choice-card version but
+// without the rotation transform, since the legend sits on the play-
+// sheet side, drawn upright.
+function drawTileIconPlain(doc, cx, cy, size, tile, color, fillBg, borderOn) {
+  if (fillBg === undefined) fillBg = true;
+  if (borderOn === undefined) borderOn = true;
+  const x0 = cx - size / 2, y0 = cy - size / 2;
+  const channelW = size * CHANNEL_RATIO;
+  const nodeR = size * NODE_RATIO;
+  if (fillBg) { doc.setFillColor(250, 250, 250); doc.rect(x0, y0, size, size, 'F'); }
+  if (borderOn) { doc.setDrawColor(153, 153, 153); doc.setLineWidth(0.4); doc.rect(x0, y0, size, size, 'S'); }
+  const edges = edgesOf(tile);
+  const active = ['N', 'S', 'E', 'W'].filter(d => edges[d] && edges[d].includes(color));
+  if (active.length === 2) {
+    const pts = { N: [cx, y0], S: [cx, y0 + size], E: [x0 + size, cy], W: [x0, cy] };
+    const p1 = pts[active[0]], p2 = pts[active[1]];
+    doc.setDrawColor(255, 255, 255); doc.setLineWidth(channelW); doc.setLineCap('butt');
+    doc.line(p1[0], p1[1], p2[0], p2[1]);
+    doc.setDrawColor(0, 0, 0); doc.setLineWidth(channelW * 0.22);
+    doc.line(p1[0], p1[1], p2[0], p2[1]);
+    doc.setLineWidth(0.5); doc.setFillColor(255, 255, 255); doc.setDrawColor(0, 0, 0);
+    doc.circle(p1[0], p1[1], nodeR, 'FD');
+    doc.circle(p2[0], p2[1], nodeR, 'FD');
+  }
+}
+
+function drawParkSwatch(doc, cx, cy, size) {
+  const x0 = cx - size / 2, y0 = cy - size / 2;
+  doc.setFillColor(PARK_GRAY_255, PARK_GRAY_255, PARK_GRAY_255);
+  doc.rect(x0, y0, size, size, 'F');
+  doc.setDrawColor(153, 153, 153);
+  doc.setLineWidth(0.4);
+  doc.rect(x0, y0, size, size, 'S');
+  const cfg = [[0.39, 0.68, 0.83], [0.61, 0.41, 0.59]]; // PARK_CONFIGS[1], two trees
+  for (const [tcx, tcy, ts] of cfg) {
+    drawTreeMono(doc, x0 + size * tcx, y0 + size * tcy, size * ts, size);
+  }
+}
+
+function drawPipePair(doc, x0, cy, tileSize) {
+  const y0 = cy - tileSize / 2;
+  doc.setFillColor(250, 250, 250);
+  doc.rect(x0, y0, tileSize * 2, tileSize, 'F');
+  doc.setDrawColor(153, 153, 153);
+  doc.setLineWidth(0.4);
+  doc.rect(x0, y0, tileSize * 2, tileSize, 'S');
+  doc.line(x0 + tileSize, y0, x0 + tileSize, y0 + tileSize);
+  const straightH = { kind: 'S', rot: 1 };
+  const bendDown = { kind: 'B', rot: 2 };
+  drawTileIconPlain(doc, x0 + tileSize / 2, cy, tileSize, straightH, 'R', false, false);
+  drawTileIconPlain(doc, x0 + tileSize * 1.5, cy, tileSize, bendDown, 'R', false, false);
+}
+
+function labelWidth(doc, lines) {
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(8);
+  return Math.max(...lines.map(l => doc.getTextWidth(l)));
+}
+
+function drawMultilineLabel(doc, x, cy, lines) {
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  const lineH = 8 * 1.15;
+  const ascent = 8 * 0.717, descent = 8 * 0.2;
+  const totalH = ascent + (lines.length - 1) * lineH + descent;
+  const firstBaseline = cy - totalH / 2 + ascent;
+  for (let i = 0; i < lines.length; i++) {
+    doc.text(lines[i], x, firstBaseline + i * lineH, { align: 'left', baseline: 'alphabetic' });
+  }
+}
+
+function drawLegend(doc, x0, y0, width) {
+  const iconSize = mm(8);
+  const cy = y0 + iconSize / 2;
+  const bigR = iconSize / 2;
+  const tileSize = iconSize * 0.85;
+  const houseSize = iconSize * 0.85;
+  const houseGap = mm(3);
+  const textGap = mm(2);
+  const itemGap = mm(9);
+
+  const items = [
+    { kind: 'supply', color: 'R', w: bigR * 2, lbl: ['Power', 'Supply'] },
+    { kind: 'supply', color: 'B', w: bigR * 2, lbl: ['Water', 'Supply'] },
+    { kind: 'park', w: iconSize, lbl: ['Park'] },
+    { kind: 'pipe', w: tileSize * 2, lbl: ['Pipe'] },
+    { kind: 'houses', w: houseSize * 2 + houseGap, lbl: ['Houses'] },
+  ];
+
+  let totalW = 0;
+  for (const it of items) totalW += it.w + textGap + labelWidth(doc, it.lbl);
+  totalW += itemGap * (items.length - 1);
+  let x = x0 + (width - totalW) / 2;
+
+  for (const it of items) {
+    if (it.kind === 'supply') {
+      const iconFn = it.color === 'R' ? drawBolt : drawDrop;
+      doc.setDrawColor(0, 0, 0); doc.setLineWidth(1.0); doc.setFillColor(255, 255, 255);
+      doc.circle(x + it.w / 2, cy, bigR, 'FD');
+      iconFn(doc, x + it.w / 2, cy, bigR * 1.15);
+    } else if (it.kind === 'park') {
+      drawParkSwatch(doc, x + it.w / 2, cy, it.w);
+    } else if (it.kind === 'pipe') {
+      drawPipePair(doc, x, cy, tileSize);
+    } else if (it.kind === 'houses') {
+      drawIdentityIcon(doc, x + houseSize / 2, cy, houseSize, 1, 'II', houseSize * 0.5);
+      drawIdentityIcon(doc, x + houseSize * 1.5 + houseGap, cy, houseSize, 2, 'III', houseSize * 0.5);
+    }
+    drawMultilineLabel(doc, x + it.w + textGap, cy, it.lbl);
+    x += it.w + textGap + labelWidth(doc, it.lbl) + itemGap;
+  }
+}
+
+// ---- Write & Wipe sheet generator: geometry solver + assembly ----
+
+const PS_H = mm(148); // play-sheet's own "page height" for the geometry formulas (top 148mm of the A4)
+
+// House ordering (I/II/III per player, row-major) - ports generate_playsheet.py's house_order()
+function houseOrder(N, house, owner, maxPlayers) {
+  maxPlayers = maxPlayers || 4;
+  const counts = {}; for (let p = 1; p <= maxPlayers; p++) counts[p] = 0;
+  const index = {};
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (house[r][c]) {
+      const p = owner[r][c];
+      counts[p]++;
+      index[r + ',' + c] = counts[p];
+    }
+  }
+  return index;
+}
+
+// Full geometry solver - ports shade_options.py's render_option geometry
+// section. Returns everything the caller needs to draw the play sheet
+// and to align the choice cards.
+function solveGeometry(opts) {
+  const M = opts.margin || mm(10);
+  const boardGap = opts.boardGap || mm(18);
+  const gutterX = opts.gutterX || mm(9);
+  const gutterY = opts.gutterY || mm(10);
+  const boardNudgeDown = opts.boardNudgeDown || 0;
+  const N = opts.N;
+
+  const titleSize = 20;
+  const titleCapH = 0.73 * titleSize;
+  const titleBaselineY = M + titleCapH;
+
+  let tablesTop = PS_H - M - TABLE_H;
+
+  const usableW = A4_W - 2 * M;
+  const widthBound = (usableW - boardGap) / 2 - gutterX;
+  const BOARD_SIZE = widthBound;
+
+  const iconR = mm(2.9);
+  const labelOffset = gutterY * 0.62;
+  const labelHalfH = 0.5 * 0.717 * 9.5;
+  const D = iconR + (gutterY - labelOffset - labelHalfH);
+
+  const totalGap = tablesTop - titleBaselineY - BOARD_SIZE - gutterY;
+  const gTop = (totalGap + D) / 2;
+  let boardTop = titleBaselineY + gTop;
+
+  boardTop += boardNudgeDown;
+  tablesTop += boardNudgeDown;
+
+  const letterCenterY = boardTop + BOARD_SIZE + gutterY * 0.62;
+  const letterBottomY = letterCenterY + labelHalfH;
+
+  if (opts.tablesTopOverride !== undefined) tablesTop = opts.tablesTopOverride;
+
+  const cell = BOARD_SIZE / N;
+  const LEFT_ORIGIN_X = M + gutterX;
+  const RIGHT_ORIGIN_X = LEFT_ORIGIN_X + BOARD_SIZE + boardGap;
+
+  return { M, boardGap, gutterX, gutterY, titleSize, titleBaselineY, tablesTop, BOARD_SIZE, boardTop, letterBottomY, cell, LEFT_ORIGIN_X, RIGHT_ORIGIN_X, N };
+}
+
+// Computes score-table x-positions for effectiveN players - ports the
+// 2/3/4-player table-position logic in shade_options.py's render_option.
+function tablePositions(effectiveN, geo) {
+  const tablesSpan = (geo.RIGHT_ORIGIN_X + geo.BOARD_SIZE) - geo.LEFT_ORIGIN_X;
+  const gapBaseline = (tablesSpan - 4 * TABLE_W) / 3;
+  const baselineTx = [0, 1, 2, 3].map(i => geo.LEFT_ORIGIN_X + i * (TABLE_W + gapBaseline));
+
+  if (effectiveN === 4) return baselineTx;
+  if (effectiveN === 2) {
+    const cLeft = geo.LEFT_ORIGIN_X + geo.BOARD_SIZE / 2;
+    const cRight = geo.RIGHT_ORIGIN_X + geo.BOARD_SIZE / 2;
+    return [cLeft - TABLE_W / 2, cRight - TABLE_W / 2];
+  }
+  if (effectiveN === 3) {
+    const box1Left = baselineTx[0], box3Left = baselineTx[3];
+    const span3 = (box3Left + TABLE_W) - box1Left;
+    const gap3 = (span3 - 3 * TABLE_W) / 2;
+    return [box1Left, box1Left + TABLE_W + gap3, box3Left];
+  }
+  return baselineTx.slice(0, effectiveN);
+}
+
+function drawOutlineTitle(doc, text, x, y, fontSize, offset) {
+  doc.setFont('Teko', 'normal'); doc.setFontSize(fontSize);
+  doc.setTextColor(0, 0, 0);
+  const offsets = [[-offset, 0], [offset, 0], [0, -offset], [0, offset], [-offset, -offset], [-offset, offset], [offset, -offset], [offset, offset]];
+  for (const [dx, dy] of offsets) doc.text(text, x + dx, y + dy);
+  doc.setTextColor(255, 255, 255);
+  doc.text(text, x, y);
+  doc.setTextColor(0, 0, 0);
+}
+
+function drawPlaySheet(doc, N, effectiveN, board, house, owner, index, geo, tableXList) {
+  doc.setFont('Teko', 'normal');
+  doc.setFontSize(geo.titleSize);
+  const titleText = 'SWALPA ADJUST MAADI!';
+  const titleW = doc.getTextWidth(titleText);
+  doc.setFontSize(geo.titleSize);
+  const subText = '  Write & Wipe';
+  const subW = doc.getTextWidth(subText);
+  const startX = A4_W / 2 - (titleW + subW) / 2;
+  doc.setTextColor(0, 0, 0);
+  doc.text(titleText, startX, geo.titleBaselineY);
+  drawOutlineTitle(doc, subText, startX + titleW, geo.titleBaselineY, geo.titleSize, 0.9);
+
+  const cell = geo.cell;
+  for (const [originX, color] of [[geo.LEFT_ORIGIN_X, 'R'], [geo.RIGHT_ORIGIN_X, 'B']]) {
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) drawCellBg(doc, r, c, originX, geo.boardTop, cell, board[r][c]);
+    drawPipeChannel(doc, N, board, originX, geo.boardTop, cell, color, mm(1.6));
+    drawParkFill(doc, N, board, originX, geo.boardTop, cell);
+    drawGrid(doc, N, originX, geo.boardTop, cell);
+    drawParkTrees(doc, N, board, originX, geo.boardTop, cell);
+    drawSupplyStrokeVisible(doc, N, originX, geo.boardTop, cell, color);
+    drawCircuitNodes(doc, N, board, originX, geo.boardTop, cell);
+    drawSupplyCenterNode(doc, N, originX, geo.boardTop, cell, color);
+    drawHouses(doc, N, house, owner, index, originX, geo.boardTop, cell);
+    drawCoordLabels(doc, N, originX, geo.boardTop, cell);
+  }
+
+  for (let i = 0; i < tableXList.length; i++) {
+    drawPlayerTable(doc, tableXList[i], geo.tablesTop, i + 1);
+  }
+}
+
+function drawRotatedCopyright(doc, x, y, text) {
+  doc.setFont('Helvetica', 'normal'); doc.setFontSize(7);
+  doc.setTextColor(102, 102, 102);
+  doc.text(text, x, y, { angle: 90 });
+  doc.setTextColor(0, 0, 0);
+}
+
+function generateWriteAndWipeSheet(doc, N, effectiveN, board, house, owner) {
+  const index = houseOrder(N, house, owner, 4);
+
+  const seamY = mm(164);
+  const oldSeamY = mm(148);
+  const legendTopY = oldSeamY + mm(3);
+  const cutLineXMax = A4_H - seamY;
+
+  // first pass to learn letter_bottom_y (depends on board geometry)
+  const geo0 = solveGeometry({ N, boardNudgeDown: mm(3) });
+  const targetTablesTop = (geo0.letterBottomY + legendTopY) / 2 - TABLE_H / 2;
+  const geo = solveGeometry({ N, boardNudgeDown: mm(3), tablesTopOverride: targetTablesTop });
+  const tableXList = tablePositions(effectiveN, geo);
+  const dividerXList = tableXList.map(tx => tx + TABLE_LABEL_W + TABLE_DATA_W);
+
+  drawPlaySheet(doc, N, effectiveN, board, house, owner, index, geo, tableXList);
+
+  drawLegend(doc, mm(10), oldSeamY + mm(3), A4_W - mm(20));
+
+  drawChoiceRows(doc, effectiveN, dividerXList, cutLineXMax);
+
+  doc.setDrawColor(102, 102, 102);
+  doc.setLineWidth(0.6);
+  doc.setLineDashPattern([3, 2], 0);
+  doc.line(0, seamY, A4_W, seamY);
+  doc.setLineDashPattern([], 0);
+
+  drawRotatedCopyright(doc, mm(6), seamY - mm(4), 'Copyright 2026  Mukund Thattai');
+}
+
 
 async function generateBoardPDF(){
   try {
@@ -4839,142 +6028,13 @@ async function generateBoardPDF(){
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const PAGE_W = doc.internal.pageSize.getWidth();
-  const PAGE_H = doc.internal.pageSize.getHeight();
-
-  const MARGIN = 70;
-  const TITLE_SPACE = 55;
-  const FOOTER_SPACE = 40;
-  const usableW = PAGE_W - 2*MARGIN;
-  const usableH = PAGE_H - 2*MARGIN - TITLE_SPACE - FOOTER_SPACE;
-  const boardSize = Math.min(usableW, usableH);
-  const cell = boardSize / N;
-  const originX = (PAGE_W - boardSize) / 2;
-  const boardTop = MARGIN + TITLE_SPACE + (usableH - boardSize) / 2;
-
-  const DOTTED = [1.5, 4];
-  const DASHED = [7, 4];
-
-  function edgeMidpoint(r, c, dir){
-    const x0 = originX + c*cell, y0 = boardTop + r*cell;
-    const cx = x0 + cell/2, cy = y0 + cell/2;
-    if (dir==='N') return [cx, y0];
-    if (dir==='S') return [cx, y0+cell];
-    if (dir==='E') return [x0+cell, cy];
-    return [x0, cy]; // W
-  }
 
   doc.addFileToVFS('Teko.ttf', TEKO_TTF_BASE64);
   doc.addFont('Teko.ttf', 'Teko', 'normal');
 
-  function drawTitleAndFooter(){
-    doc.setFont('Teko', 'normal');
-    doc.setFontSize(34);
-    doc.setTextColor(0,0,0);
-    doc.text("SWALPA ADJUST MAADI", PAGE_W/2, MARGIN + TITLE_SPACE*0.7, {align:'center'});
+  generateWriteAndWipeSheet(doc, N, effectiveN, board, house, owner);
 
-    doc.setFont('Helvetica', 'normal');
-    doc.setFontSize(9);
-    const footerY = PAGE_H - MARGIN - FOOTER_SPACE*0.5;
-    doc.text("Copyright 2026 Mukund Thattai", PAGE_W/2, footerY, {align:'center'});
-    doc.setFontSize(8);
-    doc.text("@thattai.bsky.social", PAGE_W/2, footerY+13, {align:'center'});
-  }
-
-  const {redC: pdfRedC, blueC: pdfBlueC} = connectivity();
-  const parkImage = buildParkTileImage();
-
-  // Draws one full page of the board schematic - border, grid, each pipe
-  // tile's dotted/dashed routing, and the real park tile image stamped
-  // on every PARK square. includeAnnotations controls whether sites
-  // (translucent grey wash) and houses (owner-numbered icon) are drawn
-  // on top as well - page 1 has them, page 2 is the same board with
-  // them omitted.
-  function drawSchematicPage(includeAnnotations){
-    doc.setDrawColor(0,0,0);
-    doc.setLineWidth(2.2);
-    doc.setLineDashPattern(DOTTED, 0);
-    doc.line(originX, boardTop, originX+boardSize, boardTop); // top
-    doc.line(originX, boardTop+boardSize, originX+boardSize, boardTop+boardSize); // bottom
-    doc.setLineDashPattern(DASHED, 0);
-    doc.line(originX, boardTop, originX, boardTop+boardSize); // left
-    doc.line(originX+boardSize, boardTop, originX+boardSize, boardTop+boardSize); // right
-
-    doc.setLineDashPattern([], 0);
-    doc.setLineWidth(0.4);
-    doc.setDrawColor(165,165,165);
-    for (let i=0;i<=N;i++){
-      const x = originX + i*cell;
-      doc.line(x, boardTop, x, boardTop+boardSize);
-      const y = boardTop + i*cell;
-      doc.line(originX, y, originX+boardSize, y);
-    }
-
-    doc.setLineWidth(2.0);
-    doc.setDrawColor(0,0,0);
-    for (let r=0;r<N;r++){
-      for (let c=0;c<N;c++){
-        const tile = board[r][c];
-        if (tile.kind === 'P') continue; // Park - routing skipped, image stamped below
-        const edges = edgesOf(tile);
-        for (const color of ['R','B']){
-          const active = ['N','S','E','W'].filter(d => edges[d] && edges[d].includes(color));
-          if (active.length === 2){
-            const [x1,y1] = edgeMidpoint(r,c,active[0]);
-            const [x2,y2] = edgeMidpoint(r,c,active[1]);
-            doc.setLineDashPattern(color==='R' ? DOTTED : DASHED, 0);
-            doc.line(x1,y1,x2,y2);
-          }
-        }
-      }
-    }
-    doc.setLineDashPattern([], 0);
-
-    for (let r=0;r<N;r++){
-      for (let c=0;c<N;c++){
-        if (board[r][c].kind !== 'P') continue;
-        const x = originX + c*cell, y = boardTop + r*cell;
-        doc.addImage(parkImage, 'PNG', x, y, cell, cell);
-      }
-    }
-
-    if (includeAnnotations){
-      // Sites and houses drawn on top of the routing/park images just
-      // laid down - sites as a translucent grey wash (so the lines
-      // underneath still read through, same idea as the live board's
-      // own SITE_COLOR overlay), houses as fully opaque icons (a house
-      // always hides its own tile).
-      for (let r=1;r<N-1;r++){
-        for (let c=1;c<N-1;c++){
-          if (board[r][c].kind === 'P') continue;
-          if (house[r][c]) continue;
-          if (hasFullEdgeSupply(pdfRedC, pdfBlueC, r, c)){
-            const x = originX + c*cell, y = boardTop + r*cell;
-            doc.saveGraphicsState();
-            doc.setGState(new doc.GState({opacity: 0.35}));
-            doc.setFillColor(120,120,120);
-            doc.rect(x, y, cell, cell, 'F');
-            doc.restoreGraphicsState();
-          }
-        }
-      }
-      for (let r=0;r<N;r++){
-        for (let c=0;c<N;c++){
-          if (!house[r][c]) continue;
-          const cx = originX + c*cell + cell/2, cy = boardTop + r*cell + cell/2;
-          drawSchematicHouse(doc, cx, cy, cell, owner[r][c]);
-        }
-      }
-    }
-
-    drawTitleAndFooter();
-  }
-
-  drawSchematicPage(true);
-  doc.addPage();
-  drawSchematicPage(false);
-
-  doc.save('swalpa-adjust-maadi-board.pdf');
+  doc.save('swalpa-adjust-maadi-write-and-wipe.pdf');
 }
 document.getElementById('saveBoardBtn').onclick = () => { generateBoardPDF(); };
 document.getElementById('hintBtn').onclick = () => {
@@ -4993,17 +6053,21 @@ document.getElementById('hintBtn').onclick = () => {
     return;
   }
 
-  // Always suggests both a card and a square together, replacing whatever
-  // the player had already picked (if anything) - not just when no card
-  // was chosen yet. Operates purely on whichever player's PRIVATE turn is
-  // currently active (turn) - independently, with no awareness of the
-  // other player's choice (which doesn't exist yet at this point anyway).
-  if (pendingSquare){
+  // Always suggests a card or a house together with a square, replacing
+  // whatever the player had already picked (if anything) - not just when
+  // nothing was chosen yet. Operates purely on whichever player's
+  // PRIVATE turn is currently active (turn) - independently, with no
+  // awareness of the other player's choice (which doesn't exist yet at
+  // this point anyway). Only restores a board tile if the existing
+  // preview was itself a card preview - a house preview never touched
+  // board[][] in the first place (see selectHouseIcon()'s own comment),
+  // so there's nothing to restore there.
+  if (pendingSquare && !houseModeSelected){
     board[pendingSquare[0]][pendingSquare[1]] = previewSavedTile;
-    pendingSquare = null;
-    previewSavedTile = null;
   }
-  const {cardIndex, square} = aiChooseCardAndSquare(turn, Math.random);
+  pendingSquare = null;
+  previewSavedTile = null;
+  const {cardIndex, square, isHouse} = aiChooseCardAndSquare(turn, Math.random);
 
   hintsUsedThisGame++;
   if (maxTries !== Infinity){
@@ -5012,27 +6076,41 @@ document.getElementById('hintBtn').onclick = () => {
   }
 
   // Hint plays this player's private turn for you, exactly like a human
-  // choice would - card chosen first, then (after a beat) the square
-  // preview, then commit automatically, same two-step cadence a real
-  // player's own tap-tap-tap would have. No confirmation tap needed, and
-  // none is possible: awaitingAdvance blocks all input for the whole
-  // window below (the same flag selectCard() and the board click handler
-  // already check), so the player can't wander off mid-hint - e.g.
-  // tapping a different card after tries were already spent, which used
-  // to leave them stuck with no valid move forward at all.
+  // choice would - card (or house) chosen first, then (after a beat) the
+  // square preview, then commit automatically, same two-step cadence a
+  // real player's own tap-tap-tap would have. No confirmation tap needed,
+  // and none is possible: awaitingAdvance blocks all input for the whole
+  // window below (the same flag selectCard()/selectHouseIcon() and the
+  // board click handler already check), so the player can't wander off
+  // mid-hint - e.g. tapping a different card after tries were already
+  // spent, which used to leave them stuck with no valid move forward at
+  // all.
   awaitingAdvance = true;
   isAutoPlaying = true;
   isHintPlaying = true;
-  selectedCardIndex = cardIndex;
-  currentDraw = {...DECK_COMPOSITION[cardIndex].tile};
+  if (isHouse){
+    houseModeSelected = true;
+    selectedCardIndex = null;
+  } else {
+    selectedCardIndex = cardIndex;
+    houseModeSelected = false;
+    currentDraw = {...DECK_COMPOSITION[cardIndex].tile};
+  }
   renderPlayerHand(turn);
   render();
   sounds.previewTap();
 
   scheduleIfCurrent(() => {
-    previewSavedTile = board[square[0]][square[1]];
-    board[square[0]][square[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
-    pendingSquare = square;
+    if (isHouse){
+      // A house preview never touches board[][] at all - see
+      // selectHouseIcon()'s own comment - only the hazard-tape outline
+      // (already unconditional on pendingSquare) shows anything.
+      pendingSquare = square;
+    } else {
+      previewSavedTile = board[square[0]][square[1]];
+      board[square[0]][square[1]] = {kind: currentDraw.kind, rot: currentDraw.rot};
+      pendingSquare = square;
+    }
     render();
     sounds.previewTap();
 
@@ -5044,20 +6122,25 @@ document.getElementById('hintBtn').onclick = () => {
     }, LONG_DELAY_MS);
   }, LONG_DELAY_MS);
 };
-// Card taps are delegated from the row itself, since renderPlayerHand()
-// rebuilds the canvases on every selection/turn change - a listener
-// attached to an individual card would be lost the moment it re-renders.
+// Card (and house icon) taps are delegated from the row itself, since
+// renderPlayerHand() rebuilds the canvases on every selection/turn
+// change - a listener attached to an individual card would be lost the
+// moment it re-renders.
 document.getElementById('handRow').addEventListener('click', (e) => {
   if (gameOver){ showMsg("Game over! Find another neighbourhood to dig up!"); return; }
   const cnv = e.target.closest('.handCardCanvas');
   if (cnv){
-    selectCard(parseInt(cnv.dataset.cardIndex, 10));
+    if (cnv.dataset.house === '1'){
+      selectHouseIcon();
+    } else {
+      selectCard(parseInt(cnv.dataset.cardIndex, 10));
+    }
     return;
   }
-  // Clicked somewhere in the row but not on an actual card (the gap
-  // between cards, or the dots strip above one) - same gentle nudge as
-  // before, once a card has actually been picked.
-  if (selectedCardIndex !== null){
+  // Clicked somewhere in the row but not on an actual card/icon (the gap
+  // between slots) - same gentle nudge as before, once something has
+  // actually been picked.
+  if (selectedCardIndex !== null || houseModeSelected){
     showMsg(pendingSquare ? "Tap the selected space again to confirm" : "Tap the board to place your card");
   }
 });
@@ -5159,17 +6242,6 @@ function renderTitleAndLegend(){
   const parkOff = internal*(1-parkScale)/2;
   const parkCtx = setupSupersampledLegendCanvas(document.getElementById('legPark'));
   drawTileOn(parkCtx, parkOff, parkOff, internal*parkScale, {kind:'P', rot:0}, true, true);
-
-  const siteScale = 0.577;
-  const siteOff = internal*(1-siteScale)/2;
-  const siteCtx = setupSupersampledLegendCanvas(document.getElementById('legSite'));
-  siteCtx.save();
-  siteCtx.fillStyle = SITE_COLOR;
-  siteCtx.globalAlpha = 0.75;
-  siteCtx.fillRect(siteOff, siteOff, internal*siteScale, internal*siteScale);
-  siteCtx.globalAlpha = 1;
-  siteCtx.restore();
-  drawTileOn(siteCtx, siteOff, siteOff, internal*siteScale, {kind:'B', rot:0}, true, true);
 
   const houseScale = 0.938;
   const houseCtx = setupSupersampledLegendCanvas(document.getElementById('legHouse'));
