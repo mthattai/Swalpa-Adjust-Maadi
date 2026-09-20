@@ -1,78 +1,59 @@
 # Swalpa Adjust Maadi
 
-> Dig up roads to cut off power and water from your opponents!
+A board game about being a ruthless contractor in Bengaluru — connect your own houses to power and water, and don't worry too much about whose pipes you dig up along the way.
 
-A browser-based, single-file board game about laying power and water pipes on a shared grid, connecting your houses to both supplies while your opponents try to cut you off. Dedicated to the residents of Bengaluru, whose roads are perpetually being dug up for cables, pipes, metro pillars, and flyovers.
+**Current build:** `swalpa_adjust_maadi_v47-42.html` — a single, self-contained HTML file. Open it in any modern browser; no install, no server, no build step.
 
-Everything — game logic, rendering, the AI opponent, the in-app rules page (diagrams included), and a print-and-play PDF export — lives in one self-contained `index.html`. No build step, no server, no dependencies beyond a browser. (The PDF export lazy-loads `jsPDF` from a CDN only when you actually use it.)
+---
 
-**[Play it here](https://mthattai.github.io/Swalpa-Adjust-Maadi/)**
+## 1. What the game is
 
-## Running it locally
+2–4 players compete on a shared grid of pipe tiles. Power flows in from the top and bottom edges, water from the left and right. Each player owns four houses; on your turn you move to a square, rotate or flip its pipe tile, and see how that ripples through the board's power and water flow. A house needs a steady supply of *both* resources to stay safe — starve it of either one and it's abandoned, tanks reset to empty.
 
-Open `index.html` in a browser. That's it.
+From round 3 onward, a die roll adds a bonus move before your standard one:
 
-## Objective
+| Roll | Bonus | What happens |
+|---|---|---|
+| 1, 2 | No-bonus | Nothing extra — just your standard move |
+| 3 | Jump 🚀 | Move your token to *any* square, no row/column constraint |
+| 4 | 2x 🎁 | An extra standard move (tanks update only after your real turn) |
+| 5, 6 | Dig 🚧 | Relocate the dug-up tile and bulldozer anywhere on the board |
 
-Players are contractors laying power and water pipes on a board; one contractor's work often breaks another's. Every house has a power tank and a water tank, each holding 0–3 units. A house with **at least 2 units of power AND 2 units of water is SAFE**. The first player to get **three SAFE houses** wins.
+First player to get all four houses safe *at the same time* wins. Everyone else gets one last move with a jump bonus once that happens, so a photo finish is possible.
 
-## Modes
+Play against other humans (pass-and-play), against the built-in bot, or print the reference PDF (below) to play with a physical board and real dice.
 
-- **Player count: 2, 3, or 4.** Board size scales with player count: **2 players → 7×7, 3 players → 8×8, 4 players → 9×9.**
-- **Human or Bot opponent**, toggled independently of player count — with Bot selected, every seat past Player 1 is AI-controlled.
-- **Local hotseat** for human-vs-human play at any player count, all on one device.
-- **Today's Game** — a daily puzzle seeded from the current date (India time), so everyone playing that day gets the same board. Always 2 players, human vs. Bot.
-- Every player starts with **4 houses**, placed automatically during setup (not built during play).
+## 2. Running it
 
-## Board & pipes
+Just open the HTML file. Everything — game logic, rendering, sound, the PDF exporter — is in that one file, aside from [jsPDF](https://github.com/parallax/jsPDF), which loads lazily from a CDN the first time you actually export a PDF (see `PDF_EXPORT_README.md`).
 
-- The board's top and bottom edges are the **Power Supply**; its left and right edges are the **Water Supply**.
-- Every non-Park square holds a **Pipe tile**: a single power pipe and a single water pipe crossing it, each with two ends. There are **6 tile types** — two Straights and four Bends (one per rotation) — freely reusable any number of times by any player; there's no limited hand or deck to run out of.
-- **Park tiles** are fixed at setup and never change; a pipe passes straight through a Park without turning.
+## 3. What's in this build
 
-## Turns and rounds
+- **In-app Rules page** (the "?" button) — walks through the full rule set, including bonus moves and the updated endgame, with inline diagrams.
+- **PDF export** (the save/printer icon, `generateBoardPDF()`) — a three-page reference document, board-agnostic (not a snapshot of the currently-loaded game): a page of cut-apart board templates for 2P/3P/4P games, a printed rules page, and a page combining a full graphic bonus-moves icon key with a tank-update cheat sheet. This replaced an older single-page "write-and-wipe" live-board snapshot entirely — **`PDF_EXPORT_README.md` still describes that older, now-superseded version** (`generateWriteAndWipeSheet()`, no longer present in the script at all), not this one; treat it as historical background on the PDF pipeline's own earlier shape, not as documentation of the current export.
+- **Human or bot opponents**, any mix, 2–4 players.
+- **Auto/Hint button** — the same AI that plays bot turns can also suggest or play your own move.
 
-Play happens in rounds with a **rotating starting player** (P1 opens Round 1, P2 opens Round 2, and so on). Within a round, players take their turns in order — not simultaneously. On your turn you:
+## 4. If you're picking this project up
 
-1. Pick a square and a Pipe tile (up to 5 tries before you have to commit), or just call out the square (e.g. `D5`) and the tile code (`S1`, `S2`, `B1`–`B4`) if playing with someone else driving the screen or a physical board.
-2. Confirm — the old tile on that square is wiped and replaced.
+This repo accumulates a lot of documentation as it goes — start here, then go deeper as needed:
 
-**Off-limits squares:** Park squares, squares with another player's house, and any square already played this round.
+- **`MASTER_HANDOFF.md`** — the authoritative technical reference: turn-type system, AI heuristic, lock/position model, UI/animation conventions, seeding gotchas for simulation, and a running log of what's been verified and how. Read this before making any nontrivial change.
+- **`SIMULATION_METHODOLOGY.md`** — how to write headless tests against the real game logic (no rendering, real per-turn driver), and the seeding trap that makes `enterReproducibleTestMode()` easy to misuse for "many distinct games" testing.
+- **`PDF_EXPORT_README.md`**, **`tank_cheatsheet_README.md`**, **`STAMP_TILES_README.md`** — deep dives on specific export/print features.
+- **`high_speed_simulation.js`** — a ready-to-run driver for aggregate stats (win rates, turn-type distribution, game length) across many genuinely distinct random games.
 
-Once every player has moved, the round resolves: power and water flow is traced for every house, tanks are updated, and a new round begins with the next starting player.
+**One thing worth knowing up front, since it's caused real mistakes before:** the PDF's own printed die-face groupings (what a player rolling a physical die reads) are deliberately decoupled from the digital game's internal random-number wiring (`rollTurnType()`). The app never shows a die face on screen — only the resulting bonus type — so the two don't need to match, and shouldn't be "fixed" into matching without that being an explicit, deliberate instruction. See `MASTER_HANDOFF.md` §9.2 for the full story.
 
-## Tracing power and water
+## 5. Assembling a new build
 
-For each house, start at one end of its power pipe and trace outward, moving only along connected power pipes. Hitting a water pipe or the Water Supply edge stops the trace; hitting a Park just passes straight through. If the trace reaches the Power Supply, power flows to the house. Water is traced the identical way, swapping colours.
+The working script (`game_script_table.js`) and the HTML shell (`swalpa_adjust_maadi_v43-32.html`) are separate files, recombined on every ship:
 
-- If **at least one end** of a house's power (or water) pipe reaches its Supply, that tank ticks **up** by 1 (capped at 3).
-- If **neither end** reaches Supply, that tank ticks **down** by 1.
-- Houses never vanish or get eliminated — a dormant, empty-tanked house just sits there, recoverable on a future round.
+```bash
+head -n <script-tag-line> swalpa_adjust_maadi_v43-32.html > OUTPUT.html
+cat game_script_table.js >> OUTPUT.html
+echo "</script>" >> OUTPUT.html
+tail -n +<line-after-close-script-tag> swalpa_adjust_maadi_v43-32.html >> OUTPUT.html
+```
 
-## Winning
-
-The first player to reach **3 SAFE houses** at the end of a round wins immediately. If two or more players reach it in the very same round, the game is a draw. There's no round cap and no other draw condition — the game keeps going, however long it takes, until someone hits the target.
-
-## The AI opponent
-
-The Bot evaluates every (tile, square) combination in its visible options against a two-tier priority order:
-
-1. **Don't hand anyone the game.** If a move would let an opponent reach 3 SAFE houses, it's ranked below any move that doesn't — even at the cost of the Bot's own progress. Among moves that are safe on this front, taking an outright win for itself is the next-highest priority.
-2. **Build strength.** Failing a decisive moment either way, the Bot maximizes its own count of tank-target-met houses, then how many of its houses are connected on both sides right now (the leading indicator of future progress), then banked tank progress, then minimizes fully-disconnected houses — with board-wide territory as a final tiebreak.
-
-## The Rules page
-
-The in-app Rules page is written to match the mechanics above, and every diagram on it is drawn live by the game's own real rendering and board-generation code — never a static image — wrapped so generating them can never disturb an actual in-progress game's state.
-
-## Print & Play
-
-The **Save board** button exports the current board as a 2-page, landscape A4, black-and-white PDF designed for write-and-wipe play away from a screen:
-
-- **Page 1:** the board shown twice side by side — a template copy with the current pipe layout, and a blank write-and-wipe copy — plus every player's score box (power/water tally per house, with a spot to record each move's square).
-- **Page 2:** the full rules text in a two-column layout, with an icon key (Power/Water Supply, Houses, Park, and all six Pipe tile types) matching the exact stroke style used on the board itself.
-
-## Copyright
-
-Copyright 2026 Mukund Thattai
-
-[@thattai.bsky.social](https://bsky.app/profile/thattai.bsky.social)
+The shell's own `<script>`/`</script>` line numbers shift whenever its HTML (not the script) changes, so re-check them (`grep -n "^<script>$\|^</script>$"`) rather than reuse a cached line number. Always `node --check` the extracted script before shipping.
