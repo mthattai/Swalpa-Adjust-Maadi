@@ -455,13 +455,14 @@
 
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3129623529be4e2e8dce13d003159228"}'></script><!-- End Cloudflare Web Analytics -->
 <div id="scrollSnapBottom"></div>
-</body>
-</html>
 <script>
 
 
 
 window.onerror = function(msg, url, line, col, error){
+  // Browsers report errors from other sites' scripts (analytics beacon, CDN libraries)
+  // as a bare "Script error." on line 0, with no detail. Not a game bug - keep it out of the banner.
+  if ((!line || line === 0) && /^script error\.?$/i.test(String(msg).trim())){ console.warn('Ignored cross-origin script error'); return true; }
   const box = document.createElement('div');
   box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;' +
     'font-size:12px;padding:10px;z-index:9999;white-space:pre-wrap;';
@@ -12411,7 +12412,6 @@ if (document.fonts && document.fonts.ready){
 
 
 
-</script><!-- End Cloudflare Web Analytics -->
-<div id="scrollSnapBottom"></div>
+</script>
 </body>
 </html>
